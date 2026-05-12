@@ -63,7 +63,7 @@ export default function SediPage() {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>Sedi</Typography>
+                <Typography variant="h4" gutterBottom>Sedi</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Visualizza e gestisci tutte le sedi create.
                 </Typography>
