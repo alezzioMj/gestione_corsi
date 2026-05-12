@@ -5,9 +5,7 @@ import { Box, Typography, Button, Select, MenuItem, FormControl, InputLabel, Cir
 import SessionsTable from "@/components/Stepper/SessionTable";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Corso, SessioneWithRelations } from "../validation/types";
-
-// Centralizziamo l'URL del backend
-const API_BASE_URL = "http://localhost:3001";
+import { API_BASE_URL } from "@/lib/config";
 import { SelectChangeEvent } from '@mui/material/Select'; // Import SelectChangeEvent
 
 interface SessionFilterAndDisplayProps {

@@ -7,9 +7,7 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit'; // Import EditIcon
-
-// Centralizziamo l'URL del backend
-const API_BASE_URL = "http://localhost:3001";
+import { API_BASE_URL } from "@/lib/config";
 
 // Definizione di un tipo base per un corso
 interface Corso {

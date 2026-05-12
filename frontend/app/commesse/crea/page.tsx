@@ -1,7 +1,6 @@
 import MyStepper from "@/components/Stepper/MyStepper";
 import { Box, Typography, Container, Paper } from "@mui/material";
-
-const API_BASE_URL = "http://localhost:3001";
+import { API_BASE_URL } from "@/lib/config";
 
 async function getSedi() {
     const res = await fetch(`${API_BASE_URL}/sedi`, { cache: "no-store" });

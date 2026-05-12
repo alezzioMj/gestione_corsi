@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import { useRouter } from "next/navigation";
+import { API_BASE_URL } from "@/lib/config";
 
 interface AddAulaModalProps {
     sedeId: number;
@@ -38,7 +39,7 @@ export default function AddAulaModal({ sedeId }: AddAulaModalProps) {
         setLoading(true);
 
         try {
-            const res = await fetch(`http://localhost:3001/aule`, {
+            const res = await fetch(`${API_BASE_URL}/aule`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

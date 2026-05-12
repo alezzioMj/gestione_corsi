@@ -14,7 +14,7 @@ import AddIcon from "@mui/icons-material/Add";
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 
-export default function AddSedeModal() {
+export default function AddSedeModal({ onSedeAdded } : {onSedeAdded : () => void}){
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const router = useRouter();
@@ -55,6 +55,7 @@ export default function AddSedeModal() {
             });
 
             if (res.ok) {
+                onSedeAdded();
                 handleClose();
                 router.refresh(); // Ricarica i dati della pagina (Server Component)
             } else {

@@ -15,36 +15,25 @@ export default function SediPage() {
     const [loading, setLoading] = useState(true);
     const [fetchError, setFetchError] = useState<string | null>(null);
 
-    useEffect(() => {
-        const fetchSedi = async () => {
-            setLoading(true);
-            setFetchError(null);
-            try {
-                const res = await fetch(`${API_BASE_URL}/sedi`, { cache: "no-store" });
-                if (!res.ok) {
-                    if (res.status === 404) {
-                        console.warn("Nessuna sede trovata.");
-                        setSedi([]);
-                    } else {
-                        throw new Error(`Errore ${res.status}: ${res.statusText}`);
-                    }
-                } else {
-                    const data = await res.json();
-                    setSedi(data);
-                }
-            } catch (err) {
-                if (err instanceof Error) {
-                    console.error("Errore nel recupero delle sedi:", err);
-                    setFetchError(`Impossibile caricare le sedi: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
-                } else {
-                    console.error("Errore sconosciuto nel recupero delle sedi:", err);
-                    setFetchError("Errore sconosciuto nel recupero delle sedi.");
-                }
-            } finally {
-                setLoading(false);
+    // 1. Definisci la funzione di caricamento fuori dall'useEffect
+    const loadSedi = async () => {
+        setLoading(true);
+        try {
+            const res = await fetch(`${API_BASE_URL}/sedi`, { cache: "no-store" });
+            if (res.ok) {
+                const data = await res.json();
+                setSedi(data);
             }
-        };
-        fetchSedi();
+        } catch (err) {
+            setFetchError("Errore nel caricamento");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // 2. Chiamala al primo caricamento
+    useEffect(() => {
+        loadSedi();
     }, []);
 
     const handleDeleteSede = async (sedeId: number) => {
@@ -79,7 +68,7 @@ export default function SediPage() {
                 </Typography>
 
                 <Box sx={{ mb: 4 }}>
-                    <AddSedeModal />
+                    <AddSedeModal onSedeAdded={loadSedi}/>
                 </Box>
             </Box>
 
