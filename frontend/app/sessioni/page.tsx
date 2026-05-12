@@ -1,17 +1,18 @@
 import SessionFilterAndDisplay from "@/components/SessionFilterAndDisplay";
+import { API_BASE_URL } from "@/lib/config";
 
 interface CorsoSessionsPageProps {
     searchParams: { [key: string]: string | string[] | undefined };
 }
 
 async function getAllCorsi() {
-    const res = await fetch(`http://localhost:3001/corsi`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE_URL}/corsi`, { cache: "no-store" });
     if (!res.ok) return [];
     return res.json();
 }
 
 async function getAllSessions() {
-    const res = await fetch(`http://localhost:3001/sessioni/full`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE_URL}/sessioni/full`, { cache: "no-store" });
     if (!res.ok) throw new Error("Errore nel recupero di tutte le sessioni");
     return res.json();
 }
