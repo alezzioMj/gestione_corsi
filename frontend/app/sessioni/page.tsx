@@ -1,6 +1,12 @@
 import SessionFilterAndDisplay from "@/components/SessionFilterAndDisplay";
 import { API_BASE_URL } from "@/lib/config";
 
+type Sessione = {
+    id: number;
+    corso_id: number;
+    data: string;
+}
+
 interface CorsoSessionsPageProps {
     searchParams: { [key: string]: string | string[] | undefined };
 }
@@ -28,7 +34,7 @@ export default async function SessionsPage({ searchParams }: CorsoSessionsPagePr
 
     // Filtraggio iniziale (opzionale, il componente client lo gestirà comunque)
     const initialSessions = corsoIdFilter 
-        ? allSessions.filter((s: any) => s.corso_id === Number(corsoIdFilter))
+        ? allSessions.filter((s: Sessione) => s.corso_id === Number(corsoIdFilter))
         : allSessions;
 
     return (

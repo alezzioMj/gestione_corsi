@@ -5,6 +5,21 @@ import React from "react";
 import AddAulaModal from "@/components/Aule/AddAulaModal";
 import { API_BASE_URL } from "@/lib/config";
 
+interface Aula {
+    id: number;
+    nome: string;
+    capienza?: number;
+}
+
+interface Sede {
+    id: number;
+    nome: string;
+    indirizzo: string;
+    citta: string;
+    provincia: string;
+    aula?: Aula[];
+}
+
 async function getSede(id: string) {
     // Questo endpoint include già l'elenco delle aule (sede.aula)
     const res = await fetch(`${API_BASE_URL}/sedi/${id}`, { cache: "no-store" });
@@ -18,18 +33,18 @@ export default async function AuleSedePage({ params }: { params: Promise<{ id: s
     if (!sedeId) {
         return (
             <Container sx={{ py: 4 }}>
-                <Typography variant="h6" color="error">ID Sede non fornito nell'URL.</Typography>
+                <Typography variant="h6" color="error">ID Sede non fornito nell&apos;URL.</Typography>
                 <Link href="/sedi">Torna alla lista delle Sedi</Link>
             </Container>
         );
     }
 
-    const sede = await getSede(sedeId);
+    const sede: Sede | null = await getSede(sedeId);
     
     if (!sede) {
         return (
             <Container sx={{ py: 4 }}>
-                <Typography variant="h6" color="error">Sede con ID "{sedeId}" non trovata.</Typography>
+                <Typography variant="h6" color="error">Sede con ID &quot;{sedeId}&quot; non trovata.</Typography>
                 <Link href="/sedi">Torna alla lista delle Sedi</Link>
             </Container>
         );
@@ -47,7 +62,7 @@ export default async function AuleSedePage({ params }: { params: Promise<{ id: s
             </Box>
 
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
+                <Typography variant="h4" gutterBottom>
                     Aule - {sede.nome}
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
@@ -58,7 +73,7 @@ export default async function AuleSedePage({ params }: { params: Promise<{ id: s
             <Paper elevation={2}>
                 <List>
                     {sede.aula && sede.aula.length > 0 ? (
-                        sede.aula.map((a: any, index: number) => (
+                        sede.aula.map((a: Aula, index: number) => (
                             <React.Fragment key={a.id}>
                                 <ListItem>
                                     <ListItemText 
@@ -66,7 +81,7 @@ export default async function AuleSedePage({ params }: { params: Promise<{ id: s
                                         secondary={`Capienza: ${a.capienza ?? 'N/D'} posti`} 
                                     />
                                 </ListItem>
-                                {index < sede.aula.length - 1 && <Divider />}
+                                {index < (sede.aula?.length ?? 0) - 1 && <Divider />}
                             </React.Fragment>
                         ))
                     ) : (

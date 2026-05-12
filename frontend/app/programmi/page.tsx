@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Box,
     Typography,
@@ -10,8 +10,7 @@ import {
     CircularProgress,
     Alert,
 } from "@mui/material";
-import ProgrammaCard from "@/components/Programmi/ProgrammaCard";
-import AddProgrammaModal from "@/components/Programmi/AddProgrammaModal"; // Assumendo esista un modal per aggiungere programmi
+import ProgrammaCard from "@/components/Programmi/ProgrammaCard"; // Assumendo esista un modal per aggiungere programmi
 import { ProgrammaConModuli } from "@/components/Stepper/MyStepper"; // Usa il tipo più completo
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
@@ -22,9 +21,7 @@ export default function ProgrammiPage() {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const router = useRouter();
 
-    const fetchProgrammi = async () => {
-        setLoading(true);
-        setFetchError(null);
+    const fetchProgrammi = useCallback(async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/programmi`, { cache: "no-store" });
             if (!res.ok) {
@@ -38,17 +35,17 @@ export default function ProgrammiPage() {
                 const data = await res.json();
                 setProgrammi(data);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Errore nel recupero dei programmi:", err);
-            setFetchError(`Impossibile caricare i programmi: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
+            setFetchError(`Impossibile caricare i programmi: ${err instanceof Error ? err.message : 'Errore di rete'}. Assicurati che il backend sia attivo.`);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchProgrammi();
-    }, []);
+    }, [fetchProgrammi]);
 
     const handleDeleteProgramma = async (programmaId: number) => {
         if (!window.confirm("Sei sicuro di voler eliminare questo programma?")) return;
@@ -62,8 +59,8 @@ export default function ProgrammiPage() {
             }
             setProgrammi(prevProgrammi => prevProgrammi.filter(p => p.id !== programmaId));
             alert("Programma eliminato con successo!");
-        } catch (error: any) {
-            alert(`Errore: ${error.message}`);
+        } catch (error: unknown) {
+            alert(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
             console.error("Errore nell'eliminazione del programma:", error);
         } finally {
             router.refresh(); // For Next.js to re-fetch server components
@@ -73,7 +70,7 @@ export default function ProgrammiPage() {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>Programmi Formativi</Typography>
+                <Typography variant="h4" gutterBottom>Programmi Formativi</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Gestione dei programmi didattici e dei moduli associati.
                 </Typography>

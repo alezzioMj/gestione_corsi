@@ -38,7 +38,7 @@ export default async function CreaCommessaPage() {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>
+                <Typography variant="h4" gutterBottom>
                     Crea Nuova Commessa
                 </Typography>
                 <Typography variant="body1" color="text.secondary">

@@ -45,8 +45,6 @@ export default function CommessePage() {
     const [fetchError, setFetchError] = useState<string | null>(null); // New state for general fetch errors
 
     useEffect(() => {
-        setLoading(true); // Ensure loading is true on effect run
-        setFetchError(null); // Clear previous errors
         getCorsi()
             .then(data => {
                 setCorsi(data);
@@ -75,8 +73,8 @@ export default function CommessePage() {
             // Aggiorna lo stato per rimuovere il corso eliminato
             setCorsi(prevCorsi => prevCorsi.filter(corso => corso.id !== corsoId));
             alert("Corso eliminato con successo!");
-        } catch (error: any) {
-            alert(`Errore: ${error.message}`);
+        } catch (error: unknown) {
+            alert(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
             console.error("Errore nell'eliminazione del corso:", error);
         }
     };
@@ -93,9 +91,9 @@ export default function CommessePage() {
             }
             const data = await res.json();
             setSelectedCorsoInfo(data);
-        } catch (error: any) {
+        } catch (error: unknown) {
             console.error("Errore nel recupero info corso:", error);
-            setInfoError(error.message);
+            setInfoError(error instanceof Error ? error.message : "Errore sconosciuto");
         } finally {
             setIsLoadingInfo(false);
         }
@@ -109,7 +107,7 @@ export default function CommessePage() {
 
     return (
         <Box sx={{ p: 4 }}>
-            <Typography variant="h4" fontWeight="bold" sx={{ mb: 1 }}>Gestione Commesse</Typography>
+            <Typography variant="h4" sx={{ mb: 1 }}>Gestione Commesse</Typography>
             <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                 Visualizza e gestisci tutti i corsi (commesse) creati.
             </Typography>
@@ -140,11 +138,11 @@ export default function CommessePage() {
                 <Typography variant="h6" color="text.secondary">Nessun corso (commessa) trovato. Inizia creando una nuova commessa!</Typography>
             ) : (
                 <Box>
-                    <Typography variant="h5" fontWeight="bold" sx={{ mb: 2 }}>Corsi Esistenti</Typography>
+                    <Typography variant="h5" sx={{ mb: 2 }}>Corsi Esistenti</Typography>
                     {corsi.map((corso) => (
                         <Box key={corso.id} sx={{ mb: 2, p: 2, border: '1px solid #eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Box>
-                                <Typography variant="subtitle1" fontWeight="bold">{corso.nome} (ID: {corso.id})</Typography>
+                                <Typography variant="subtitle1">{corso.nome} (ID: {corso.id})</Typography>
                                 <Typography variant="body2">Cliente: {corso.cliente}</Typography>
                             </Box>
                             <Box>

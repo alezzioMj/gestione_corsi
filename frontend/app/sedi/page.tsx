@@ -32,9 +32,14 @@ export default function SediPage() {
                     const data = await res.json();
                     setSedi(data);
                 }
-            } catch (err: any) {
-                console.error("Errore nel recupero delle sedi:", err);
-                setFetchError(`Impossibile caricare le sedi: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
+            } catch (err) {
+                if (err instanceof Error) {
+                    console.error("Errore nel recupero delle sedi:", err);
+                    setFetchError(`Impossibile caricare le sedi: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
+                } else {
+                    console.error("Errore sconosciuto nel recupero delle sedi:", err);
+                    setFetchError("Errore sconosciuto nel recupero delle sedi.");
+                }
             } finally {
                 setLoading(false);
             }
@@ -54,7 +59,12 @@ export default function SediPage() {
             }
             setSedi(prevSedi => prevSedi.filter(s => s.id !== sedeId));
             alert("Sede eliminata con successo!");
-        } catch (error: any) {
+        } catch (error) {
+            if (!(error instanceof Error)) {
+                console.error("Errore sconosciuto nell'eliminazione della sede:", error);
+                return;
+            }
+            setFetchError(error.message);
             alert(`Errore: ${error.message}`);
             console.error("Errore nell'eliminazione della sede:", error);
         }
@@ -74,8 +84,8 @@ export default function SediPage() {
             </Box>
 
             {fetchError && (
-                <Alert 
-                    severity="error" 
+                <Alert
+                    severity="error"
                     sx={{ mb: 4 }}
                     action={
                         <Button color="inherit" size="small" onClick={() => window.location.reload()}>
@@ -95,9 +105,9 @@ export default function SediPage() {
                 <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
                     {sedi.map((s: Sede) => (
                         <Paper key={s.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                            <SedeCard sede={s} />
+                            <SedeCard onDeleteSede={() => handleDeleteSede(s.id)} onSedeUpdated={() => window.location.reload()} sede={s} />
                             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
-                                
+
                             </Box>
                         </Paper>
                     ))}

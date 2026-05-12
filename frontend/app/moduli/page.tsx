@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
     Box,
     Typography,
@@ -11,7 +11,6 @@ import {
     Alert,
 } from "@mui/material";
 import ModuloCard from "@/components/Moduli/ModuloCard";
-import AddModuloModal from "@/components/Moduli/AddModuloModal"; // Assumendo esista un modal per aggiungere moduli
 import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 
@@ -28,9 +27,7 @@ export default function ModuliPage() {
     const [fetchError, setFetchError] = useState<string | null>(null);
     const router = useRouter();
 
-    const fetchModuli = async () => {
-        setLoading(true);
-        setFetchError(null);
+    const fetchModuli = useCallback(async () => {
         try {
             const res = await fetch(`${API_BASE_URL}/moduli`, { cache: "no-store" });
             if (!res.ok) {
@@ -44,17 +41,17 @@ export default function ModuliPage() {
                 const data = await res.json();
                 setModuli(data);
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             console.error("Errore nel recupero dei moduli:", err);
-            setFetchError(`Impossibile caricare i moduli: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
+            setFetchError(`Impossibile caricare i moduli: ${err instanceof Error ? err.message : 'Errore di rete'}. Assicurati che il backend sia attivo.`);
         } finally {
             setLoading(false);
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchModuli();
-    }, []);
+    }, [fetchModuli]);
 
     const handleDeleteModulo = async (moduloId: number) => {
         if (!window.confirm("Sei sicuro di voler eliminare questo modulo?")) return;
@@ -68,8 +65,8 @@ export default function ModuliPage() {
             }
             setModuli(prevModuli => prevModuli.filter(m => m.id !== moduloId));
             alert("Modulo eliminato con successo!");
-        } catch (error: any) {
-            alert(`Errore: ${error.message}`);
+        } catch (error: unknown) {
+            alert(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
             console.error("Errore nell'eliminazione del modulo:", error);
         } finally {
             router.refresh(); // For Next.js to re-fetch server components
@@ -79,7 +76,7 @@ export default function ModuliPage() {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>Moduli Formativi</Typography>
+                <Typography variant="h4" gutterBottom>Moduli Formativi</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Gestione dei moduli didattici e dei relativi materiali.
                 </Typography>
