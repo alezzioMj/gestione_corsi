@@ -44,11 +44,9 @@ export default function ModuliPage() {
                 const data = await res.json();
                 setModuli(data);
             }
-        } catch (err: unknown) { // Use unknown for catch block errors
+        } catch (err: any) {
             console.error("Errore nel recupero dei moduli:", err);
-            // Safely extract error message
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            setFetchError(`Impossibile caricare i moduli: ${errorMessage}. Assicurati che il backend sia attivo.`);
+            setFetchError(`Impossibile caricare i moduli: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
         } finally {
             setLoading(false);
         }
@@ -70,11 +68,11 @@ export default function ModuliPage() {
             }
             setModuli(prevModuli => prevModuli.filter(m => m.id !== moduloId));
             alert("Modulo eliminato con successo!");
-            router.refresh(); // For Next.js to re-fetch server components, only on success
-        } catch (err: unknown) { // Use unknown for catch block errors
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            alert(`Errore: ${errorMessage}`);
-            console.error("Errore nell'eliminazione del modulo:", err);
+        } catch (error: any) {
+            alert(`Errore: ${error.message}`);
+            console.error("Errore nell'eliminazione del modulo:", error);
+        } finally {
+            router.refresh(); // For Next.js to re-fetch server components
         }
     };
 

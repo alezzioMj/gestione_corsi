@@ -28,10 +28,9 @@ export default function DocentiPage() {
                 const data = await res.json();
                 setDocenti(data);
             }
-        } catch (err: unknown) {
+        } catch (err: any) {
             console.error("Errore nel recupero dei docenti:", err);
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            setFetchError(`Impossibile caricare i docenti: ${errorMessage}. Assicurati che il backend sia attivo.`);
+            setFetchError(`Impossibile caricare i docenti: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
         } finally {
             setLoading(false);
         }
@@ -53,10 +52,9 @@ export default function DocentiPage() {
             }
             setDocenti(prevDocenti => prevDocenti.filter(d => d.codice_fiscale !== codice_fiscale));
             alert("Docente eliminato con successo!");
-        } catch (err: unknown) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            alert(`Errore: ${errorMessage}`);
-            console.error("Errore nell'eliminazione del docente:", err);
+        } catch (error: any) {
+            alert(`Errore: ${error.message}`);
+            console.error("Errore nell'eliminazione del docente:", error);
         }
     };
 
