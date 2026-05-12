@@ -2,7 +2,7 @@ import { prisma } from "../prisma";
 import { sessione, stato_sessione_enum } from "@prisma/client";
 import { generateSlots, findDocente, findAula } from "./availability.service";
 import { createSessioneMany } from "./sessione.service";
-import { Prisma } from "../generated/prisma/browser";
+import { Prisma } from '@prisma/client';
 
 enum LogLevel {
     DEBUG = "debug",
