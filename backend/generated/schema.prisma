@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model aula {
+  id       Int        @id @default(autoincrement())
+  nome     String     @db.VarChar(100)
+  sede_id  Int
+  capienza Int?
+  sede     sede       @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sessione sessione[]
+
+  @@unique([nome, sede_id])
+}
+
+model corso {
+  id                Int             @id @default(autoincrement())
+  cliente           String          @db.VarChar(150)
+  programma_id      Int?
+  n_ore             Int?
+  inizio            DateTime?       @db.Date
+  fine              DateTime?       @db.Date
+  mattina_inizio    DateTime?       @db.Time(6)
+  mattina_fine      DateTime?       @db.Time(6)
+  pomeriggio_inizio DateTime?       @db.Time(6)
+  pomeriggio_fine   DateTime?       @db.Time(6)
+  created_at        DateTime?       @default(now()) @db.Timestamp(6)
+  created_by        String?         @db.VarChar(100)
+  programma         programma?      @relation(fields: [programma_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  corso_docente     corso_docente[]
+  corso_sede        corso_sede[]
+  sessione          sessione[]
+}
+
+model corso_docente {
+  corso_id   Int
+  docente_cf String  @db.VarChar(16)
+  n_ore      Int?
+  corso      corso   @relation(fields: [corso_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  docente    docente @relation(fields: [docente_cf], references: [codice_fiscale], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([corso_id, docente_cf])
+}
+
+model corso_sede {
+  corso_id Int
+  sede_id  Int
+  corso    corso @relation(fields: [corso_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  sede     sede  @relation(fields: [sede_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([corso_id, sede_id])
+}
+
+model docente {
+  codice_fiscale  String            @id @db.VarChar(16)
+  nome            String            @db.VarChar(100)
+  cognome         String            @db.VarChar(100)
+  datanascita     DateTime          @db.Date
+  nazione         String            @db.VarChar(100)
+  regione         String            @db.VarChar(100)
+  provincia       String            @db.VarChar(100)
+  comune          String            @db.VarChar(100)
+  sesso           String            @db.VarChar(20)
+  cellulare       String            @db.VarChar(20)
+  mail            String            @db.VarChar(100)
+  cv              String            @db.VarChar(255)
+  contratto       String            @db.VarChar(100)
+  created_at      DateTime          @default(now()) @db.Timestamp(6)
+  created_by      String?           @db.VarChar(100)
+  corso_docente   corso_docente[]
+  docente_modulo  docente_modulo[]
+  indisponibilita indisponibilita[]
+  sessione        sessione[]
+}
+
+model docente_modulo {
+  docente_cf String  @db.VarChar(16)
+  modulo_id  Int
+  docente    docente @relation(fields: [docente_cf], references: [codice_fiscale], onDelete: Cascade, onUpdate: NoAction)
+  modulo     modulo  @relation(fields: [modulo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([docente_cf, modulo_id])
+}
+
+model indisponibilita {
+  id          Int      @id @default(autoincrement())
+  tipologia   String   @db.VarChar(50)
+  docente_cf  String?  @db.VarChar(16)
+  sede_id     Int?
+  data_inizio DateTime @db.Date
+  data_fine   DateTime @db.Date
+  ora_inizio  DateTime @db.Time(6)
+  ora_fine    DateTime @db.Time(6)
+  causale     String   @db.VarChar(100)
+  descrizione String?
+  created_at  DateTime @default(now()) @db.Timestamp(6)
+  docente     docente? @relation(fields: [docente_cf], references: [codice_fiscale], onDelete: NoAction, onUpdate: NoAction)
+  sede        sede?    @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model materiale {
+  id               Int                @id @default(autoincrement())
+  url              String             @db.VarChar(255)
+  file_name        String             @db.VarChar(255)
+  tipo             String             @db.VarChar(50)
+  descrizione      String?
+  created_at       DateTime           @default(now()) @db.Timestamp(6)
+  created_by       String?            @db.VarChar(100)
+  modulo_materiale modulo_materiale[]
+}
+
+model modulo {
+  id               Int                @id @default(autoincrement())
+  titolo           String             @db.VarChar(150)
+  n_ore            Int
+  competenza       competenza_enum
+  created_at       DateTime           @default(now()) @db.Timestamp(6)
+  created_by       String?            @db.VarChar(100)
+  docente_modulo   docente_modulo[]
+  modulo_materiale modulo_materiale[]
+  programma_modulo programma_modulo[]
+  sessione         sessione[]
+}
+
+model modulo_materiale {
+  modulo_id    Int
+  materiale_id Int
+  materiale    materiale @relation(fields: [materiale_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  modulo       modulo    @relation(fields: [modulo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([modulo_id, materiale_id])
+}
+
+model programma {
+  id               Int                @id @default(autoincrement())
+  titolo           String             @db.VarChar(150)
+  descrizione      String?
+  durata_totale    Int
+  ore_pratiche     Int
+  ore_teoriche     Int
+  ore_trasversali  Int
+  created_at       DateTime           @default(now()) @db.Timestamp(6)
+  created_by       String?            @db.VarChar(100)
+  corso            corso[]
+  programma_modulo programma_modulo[]
+}
+
+model programma_modulo {
+  programma_id Int
+  modulo_id    Int
+  ordine       Int
+  obbligatorio Boolean?  @default(true)
+  modulo       modulo?   @relation(fields: [modulo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  programma    programma @relation(fields: [programma_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@id([programma_id, ordine])
+  @@unique([programma_id, modulo_id])
+}
+
+model sede {
+  id              Int               @id @default(autoincrement())
+  nome            String            @db.VarChar(150)
+  indirizzo       String            @db.VarChar(150)
+  civico          String            @db.VarChar(20)
+  cap             String            @db.Char(5)
+  citta           String            @db.VarChar(100)
+  provincia       String            @db.Char(2)
+  descrizione     String?
+  created_at      DateTime          @default(now()) @db.Timestamp(6)
+  created_by      String?           @db.VarChar(100)
+  aula            aula[]
+  corso_sede      corso_sede[]
+  indisponibilita indisponibilita[]
+  sessione        sessione[]
+}
+
+model sessione {
+  id         Int                  @id @default(autoincrement())
+  corso_id   Int
+  docente_cf String               @db.VarChar(16)
+  modulo_id  Int
+  sede_id    Int
+  aula_id    Int
+  data       DateTime             @db.Date
+  ora_inizio DateTime             @db.Time(6)
+  ora_fine   DateTime             @db.Time(6)
+  stato      stato_sessione_enum? @default(Bozza)
+  priorita   Int
+  note       String?
+  created_at DateTime             @default(now()) @db.Timestamp(6)
+  created_by String?              @db.VarChar(100)
+  aula       aula                 @relation(fields: [aula_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  corso      corso                @relation(fields: [corso_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  docente    docente              @relation(fields: [docente_cf], references: [codice_fiscale], onDelete: NoAction, onUpdate: NoAction)
+  modulo     modulo               @relation(fields: [modulo_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  sede       sede                 @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum competenza_enum {
+  Pratica
+  Teorica
+  Trasversale
+}
+
+enum stato_sessione_enum {
+  Bozza
+  Confermata
+  Annullata
+  Completata
+}
