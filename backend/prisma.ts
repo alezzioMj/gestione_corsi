@@ -4,10 +4,17 @@ import pg from "pg";
 
 const { Pool } = pg;
 
-// pool di connessioni configurato per il cloud
+// Debug: questo aiuterà a vedere nei log di Render se la stringa esiste (oscurata)
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error("ERRORE: DATABASE_URL non trovata nelle variabili d'ambiente!");
+}
+
 const pool = new Pool({ 
-  connectionString: process.env.DATABASE_URL,
-  ssl: true // Fondamentale per Supabase/Render
+  connectionString: connectionString,
+  ssl: {
+    rejectUnauthorized: false // Permette la connessione SSL su Supabase senza certificati locali
+  }
 });
 
 const adapter = new PrismaPg(pool);
