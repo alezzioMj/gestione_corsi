@@ -57,7 +57,6 @@ export default function AddSedeModal({ onSedeAdded } : {onSedeAdded : () => void
             if (res.ok) {
                 onSedeAdded();
                 handleClose();
-                router.refresh(); // Ricarica i dati della pagina (Server Component)
             } else {
                 const errorData = await res.json();
                 alert(`Errore durante la creazione della sede: ${errorData.error || res.statusText}`);
