@@ -4,9 +4,6 @@ import express from "express";
 const getAule = async (req: express.Request, res: express.Response) => {
   try {
     const aule = await prisma.aula.findMany();
-    if (aule.length === 0) {
-      return res.status(404).send("Nessun aula trovata");
-    }
     res.json(aule);
   } catch (error) {
     console.error("Errore nel recupero delle aule:", error);

@@ -8,8 +8,8 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    CircularProgress,
-    Box
+    Box,
+    MenuItem // Added MenuItem
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { API_BASE_URL } from "@/lib/config";
@@ -17,24 +17,28 @@ import { API_BASE_URL } from "@/lib/config";
 interface EditModuloModalProps {
     open: boolean;
     onClose: () => void;
-    modulo: any; 
+    modulo: { id: number; titolo: string; ore: number; competenza: string; descrizione?: string }; // More specific type
     onSaveSuccess: () => void;
 }
+
+const COMPETENZE_ENUM = ["Teorica", "Trasversale", "Pratica"]; // Re-use enum
 
 export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }: EditModuloModalProps) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
-        nome: "",
+        titolo: "", // Changed from nome to titolo
         descrizione: "",
-        ore: 0
+        ore: 0,
+        competenza: "", // Added competenza
     });
 
     useEffect(() => {
         if (modulo) {
             setFormData({
-                nome: modulo.nome || "",
+                titolo: modulo.titolo || "", // Changed from nome to titolo
                 descrizione: modulo.descrizione || "",
-                ore: modulo.ore || 0
+                ore: modulo.ore || 0,
+                competenza: modulo.competenza || "",
             });
         }
     }, [modulo, open]);
@@ -46,7 +50,10 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
             const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    ...formData,
+                    ore: Number(formData.ore), // Ensure ore is sent as a number
+                }),
             });
 
             if (res.ok) {
@@ -69,16 +76,28 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                 <DialogContent dividers>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
                         <TextField 
-                            label="Nome Modulo" fullWidth required 
-                            value={formData.nome} 
-                            onChange={(e) => setFormData({ ...formData, nome: e.target.value })} 
+                            label="Titolo Modulo" fullWidth required 
+                            value={formData.titolo} 
+                            onChange={(e) => setFormData({ ...formData, titolo: e.target.value })} 
                         />
                         <TextField 
                             label="Ore" type="number" fullWidth required 
                             value={formData.ore} 
                             onChange={(e) => setFormData({ ...formData, ore: Number(e.target.value) })} 
                         />
-                        <TextField label="Descrizione" fullWidth multiline rows={4} value={formData.descrizione} onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} />
+                        <TextField
+                            select
+                            label="Livello Competenza"
+                            fullWidth
+                            required
+                            value={formData.competenza}
+                            onChange={(e) => setFormData({ ...formData, competenza: e.target.value })}
+                        >
+                            {COMPETENZE_ENUM.map((option) => (
+                                <MenuItem key={option} value={option}>{option}</MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField label="Descrizione" fullWidth multiline rows={4} value={formData.descrizione || ""} onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} />
                     </Box>
                 </DialogContent>
                 <DialogActions>

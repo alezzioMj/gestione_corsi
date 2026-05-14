@@ -1,40 +1,15 @@
 "use client";
-
 import SedeCard from "@/components/Sedi/SedeCard";
-import { Box, Typography, Container, CircularProgress, Alert, Button, IconButton, Paper } from "@mui/material";
+import { Box, Typography, Container, Alert, Button, Paper } from "@mui/material";
 import { Sede } from "../../validation/types";
-import AddSedeModal from "@/components/Sedi/AddSedeModal";
-import React, { useState, useEffect } from "react";
-import Link from "next/link";
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import AddSedeModal from "@/components/Sedi/AddSedeModal"
 import { API_BASE_URL } from "@/lib/config";
+import DelayedLoading from "@/components/DelayedLoading";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr-config";
 
 export default function SediPage() {
-    const [sedi, setSedi] = useState<Sede[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [fetchError, setFetchError] = useState<string | null>(null);
-
-    // 1. Definisci la funzione di caricamento fuori dall'useEffect
-    const loadSedi = async () => {
-        setLoading(true);
-        try {
-            const res = await fetch(`${API_BASE_URL}/sedi`, { cache: "no-store" });
-            if (res.ok) {
-                const data = await res.json();
-                setSedi(data);
-            }
-        } catch (err) {
-            setFetchError("Errore nel caricamento");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    // 2. Chiamala al primo caricamento
-    useEffect(() => {
-        loadSedi();
-    }, []);
+    const { data: sedi, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/sedi`, fetcher);
 
     const handleDeleteSede = async (sedeId: number) => {
         if (!window.confirm("Sei sicuro di voler eliminare questa sede? Verranno eliminate anche tutte le aule associate.")) return;
@@ -46,14 +21,13 @@ export default function SediPage() {
                 const errorData = await res.json();
                 throw new Error(errorData.message || `Errore durante l'eliminazione della sede: ${res.statusText}`);
             }
-            setSedi(prevSedi => prevSedi.filter(s => s.id !== sedeId));
+            mutate();
             alert("Sede eliminata con successo!");
         } catch (error) {
             if (!(error instanceof Error)) {
                 console.error("Errore sconosciuto nell'eliminazione della sede:", error);
                 return;
             }
-            setFetchError(error.message);
             alert(`Errore: ${error.message}`);
             console.error("Errore nell'eliminazione della sede:", error);
         }
@@ -68,33 +42,33 @@ export default function SediPage() {
                 </Typography>
 
                 <Box sx={{ mb: 4 }}>
-                    <AddSedeModal onSedeAdded={loadSedi}/>
+                    <AddSedeModal onSedeAdded={() => mutate}/>
                 </Box>
             </Box>
 
-            {fetchError && (
+            {error && (
                 <Alert
                     severity="error"
                     sx={{ mb: 4 }}
                     action={
-                        <Button color="inherit" size="small" onClick={() => window.location.reload()}>
+                        <Button color="inherit" size="small" onClick={() => mutate}>
                             Riprova
                         </Button>
                     }
                 >
-                    {fetchError}
+                    {error.message}
                 </Alert>
             )}
 
-            {loading ? (
-                <CircularProgress />
+            {isLoading ? (
+                <DelayedLoading />
             ) : sedi.length === 0 ? (
                 <Typography variant="h6" color="text.secondary">Nessuna sede trovata. Inizia creando una nuova sede!</Typography>
             ) : (
                 <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
                     {sedi.map((s: Sede) => (
                         <Paper key={s.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                            <SedeCard onDeleteSede={() => handleDeleteSede(s.id)} onSedeUpdated={() => window.location.reload()} sede={s} />
+                            <SedeCard onDeleteSede={() => handleDeleteSede(s.id)} onSedeUpdated={() => mutate} sede={s} />
                             <Box sx={{ mt: 2, display: 'flex', justifyContent: 'flex-end', gap: 1 }}>
 
                             </Box>

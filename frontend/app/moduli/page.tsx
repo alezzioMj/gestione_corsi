@@ -1,18 +1,19 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
 import {
     Box,
     Typography,
     Container,
     Button,
     Paper,
-    CircularProgress,
     Alert,
 } from "@mui/material";
 import ModuloCard from "@/components/Moduli/ModuloCard";
-import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
+import DelayedLoading from "@/components/DelayedLoading";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr-config";
+import AddModuloModal from "@/components/Moduli/AddModuloModal";
 
 interface Modulo {
     id: number;
@@ -22,36 +23,7 @@ interface Modulo {
 }
 
 export default function ModuliPage() {
-    const [moduli, setModuli] = useState<Modulo[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [fetchError, setFetchError] = useState<string | null>(null);
-    const router = useRouter();
-
-    const fetchModuli = useCallback(async () => {
-        try {
-            const res = await fetch(`${API_BASE_URL}/moduli`, { cache: "no-store" });
-            if (!res.ok) {
-                if (res.status === 404) {
-                    console.warn("Nessun modulo trovato.");
-                    setModuli([]);
-                } else {
-                    throw new Error(`Errore ${res.status}: ${res.statusText}`);
-                }
-            } else {
-                const data = await res.json();
-                setModuli(data);
-            }
-        } catch (err: unknown) {
-            console.error("Errore nel recupero dei moduli:", err);
-            setFetchError(`Impossibile caricare i moduli: ${err instanceof Error ? err.message : 'Errore di rete'}. Assicurati che il backend sia attivo.`);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchModuli();
-    }, [fetchModuli]);
+    const { data: moduli, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/moduli`, fetcher);
 
     const handleDeleteModulo = async (moduloId: number) => {
         if (!window.confirm("Sei sicuro di voler eliminare questo modulo?")) return;
@@ -63,13 +35,11 @@ export default function ModuliPage() {
                 const errorData = await res.json();
                 throw new Error(errorData.message || `Errore durante l'eliminazione del modulo: ${res.statusText}`);
             }
-            setModuli(prevModuli => prevModuli.filter(m => m.id !== moduloId));
+            mutate();
             alert("Modulo eliminato con successo!");
         } catch (error: unknown) {
             alert(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
             console.error("Errore nell'eliminazione del modulo:", error);
-        } finally {
-            router.refresh(); // For Next.js to re-fetch server components
         }
     };
 
@@ -81,26 +51,24 @@ export default function ModuliPage() {
                     Gestione dei moduli didattici e dei relativi materiali.
                 </Typography>
                 <Box sx={{ mb: 4 }}>
-                    {/* Assumendo che esista un AddModuloModal simile a AddDocenteModal */}
-                    {/* <AddModuloModal onModuloAdded={fetchModuli} /> */}
-                    <Button variant="contained" onClick={() => alert("Implementa AddModuloModal")}>Aggiungi Modulo</Button>
+                    <AddModuloModal onModuloAdded={() => mutate()} />
                 </Box>
             </Box>
-            {fetchError && (
+            {error && (
                 <Alert
                     severity="error"
                     sx={{ mb: 4 }}
                     action={
-                        <Button color="inherit" size="small" onClick={() => window.location.reload()}>
+                        <Button color="inherit" size="small" onClick={() => mutate()}>
                             Riprova
                         </Button>
                     }
                 >
-                    {fetchError}
+                    {error.message}
                 </Alert>
             )}
-            {loading ? (
-                <CircularProgress />
+            {isLoading ? (
+                <DelayedLoading />
             ) : moduli.length === 0 ? (
                 <Typography variant="h6" color="text.secondary">Nessun modulo trovato. Inizia aggiungendo un nuovo modulo!</Typography>
             ) : (
@@ -109,7 +77,7 @@ export default function ModuliPage() {
                         <Paper key={m.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <ModuloCard
                                 modulo={m}
-                                onModuloUpdated={fetchModuli}
+                                onModuloUpdated={() => mutate()}
                                 onDeleteModulo={handleDeleteModulo}
                             />
                         </Paper>

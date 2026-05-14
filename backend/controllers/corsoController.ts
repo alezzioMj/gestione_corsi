@@ -5,9 +5,6 @@ import express from "express";
 const getCorsi = async (req: express.Request, res: express.Response) => {
   try {
     const corsi = await prisma.corso.findMany();
-    if (corsi.length === 0) {
-      return res.status(404).send("Nessun corso trovato");
-    }
     res.json(corsi);
   } catch (error) {
     console.error("Errore nel recupero dei corsi:", error);
@@ -143,7 +140,7 @@ const getDocenti = async (req: express.Request, res: express.Response) => {
     })
 
     if (docenti.length === 0) {
-      return res.status(404).send("Nessun docente trovato per questo corso");
+      return res.send("Nessun docente trovato per questo corso");
     }
     res.json(docenti)
 

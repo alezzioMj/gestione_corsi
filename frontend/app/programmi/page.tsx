@@ -1,51 +1,24 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
 import {
     Box,
     Typography,
     Container,
     Button,
     Paper,
-    CircularProgress,
     Alert,
 } from "@mui/material";
 import ProgrammaCard from "@/components/Programmi/ProgrammaCard"; // Assumendo esista un modal per aggiungere programmi
-import { ProgrammaConModuli } from "@/components/Stepper/MyStepper"; // Usa il tipo più completo
-import { useRouter } from "next/navigation";
+import { ProgrammaConModuli } from "@/components/Stepper/MyStepper";// Usa il tipo più completo
 import { API_BASE_URL } from "@/lib/config";
+import DelayedLoading from "@/components/DelayedLoading";
+import AddIcon from "@mui/icons-material/Add";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr-config";
+import AddProgrammaModal from "@/components/Programmi/AddProgrammaModal"; // Import the new modal
 
 export default function ProgrammiPage() {
-    const [programmi, setProgrammi] = useState<ProgrammaConModuli[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [fetchError, setFetchError] = useState<string | null>(null);
-    const router = useRouter();
-
-    const fetchProgrammi = useCallback(async () => {
-        try {
-            const res = await fetch(`${API_BASE_URL}/programmi`, { cache: "no-store" });
-            if (!res.ok) {
-                if (res.status === 404) {
-                    console.warn("Nessun programma trovato.");
-                    setProgrammi([]);
-                } else {
-                    throw new Error(`Errore ${res.status}: ${res.statusText}`);
-                }
-            } else {
-                const data = await res.json();
-                setProgrammi(data);
-            }
-        } catch (err: unknown) {
-            console.error("Errore nel recupero dei programmi:", err);
-            setFetchError(`Impossibile caricare i programmi: ${err instanceof Error ? err.message : 'Errore di rete'}. Assicurati che il backend sia attivo.`);
-        } finally {
-            setLoading(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        fetchProgrammi();
-    }, [fetchProgrammi]);
+    const { data: programmi, isLoading, error, mutate } = useSWR(`${API_BASE_URL}/programmi`, fetcher);
 
     const handleDeleteProgramma = async (programmaId: number) => {
         if (!window.confirm("Sei sicuro di voler eliminare questo programma?")) return;
@@ -57,36 +30,38 @@ export default function ProgrammiPage() {
                 const errorData = await res.json();
                 throw new Error(errorData.message || `Errore durante l'eliminazione del programma: ${res.statusText}`);
             }
-            setProgrammi(prevProgrammi => prevProgrammi.filter(p => p.id !== programmaId));
+            mutate();
             alert("Programma eliminato con successo!");
         } catch (error: unknown) {
             alert(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
             console.error("Errore nell'eliminazione del programma:", error);
-        } finally {
-            router.refresh(); // For Next.js to re-fetch server components
         }
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 4 }}>
+        <Container maxWidth="xl" >
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start', // Allinea tutto a sinistra
+                gap: 2,
+                mb: 4
+            }}>
                 <Typography variant="h4" gutterBottom>Programmi Formativi</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Gestione dei programmi didattici e dei moduli associati.
                 </Typography>
-                <Box sx={{ mb: 4 }}>
-                    {/* Assumendo che esista un AddProgrammaModal simile a AddDocenteModal */}
-                    {/* <AddProgrammaModal onProgrammaAdded={fetchProgrammi} /> */}
-                    <Button variant="contained" onClick={() => alert("Implementa AddProgrammaModal")}>Aggiungi Programma</Button>
+                <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-end' }}>
+                    <AddProgrammaModal onProgrammaAdded={() => mutate()} /> {/* Use the new modal */}
                 </Box>
             </Box>
-            {fetchError && (
-                <Alert severity="error" sx={{ mb: 4 }} action={<Button color="inherit" size="small" onClick={() => window.location.reload()}>Riprova</Button>}>
-                    {fetchError}
+            {error && (
+                <Alert severity="error" sx={{ mb: 4 }} action={<Button color="inherit" size="small" onClick={() => mutate}>Riprova</Button>}>
+                    {error.message}
                 </Alert>
             )}
-            {loading ? (
-                <CircularProgress />
+            {isLoading ? (
+                <DelayedLoading />
             ) : programmi.length === 0 ? (
                 <Typography variant="h6" color="text.secondary">Nessun programma trovato. Inizia aggiungendo un nuovo programma!</Typography>
             ) : (
@@ -95,7 +70,7 @@ export default function ProgrammiPage() {
                         <Paper key={p.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <ProgrammaCard
                                 programma={p}
-                                onProgrammaUpdated={fetchProgrammi}
+                                onProgrammaUpdated={() => mutate}
                                 onDeleteProgramma={handleDeleteProgramma}
                             />
                         </Paper>

@@ -8,6 +8,8 @@ import { useRouter } from "next/navigation";
 import * as countries from "i18n-iso-countries";
 import itLocale from "i18n-iso-countries/langs/it.json";
 import { API_BASE_URL } from "@/lib/config";
+import useSWR, { mutate } from "swr";
+import { fetcher } from "@/lib/swr-config";
 
 type Provincia = {
     codice: string;
@@ -24,11 +26,12 @@ type Comune = {
 // Registra la localizzazione italiana per la libreria delle nazioni
 countries.registerLocale(itLocale);
 
-export default function AddDocenteModal() {
-    const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
-    const router = useRouter();
+// Definiamo il prop che arriva dalla pagina principale
+interface AddDocenteModalProps {
+    onDocenteAdded?: () => void;
+}
 
+export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps) {
     const [formData, setFormData] = useState({
         nome: "",
         cognome: "",
@@ -45,73 +48,59 @@ export default function AddDocenteModal() {
         contratto: "",
     });
 
-    // Stati per le opzioni geografiche
-    const [regioni, setRegioni] = useState<string[]>([]);
-    const [province, setProvince] = useState<Provincia[]>([]);
-    const [comuni, setComuni] = useState<Comune[]>([]);
+    const isItaly = formData.nazione === "Italia" || formData.nazione === "IT";
+    const [open, setOpen] = useState(false);
+    const [submitting, setSubmitting] = useState(false); // Stato per il salvataggio
 
-    // Ottieni la lista delle nazioni in italiano dalla libreria
+    const { data: regioni = [] } = useSWR(
+        open && isItaly ? "https://comuni-ita.nicolorebaioli.dev/regioni" : null,
+        fetcher
+    );
+    const { data: province = [] } = useSWR(
+        open && isItaly && formData.regione ? `https://comuni-ita.nicolorebaioli.dev/province?regione=${formData.regione}` : null,
+        fetcher
+    );
+    const { data: comuni = [] } = useSWR(
+        open && isItaly && formData.provincia ? `https://comuni-ita.nicolorebaioli.dev/comuni?provincia=${formData.provincia}` : null,
+        fetcher
+    );
+
     const countryOptions = Object.entries(countries.getNames("it")).map(([code, name]) => ({
         code,
         name
     }));
 
     useEffect(() => {
-        const isItaly = formData.nazione === "Italia" || formData.nazione === "IT";
-        if (open && isItaly && regioni.length === 0) {
-            fetch("https://comuni-ita.nicolorebaioli.dev/regioni")
-                .then(res => res.json())
-                .then(data => setRegioni(data))
-                .catch(err => console.error("Errore caricamento regioni", err));
+        if (!isItaly) {
+            // Reset dei valori nel form se nazione non è Italia
+            setFormData(prev => ({
+                ...prev,
+                regione: "",
+                provincia: "",
+                comune: ""
+            }));
         }
+    }, [isItaly]);
 
-        if (!isItaly && open) {
-            if (regioni.length) setRegioni([]);
-            if (province.length) setProvince([]);
-            if (comuni.length) setComuni([]);
-        }
-    }, [open, formData.nazione]);
+    // Reset provincia se cambia regione
+    useEffect(() => {
+        setFormData(prev => ({ ...prev, provincia: "", comune: "" }));
+    }, [formData.regione]);
 
-    // Caricamento Province quando cambia la regione
-    const loadProvince = (regioneNome: string | null) => {
-        if (!regioneNome) {
-            setProvince([]);
-            return;
-        }
-        fetch(`https://comuni-ita.nicolorebaioli.dev/province?regione=${encodeURIComponent(regioneNome)}`)
-            .then(res => res.json())
-            .then(data => {
-                console.log(data)
-                setProvince(data);
-            })
-            .catch(err => console.error("Errore caricamento province", err));
-    };
-
-    // Caricamento Comuni quando cambia la provincia
-    const loadComuni = (provinciaNome: string | null) => {
-        if (!provinciaNome) {
-            setComuni([]);
-            return;
-        }
-        fetch(`https://comuni-ita.nicolorebaioli.dev/comuni?provincia=${encodeURIComponent(provinciaNome)}`)
-            .then(res => res.json())
-            .then(data => {
-                setComuni(data);
-            })
-            .catch(err => console.error("Errore caricamento comuni", err));
-    };
+    // Reset comune se cambia provincia
+    useEffect(() => {
+        setFormData(prev => ({ ...prev, comune: "" }));
+    }, [formData.provincia]);
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
         setOpen(false);
         setFormData({ nome: "", cognome: "", codice_fiscale: "", datanascita: "", nazione: "Italia", regione: "", provincia: "", comune: "", sesso: "", cellulare: "", mail: "", cv: "", contratto: "" });
-        setProvince([]);
-        setComuni([]);
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        setLoading(true);
+        setSubmitting(true);
 
         try {
             const res = await fetch(`${API_BASE_URL}/docenti`, {
@@ -121,8 +110,8 @@ export default function AddDocenteModal() {
             });
 
             if (res.ok) {
+                if (onDocenteAdded) onDocenteAdded(); // <--- TRICK: rinfresca la lista SWR della pagina
                 handleClose();
-                router.refresh();
             } else {
                 const errorData = await res.json();
                 alert(`Errore: ${errorData.error || res.statusText}`);
@@ -131,7 +120,7 @@ export default function AddDocenteModal() {
             console.error("Errore:", error);
             alert("Errore di rete.");
         } finally {
-            setLoading(false);
+            setSubmitting(false);
         }
     };
 
@@ -160,7 +149,7 @@ export default function AddDocenteModal() {
     return (
         <>
             <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen}>
-                Nuovo Docente
+                AGGIUNGI Nuovo Docente
             </Button>
 
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
@@ -217,49 +206,37 @@ export default function AddDocenteModal() {
                                     onChange={(_, val) => {
                                         const newNazione = val?.name || "";
                                         setFormData({ ...formData, nazione: newNazione, regione: "", provincia: "", comune: "" });
-                                        setProvince([]);
-                                        setComuni([]);
                                     }}
                                 />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Autocomplete
+                                    disabled={!isItaly}
                                     options={regioni}
-                                    value={regioni.find(r => r === formData.regione) || null}
-                                    getOptionLabel={(opt) => opt || ""}
-                                    isOptionEqualToValue={(option, value) => option === value}
-                                    renderInput={(params) => <TextField {...params} label="Regione" required={formData.nazione === "Italia"} />}
-                                    disabled={formData.nazione !== "Italia"}
-                                    onChange={(_, val) => {
-                                        const newRegione = val || "";
-                                        setFormData({ ...formData, regione: newRegione, provincia: "", comune: "" });
-                                        setComuni([]); // Pulisco i comuni perché cambio regione
-                                        loadProvince(newRegione);
-                                    }}
+                                    value={formData.regione || null}
+                                    onChange={(_, val) => setFormData({ ...formData, regione: val || "", provincia: "", comune: "" })}
+                                    renderInput={(params) => <TextField {...params} label="Regione" required={isItaly} />}
                                 />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Autocomplete
+                                    disabled={!isItaly || !formData.regione}
                                     options={province}
-                                    value={province.find(p => p.nome === formData.provincia) || null}
-                                    getOptionLabel={(opt) => opt.nome || ""}
+                                    getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.nome || "")}
+                                    value={province.find((p: Provincia) => p.nome === formData.provincia) || null}
                                     isOptionEqualToValue={(option, value) => option.nome === value.nome}
-                                    renderInput={(params) => <TextField {...params} label="Provincia" required={formData.nazione === "Italia"} />}
-                                    disabled={!formData.regione || formData.nazione !== "Italia"}
-                                    onChange={(_, val) => {
-                                        setFormData({ ...formData, provincia: val?.nome || "", comune: "" });
-                                        loadComuni(val?.nome ?? "");
-                                    }}
+                                    onChange={(_, val: Provincia | null) => setFormData({ ...formData, provincia: val?.nome || "", comune: "" })}
+                                    renderInput={(params) => <TextField {...params} label="Provincia" required={isItaly} />}
                                 />
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Autocomplete
                                     options={comuni}
-                                    value={comuni.find(c => c.nome === formData.comune) || null}
-                                    getOptionLabel={(opt) => opt.nome || ""}
+                                    value={comuni.find((c: Comune) => c.nome === formData.comune) || null}
+                                    getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.nome || "")}
                                     isOptionEqualToValue={(option, value) => option.nome === value.nome}
-                                    renderInput={(params) => <TextField {...params} label="Comune" required={formData.nazione === "Italia"} />}
-                                    disabled={!formData.provincia || formData.nazione !== "Italia"}
+                                    renderInput={(params) => <TextField {...params} label="Comune" required={isItaly} />}
+                                    disabled={!formData.provincia || !isItaly}
                                     onChange={(_, val) => setFormData({ ...formData, comune: val?.nome || "" })}
                                 />
                             </Grid>
@@ -288,8 +265,8 @@ export default function AddDocenteModal() {
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleClose}>Annulla</Button>
-                        <Button type="submit" variant="contained" disabled={loading}>
-                            {loading ? <CircularProgress size={24} /> : "Salva"}
+                        <Button type="submit" variant="contained" disabled={submitting}>
+                            {submitting ? <CircularProgress size={24} /> : "Salva"}
                         </Button>
                     </DialogActions>
                 </form>

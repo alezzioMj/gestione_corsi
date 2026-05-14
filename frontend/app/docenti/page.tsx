@@ -1,44 +1,16 @@
 "use client";
 
 import DocenteCard from "@/components/Docenti/DocenteCard";
-import { Box, Typography, Container, CircularProgress, Alert, Button, Paper } from "@mui/material";
+import { Box, Typography, Container, Alert, Button, Paper } from "@mui/material";
 import { Docente } from "../../validation/types";
 import AddDocenteModal from "@/components/Docenti/AddDocenteModal";
-import React, { useState, useEffect } from "react";
 import { API_BASE_URL } from "@/lib/config";
+import DelayedLoading from "@/components/DelayedLoading";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr-config";
 
 export default function DocentiPage() {
-    const [docenti, setDocenti] = useState<Docente[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [fetchError, setFetchError] = useState<string | null>(null);
-
-    const fetchDocenti = async () => {
-        setLoading(true);
-        setFetchError(null);
-        try {
-            const res = await fetch(`${API_BASE_URL}/docenti`, { cache: "no-store" });
-            if (!res.ok) {
-                if (res.status === 404) {
-                    console.warn("Nessun docente trovato.");
-                    setDocenti([]);
-                } else {
-                    throw new Error(`Errore ${res.status}: ${res.statusText}`);
-                }
-            } else {
-                const data = await res.json();
-                setDocenti(data);
-            }
-        } catch (err: any) {
-            console.error("Errore nel recupero dei docenti:", err);
-            setFetchError(`Impossibile caricare i docenti: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    useEffect(() => {
-        fetchDocenti();
-    }, []);
+    const { data: docenti, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/docenti`, fetcher);
 
     const handleDeleteDocente = async (codice_fiscale: string) => {
         if (!window.confirm("Sei sicuro di voler eliminare questo docente?")) return;
@@ -50,9 +22,13 @@ export default function DocentiPage() {
                 const errorData = await res.json();
                 throw new Error(errorData.message || `Errore durante l'eliminazione del docente: ${res.statusText}`);
             }
-            setDocenti(prevDocenti => prevDocenti.filter(d => d.codice_fiscale !== codice_fiscale));
+            mutate();
             alert("Docente eliminato con successo!");
-        } catch (error: any) {
+        } catch (error : unknown) {
+            if(!(error instanceof Error)){
+                console.error("Errore sconosciuto nell'eliminazione del docente:", error);
+                return;
+            }
             alert(`Errore: ${error.message}`);
             console.error("Errore nell'eliminazione del docente:", error);
         }
@@ -61,7 +37,7 @@ export default function DocentiPage() {
     return (
         <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{ mb: 4 }}>
-                <Typography variant="h4" fontWeight="bold" gutterBottom>Docenti</Typography>
+                <Typography variant="h4" gutterBottom>Docenti</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Gestione dell'anagrafica docenti e dei relativi contatti.
                 </Typography>
@@ -71,31 +47,33 @@ export default function DocentiPage() {
                 </Box>
             </Box>
 
-            {fetchError && (
+            {error && (
                 <Alert 
                     severity="error" 
                     sx={{ mb: 4 }}
                     action={
-                        <Button color="inherit" size="small" onClick={() => window.location.reload()}>
+                        <Button color="inherit" size="small" onClick={mutate}>
                             Riprova
                         </Button>
                     }
                 >
-                    {fetchError}
+                    {error.message}
                 </Alert>
             )}
 
-            {loading ? (
-                <CircularProgress />
-            ) : docenti.length === 0 ? (
-                <Typography variant="h6" color="text.secondary">Nessun docente trovato. Inizia aggiungendo un nuovo docente!</Typography>
+            {isLoading ? (
+                <DelayedLoading />
+            ) : !docenti || docenti.length === 0 ? (
+                <Typography variant="h6" color="text.secondary">
+                    Nessun docente trovato. Inizia aggiungendo un nuovo docente!
+                </Typography>
             ) : (
                 <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
                     {docenti.map((d: Docente) => (
                         <Paper key={d.codice_fiscale} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <DocenteCard
                                 docente={d}
-                                onDocenteUpdated={fetchDocenti} // Passa la funzione di refresh
+                                onDocenteUpdated={() => mutate()} // Passa la funzione di refresh
                                 onDeleteDocente={handleDeleteDocente} // Passa la funzione di eliminazione
                             />
                         </Paper>

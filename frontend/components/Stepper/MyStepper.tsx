@@ -47,6 +47,10 @@ export interface ModuloRelation {
 
 export interface ProgrammaConModuli extends Programma {
     programma_modulo: ModuloRelation[];
+    durata_totale: number; // Added
+    ore_pratiche: number;  // Added
+    ore_teoriche: number;  // Added
+    ore_trasversali: number; // Added
 }
 
 export interface DocenteConModuli extends Docente {

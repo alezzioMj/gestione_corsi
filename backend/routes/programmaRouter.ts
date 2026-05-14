@@ -11,7 +11,8 @@ import {
   getModuliByProgramma,
   addModuloToProgramma,
   addModuloToProgrammaBulk,
-  deleteModuloFromProgramma
+  deleteModuloFromProgramma,
+  createCompleteProgramma
 } from '../controllers/programmaController';
 
 programmaRouter.get('/', getProgrammi);
@@ -25,5 +26,7 @@ programmaRouter.get("/:id/moduli", getModuliByProgramma);
 programmaRouter.post("/:id/moduli", addModuloToProgramma);
 programmaRouter.post("/:id/moduli_bulk", addModuloToProgrammaBulk);
 programmaRouter.delete("/:id/moduli/:modulo_id", deleteModuloFromProgramma);
+
+programmaRouter.post("/completo", createCompleteProgramma);
 
 export default programmaRouter;

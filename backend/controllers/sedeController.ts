@@ -5,9 +5,6 @@ import express from "express";
 const getSedi = async (req: express.Request, res: express.Response) => {
   try {
     const sedi = await prisma.sede.findMany();
-    if (sedi.length === 0) {
-      return res.status(404).send("Nessuna sede trovata");
-    }
     res.json(sedi);
   } catch (error) {
     console.error("Errore nel recupero delle sedi:", error);

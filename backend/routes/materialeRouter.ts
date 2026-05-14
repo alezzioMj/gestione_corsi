@@ -10,30 +10,17 @@ import {
     createMateriale,
     updateMateriale,
     deleteMateriale,
-    getModuliByMateriale,
-    uploadFileAndCreateMateriale // Assicurati che sia esportata dal controller
+    getModuliByMateriale// Assicurati che sia esportata dal controller
 } from '../controllers/materialeController';
-
-// Configurazione di Multer per l'archiviazione dei file
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Specifica la cartella dove salvare i file. Assicurati che esista!
-    cb(null, 'uploads/'); 
-  },
-  filename: (req, file, cb) => {
-    // Genera un nome file unico per evitare sovrascritture
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-
+const storage = multer.memoryStorage(); // <--- IMPORTANTE: salva in RAM temporaneamente
 const upload = multer({ storage: storage });
 
+// La tua rotta userà questo middleware
 materialeRouter.get('/', getMateriali);
 materialeRouter.get('/:id', getMateriale);
 materialeRouter.post('/', validate(materialeSchema), createMateriale);
 materialeRouter.put('/:id', validate(materialeSchema), updateMateriale);
-materialeRouter.delete('/:id', deleteMateriale);
-materialeRouter.post('/upload', upload.single('file'), uploadFileAndCreateMateriale); // Nuova rotta per l'upload con Multer
+materialeRouter.delete('/:id', deleteMateriale); // Nuova rotta per l'upload con Multer
 
 //MODULI
 materialeRouter.get('/:id/moduli', getModuliByMateriale);

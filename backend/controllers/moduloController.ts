@@ -1,15 +1,24 @@
+import 'dotenv/config';
 import { prisma } from "../prisma";
 import express from "express";
 import { getDocenti } from "./docenteController";
 import { getMateriale } from "./materialeController";
+import { createClient } from '@supabase/supabase-js'
+const supabaseUrl = process.env.SUPABASE_URL!
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY! // Usa la Service Role per bypassare le RLS nel backend
+export const supabase = createClient(supabaseUrl, supabaseKey)
+
 
 
 const getModuli = async (req: express.Request, res: express.Response) => {
   try {
-    const moduli = await prisma.modulo.findMany();
-    if (moduli.length === 0) {
-      return res.status(404).send("Nessun modulo trovato");
-    }
+    const moduli = await prisma.modulo.findMany({
+      select: { // Ensure these fields are selected for the frontend calculation
+        id: true,
+        titolo: true,
+        n_ore: true,
+        competenza: true,
+      }});
     res.json(moduli);
   } catch (error) {
     console.error("Errore nel recupero dei moduli:", error);
@@ -46,7 +55,7 @@ const createModulo = async (req: express.Request, res: express.Response) => {
     const modulo = await prisma.modulo.create({
       data: {
         titolo,
-        n_ore,
+        n_ore: Number(n_ore), // Ensure it's a number
         competenza
       }
     });
@@ -221,6 +230,63 @@ const getProgrammiByModulo = async (req: express.Request, res: express.Response)
   }
 }
 
+const uploadCompleteModulo = async (req: express.Request, res: express.Response) => {
+  try {
+    if (!req.file) return res.status(400).send("File mancante.");
+
+    const { titolo, n_ore, descrizioneMateriale, competenza } = req.body;
+    const file = req.file;
+
+    // Upload su Supabase
+    const fileName = `${Date.now()}-${file.originalname}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('Materiali')
+      .upload(fileName, file.buffer, { contentType: file.mimetype });
+
+    if (uploadError) throw uploadError;
+
+    const { data: publicUrlData } = supabase.storage
+      .from('Materiali')
+      .getPublicUrl(fileName);
+
+    // Transazione Prisma Crea Modulo, Materiale e Associazione
+    const result = await prisma.$transaction(async (tx) => {
+      const nuovoModulo = await tx.modulo.create({
+        data: {
+          titolo,
+          n_ore: Number(n_ore),
+          competenza: competenza
+        }
+      });
+
+      // Crea il materiale
+      const nuovoMateriale = await tx.materiale.create({
+        data: {
+          url: publicUrlData.publicUrl,
+          file_name: file.originalname,
+          tipo: file.mimetype,
+          descrizione: descrizioneMateriale || `Materiale per ${titolo}`
+        }
+      });
+
+      // Crea il collegamento nella tabella pivot
+      await tx.modulo_materiale.create({
+        data: {
+          modulo_id: nuovoModulo.id,
+          materiale_id: nuovoMateriale.id
+        }
+      });
+
+      return nuovoModulo;
+    });
+
+    res.status(201).json(result);
+  } catch (err: any) {
+    console.error(err);
+    res.status(500).json({ error: "Errore durante la creazione completa" });
+  }
+};
+
 export {
   getModuli,
   getModulo,
@@ -231,5 +297,6 @@ export {
   getMaterialeByModulo,
   addMaterialeToModulo,
   deleteMaterialeFromModulo,
-  getProgrammiByModulo
+  getProgrammiByModulo,
+  uploadCompleteModulo
 };

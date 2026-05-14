@@ -10,8 +10,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 type Modulo = {
     id: number;
     titolo: string;
-    ore: number; // Modificato da n_ore a ore per coerenza con EditModuloModal
-    descrizione: string; // Aggiunto per coerenza con EditModuloModal
+    ore: number;
+    competenza: "Teorica" | "Trasversale" | "Pratica"; // Added for consistency
+    descrizione?: string;
 }
 
 interface ModuloCardProps {

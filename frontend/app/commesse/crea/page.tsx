@@ -19,8 +19,12 @@ async function getProgrammi() {
 }
 
 async function getDocenti() {
-    const res = await fetch(`${API_BASE_URL}/docenti`, { cache: "no-store" });
+    const url = `${API_BASE_URL}/docenti`;
+    console.log("DEBUG: Tentativo di fetch su:", url); // Questo apparirà nel terminale di VS Code, non nel browser!
+    
+    const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
+        console.error(`DEBUG: Fallito con status ${res.status} per URL: ${url}`);
         throw new Error(`Errore durante il recupero dei docenti: ${res.statusText}`);
     }
     return res.json();

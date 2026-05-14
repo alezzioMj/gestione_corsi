@@ -2,12 +2,15 @@
 
 import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, CircularProgress, Alert } from "@mui/material"; // Added Alert
 import Link from "next/link";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react"; // Removed useEffect
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit'; // Import EditIcon
 import { API_BASE_URL } from "@/lib/config";
+import useSWR from 'swr';
+import DelayedLoading from "@/components/DelayedLoading";
+import { fetcher } from "@/lib/swr-config"; // Import fetcher from swr-config.ts
 
 // Definizione di un tipo base per un corso
 interface Corso {
@@ -34,26 +37,12 @@ async function getCorsi(): Promise<Corso[]> {
 }
 
 export default function CommessePage() {
-    const [corsi, setCorsi] = useState<Corso[]>([]);
+    
+    const { data: corsi, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/corsi`, fetcher);
     const [openInfoModal, setOpenInfoModal] = useState(false);
     const [selectedCorsoInfo, setSelectedCorsoInfo] = useState<Corso | null>(null);
     const [isLoadingInfo, setIsLoadingInfo] = useState(false);
     const [infoError, setInfoError] = useState<string | null>(null);
-    const [loading, setLoading] = useState(true);
-    const [fetchError, setFetchError] = useState<string | null>(null); // New state for general fetch errors
-
-    useEffect(() => {
-        getCorsi()
-            .then(data => {
-                setCorsi(data);
-                setLoading(false);
-            })
-            .catch(err => {
-                console.error("Errore nel recupero dei corsi:", err);
-                setFetchError(`Impossibile caricare i corsi: ${err.message || 'Errore di rete'}. Assicurati che il backend sia attivo.`);
-                setLoading(false);
-            });
-    }, []);
 
     // Logica per l'eliminazione di un corso
     const handleDelete = async (corsoId: number) => {
@@ -69,7 +58,7 @@ export default function CommessePage() {
                 throw new Error(errorData.message || `Errore durante l'eliminazione del corso: ${res.statusText}`);
             }
             // Aggiorna lo stato per rimuovere il corso eliminato
-            setCorsi(prevCorsi => prevCorsi.filter(corso => corso.id !== corsoId));
+            mutate();
             alert("Corso eliminato con successo!");
         } catch (error: unknown) {
             alert(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
@@ -82,8 +71,8 @@ export default function CommessePage() {
         setIsLoadingInfo(true);
         setInfoError(null);
         setOpenInfoModal(true); // Apri il modal immediatamente per mostrare lo stato di caricamento
-        try {
-            const res = await fetch(`${API_BASE_URL}/corsi/${corsoId}`, { cache: "no-store" }); // Fetch dettagli specifici
+        try { // Use the imported fetcher for consistency
+            const res = await fetcher(`/corsi/${corsoId}`); // Fetch dettagli specifici
             if (!res.ok) {
                 throw new Error(`Errore durante il recupero delle informazioni del corso: ${res.status} - ${res.statusText}`);
             }
@@ -116,28 +105,28 @@ export default function CommessePage() {
                 </Button>
             </Link>
 
-            {fetchError && ( // Display general fetch error
+            {error && ( // Display SWR error
                 <Alert 
                     severity="error" 
                     sx={{ mb: 4 }}
                     action={
-                        <Button color="inherit" size="small" onClick={() => window.location.reload()}>
+                        <Button color="inherit" size="small" onClick={() => mutate()}>
                             Riprova
                         </Button>
                     }
                 >
-                    {fetchError}
+                    {error.message || "Errore nel caricamento dei corsi."}
                 </Alert>
             )}
 
-            {loading ? (
-                <CircularProgress />
-            ) : corsi.length === 0 ? (
+            {isLoading ? ( // Use SWR's isLoading
+                <DelayedLoading />
+            ) : corsi && corsi.length === 0 ? ( // Check if corsi is defined and empty
                 <Typography variant="h6" color="text.secondary">Nessun corso (commessa) trovato. Inizia creando una nuova commessa!</Typography>
             ) : (
                 <Box>
                     <Typography variant="h5" sx={{ mb: 2 }}>Corsi Esistenti</Typography>
-                    {corsi.map((corso) => (
+                    {corsi && corsi.map((corso : Corso) => ( // Ensure corsi is defined before mapping
                         <Box key={corso.id} sx={{ mb: 2, p: 2, border: '1px solid #eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                             <Box>
                                 <Typography variant="subtitle1">{corso.nome} (ID: {corso.id})</Typography>

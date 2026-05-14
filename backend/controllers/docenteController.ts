@@ -13,9 +13,6 @@ const getDocenti = async (req: express.Request, res: express.Response) => {
         }
       }
     });
-    if (docenti.length === 0) {
-      return res.status(404).send("Nessun docente trovato");
-    }
     res.json(docenti);
   } catch (error) {
     console.error("Errore nel recupero dei docenti:", error);
