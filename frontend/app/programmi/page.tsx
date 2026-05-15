@@ -8,14 +8,14 @@ import {
     Paper,
     Alert,
 } from "@mui/material";
-import ProgrammaCard from "@/components/Programmi/ProgrammaCard"; // Assumendo esista un modal per aggiungere programmi
-import { ProgrammaConModuli } from "@/components/Stepper/MyStepper";// Usa il tipo più completo
+import ProgrammaCard from "@/components/Programmi/ProgrammaCard";
+import { ProgrammaConModuli } from "@/components/Stepper/MyStepper";
 import { API_BASE_URL } from "@/lib/config";
 import DelayedLoading from "@/components/DelayedLoading";
 import AddIcon from "@mui/icons-material/Add";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
-import AddProgrammaModal from "@/components/Programmi/AddProgrammaModal"; // Import the new modal
+import AddProgrammaModal from "@/components/Programmi/AddProgrammaModal";
 
 export default function ProgrammiPage() {
     const { data: programmi, isLoading, error, mutate } = useSWR(`${API_BASE_URL}/programmi`, fetcher);
@@ -43,7 +43,7 @@ export default function ProgrammiPage() {
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
-                alignItems: 'flex-start', // Allinea tutto a sinistra
+                alignItems: 'flex-start',
                 gap: 2,
                 mb: 4
             }}>
@@ -52,7 +52,7 @@ export default function ProgrammiPage() {
                     Gestione dei programmi didattici e dei moduli associati.
                 </Typography>
                 <Box sx={{ mb: 4, display: 'flex', justifyContent: 'flex-end' }}>
-                    <AddProgrammaModal onProgrammaAdded={() => mutate()} /> {/* Use the new modal */}
+                    <AddProgrammaModal onProgrammaAdded={() => mutate()} />
                 </Box>
             </Box>
             {error && (
@@ -70,7 +70,7 @@ export default function ProgrammiPage() {
                         <Paper key={p.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <ProgrammaCard
                                 programma={p}
-                                onProgrammaUpdated={() => mutate}
+                                onProgrammaUpdated={() => mutate()}
                                 onDeleteProgramma={handleDeleteProgramma}
                             />
                         </Paper>

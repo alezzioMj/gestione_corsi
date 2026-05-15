@@ -6,7 +6,7 @@ import SessionsTable from "@/components/Stepper/SessionTable";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Corso, SessioneWithRelations } from "../validation/types";
 import { API_BASE_URL } from "@/lib/config";
-import { SelectChangeEvent } from '@mui/material/Select'; // Import SelectChangeEvent
+import { SelectChangeEvent } from '@mui/material/Select';
 
 interface SessionFilterAndDisplayProps {
     initialSessions: SessioneWithRelations[];
@@ -17,7 +17,7 @@ interface SessionFilterAndDisplayProps {
 // Definizione locale dell'interfaccia Corso per includere 'nome' se non è già in validation/types
 interface Corso {
     id: number;
-    nome: string; // Aggiunto 'nome' per risolvere l'errore TypeScript
+    nome: string;
     cliente: string;
     programma_id?: number;
     n_ore?: number;
@@ -43,43 +43,37 @@ export default function SessionFilterAndDisplay({ initialSessions, allCorsi, ini
     const router = useRouter();
     const searchParams = useSearchParams();
     
-    // Inizializza gli stati direttamente dalle props.
-    // Quando initialCorsoIdFilter o initialSessions cambiano, React re-renderizza il componente,
-    // e questi useState initializers vengono eseguiti di nuovo, aggiornando efficacemente lo stato.
     const initialCorsoId = initialCorsoIdFilter ? (Array.isArray(initialCorsoIdFilter) ? initialCorsoIdFilter[0] : initialCorsoIdFilter) : "";
     const [selectedCorsoId, setSelectedCorsoId] = useState<string>(initialCorsoId);
-    const [sessions, setSessions] = useState<SessioneWithRelations[]>(initialSessions); // Questo stato verrà aggiornato da fetchSessions
+    const [sessions, setSessions] = useState<SessioneWithRelations[]>(initialSessions);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // useCallback per la funzione di fetching per prevenire ricreazioni non necessarie
     const fetchSessions = useCallback(async (corsoId: string) => {
         setLoading(true);
         setError(null);
         try {
             const fetchedSessions = await getSessionsFiltered(corsoId);
             setSessions(fetchedSessions);
-        } catch (err: unknown) { // Utilizza 'unknown' per il tipo di errore nel catch
+        } catch (err: unknown) {
             console.error("Errore nel recupero delle sessioni filtrate:", err);
             setError(`Impossibile caricare le sessioni: ${err instanceof Error ? err.message : String(err)}.`);
-            setSessions([]); // Pulisci le sessioni in caso di errore
+            setSessions([]);
         } finally {
             setLoading(false);
         }
     }, []);
 
-    // Effect per recuperare le sessioni quando selectedCorsoId cambia
     useEffect(() => {
         fetchSessions(selectedCorsoId);
     }, [selectedCorsoId, fetchSessions]);
 
-    const handleCorsoChange = async (event: SelectChangeEvent<string>) => { // Tipo corretto per l'evento
+    const handleCorsoChange = async (event: SelectChangeEvent<string>) => {
         const newCorsoId = event.target.value as string;
         setSelectedCorsoId(newCorsoId);
         setLoading(true);
         setError(null);
 
-        // Update URL search params
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         if (newCorsoId) {
             current.set("corsoId", newCorsoId);
@@ -88,8 +82,6 @@ export default function SessionFilterAndDisplay({ initialSessions, allCorsi, ini
         }
         const queryString = current.toString();
         router.push(`/sessioni${queryString ? `?${queryString}` : ""}`);
-        // L'useEffect sopra gestirà il fetching delle sessioni quando selectedCorsoId cambia
-        // Nessun fetching diretto qui per evitare race conditions e mantenere la logica centralizzata.
     };
 
     const handleRemoveFilter = () => {
@@ -100,9 +92,7 @@ export default function SessionFilterAndDisplay({ initialSessions, allCorsi, ini
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         current.delete("corsoId");
         const query = current.toString();
-        router.push(`/sessioni${query ? `?${query}` : ""}`); // Aggiorna l'URL
-        // Impostare selectedCorsoId su "" attiverà l'useEffect per recuperare tutte le sessioni
-        // e aggiornare lo stato 'sessions'.
+        router.push(`/sessioni${query ? `?${query}` : ""}`);
     };
 
     return (

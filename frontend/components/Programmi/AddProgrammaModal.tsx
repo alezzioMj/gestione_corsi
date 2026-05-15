@@ -54,7 +54,6 @@ interface AddProgrammaModalProps {
     onProgrammaAdded?: () => void;
 }
 
-// Componente per il singolo elemento della lista trascinabile (riutilizzato da AddModuloProgrammaModal)
 function SortableModuloItem({ modulo, onRemove }: { modulo: ModuloForProgram; onRemove: () => void }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: modulo.id,
@@ -86,7 +85,7 @@ function SortableModuloItem({ modulo, onRemove }: { modulo: ModuloForProgram; on
             <Box {...attributes} {...listeners} sx={{ cursor: "grab", display: "flex", alignItems: "center" }}>
                 <DragIndicatorIcon color="action" />
             </Box>
-            <Typography sx={{ flexGrow: 1, fontSize: '0.875rem' }}>{modulo.titolo} ({modulo.n_ore}h - {modulo.competenza})</Typography>
+            <Typography sx={{ flexGrow: 1, fontSize: '0.875rem' }}>{modulo.titolo} ({modulo.ore}h - {modulo.competenza})</Typography>
             <IconButton size="small" onClick={onRemove} color="error">
                 <DeleteIcon fontSize="small" />
             </IconButton>
@@ -99,14 +98,13 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
     const [submitting, setSubmitting] = useState(false);
     const [formData, setFormData] = useState({
         titolo: "",
-        descrizione: "", // Added description field
+        descrizione: "",
     });
     const [selectedModuleIds, setSelectedModuleIds] = useState<number[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
 
-    // Fetch all available modules
     const { data: allModuli = [], isLoading: isLoadingModuli, error: errorModuli } = useSWR<ModuloForProgram[]>(
-        open ? "/moduli" : null, // Fetch only when modal is open
+        open ? "/moduli" : null,
         fetcher
     );
 
@@ -166,10 +164,10 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
         let trasversali = 0;
 
         orderedSelectedModuli.forEach(m => {
-            total += m.n_ore;
-            if (m.competenza === "Pratica") pratiche += m.n_ore;
-            else if (m.competenza === "Teorica") teoriche += m.n_ore;
-            else if (m.competenza === "Trasversale") trasversali += m.n_ore;
+            total += m.ore;
+            if (m.competenza === "Pratica") pratiche += m.ore;
+            else if (m.competenza === "Teorica") teoriche += m.ore;
+            else if (m.competenza === "Trasversale") trasversali += m.ore;
         });
 
         return {
@@ -191,7 +189,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
                 ore_pratiche,
                 ore_teoriche,
                 ore_trasversali,
-                moduli_ids: selectedModuleIds, // Send ordered module IDs
+                moduli_ids: selectedModuleIds,
             };
 
             const res = await fetch(`${API_BASE_URL}/programmi/completo`, {
@@ -218,7 +216,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
     const filteredAvailableModuli = useMemo(() =>
         allModuli.filter(m =>
             m.titolo.toLowerCase().includes(searchQuery.toLowerCase()) &&
-            !selectedModuleIds.includes(m.id) // Exclude already selected modules
+            !selectedModuleIds.includes(m.id)
         ),
         [allModuli, searchQuery, selectedModuleIds]
     );

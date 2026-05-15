@@ -11,14 +11,14 @@ type Modulo = {
     id: number;
     titolo: string;
     ore: number;
-    competenza: "Teorica" | "Trasversale" | "Pratica"; // Added for consistency
+    competenza: "Teorica" | "Trasversale" | "Pratica";
     descrizione?: string;
 }
 
 interface ModuloCardProps {
     modulo: Modulo;
-    onModuloUpdated: () => void; // Callback per aggiornare la lista nel componente padre
-    onDeleteModulo: (moduloId: number) => void; // Callback per eliminare il modulo
+    onModuloUpdated: () => void;
+    onDeleteModulo: (moduloId: number) => void;
 }
 
 export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: ModuloCardProps) {

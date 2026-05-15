@@ -21,10 +21,10 @@ import StepReview from "./StepReview";
 import { Docente, Programma } from "../../validation/types"
 
 export const formSchema = z.object({
-    nomeCorso: z.string().min(1, "Il nome del corso è obbligatorio"), // Nuovo campo
+    nomeCorso: z.string().min(1, "Il nome del corso è obbligatorio"),
     cliente: z.string().min(1, "Il cliente è obbligatorio"),
     sedi: z.array(z.string()).min(1, "Seleziona almeno una sede"),
-    programmi: z.number().min(1, "Seleziona un programma"), // Ora è l'ID del programma
+    programmi: z.number().min(1, "Seleziona un programma"),
     docenti: z.array(z.string()).min(1, "Seleziona almeno un docente"),
     oreTotali: z.coerce.number().min(1, "Le ore totali devono essere maggiori di 0"),
     dataInizio: z.string().min(1, "Data inizio obbligatoria"),
@@ -47,10 +47,10 @@ export interface ModuloRelation {
 
 export interface ProgrammaConModuli extends Programma {
     programma_modulo: ModuloRelation[];
-    durata_totale: number; // Added
-    ore_pratiche: number;  // Added
-    ore_teoriche: number;  // Added
-    ore_trasversali: number; // Added
+    durata_totale: number;
+    ore_pratiche: number;
+    ore_teoriche: number;
+    ore_trasversali: number;
 }
 
 export interface DocenteConModuli extends Docente {
@@ -100,9 +100,9 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         resolver: zodResolver(dynamicSchema),
         defaultValues: {
             cliente: "",
-            nomeCorso: "", // Nuovo campo
+            nomeCorso: "",
             sedi: [],
-            programmi: 0, // Default a 0 per l'ID del programma
+            programmi: 0,
             docenti: [],
             oreTotali: 0,
             dataInizio: "",
@@ -121,9 +121,8 @@ export default function MyStepper({ sedi, programmi, docenti }: {
     const router = useRouter();
 
     const onSubmit = async (data: FormType) => {
-        // Estrai solo i dati per la creazione del corso principale
         const corsoData = {
-            nome: data.nomeCorso, // Includi il nome del corso
+            nome: data.nomeCorso,
             cliente: data.cliente,
             programma_id: data.programmi,
             n_ore: data.oreTotali,
@@ -140,7 +139,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         setSubmitError(null);
         try {
             // 1. Crea il corso principale
-            const corsoResponse = await fetch("/api/corsi", {
+            const corsoResponse = await fetch("/corsi", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(corsoData),
@@ -153,10 +152,10 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             const corsoId = newCorso.id;
 
             // 2. Associa i docenti al corso
-            const docentiResponse = await fetch(`/api/corsi/${corsoId}/docenti`, {
+            const docentiResponse = await fetch(`/corsi/${corsoId}/docenti`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ docenti_cfs: data.docenti }), // Invia un array di CF
+                body: JSON.stringify({ docenti_cfs: data.docenti }),
             });
             if (!docentiResponse.ok) {
                 const errorData = await docentiResponse.json();
@@ -164,10 +163,10 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             }
 
             // 3. Associa le sedi al corso
-            const sediResponse = await fetch(`/api/corsi/${corsoId}/sedi`, {
+            const sediResponse = await fetch(`/corsi/${corsoId}/sedi`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ sedi_names: data.sedi }), // Invia un array di nomi sede
+                body: JSON.stringify({ sedi_names: data.sedi }),
             });
             if (!sediResponse.ok) {
                 const errorData = await sediResponse.json();
@@ -176,10 +175,10 @@ export default function MyStepper({ sedi, programmi, docenti }: {
 
             // 4. Genera le sessioni per il corso
             // Questa chiamata attiverà il scheduler.service.ts nel backend
-            const generateSessionsResponse = await fetch(`/api/corsi/${corsoId}/schedule`, {
+            const generateSessionsResponse = await fetch(`corsi/${corsoId}/schedule`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ giorniDisponibili: data.giorni }), // Usa la chiave corretta per il backend
+                body: JSON.stringify({ giorniDisponibili: data.giorni }),
             });
             if (!generateSessionsResponse.ok) {
                 const errorData = await generateSessionsResponse.json();
@@ -202,7 +201,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         let fieldsToValidate: (keyof FormType)[] = [];
 
         if (activeStep === 0) {
-            fieldsToValidate = ["nomeCorso", "cliente", "sedi", "programmi", "oreTotali", "dataInizio", "dataFine"]; // Aggiungi nomeCorso
+            fieldsToValidate = ["nomeCorso", "cliente", "sedi", "programmi", "oreTotali", "dataInizio", "dataFine"];
         } else if (activeStep === 1) {
             fieldsToValidate = ["docenti", "giorni", "mattina_inizio", "mattina_fine", "pomeriggio_inizio", "pomeriggio_fine"];
         }
@@ -213,7 +212,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
 
         if (isStepValid) {
             if (activeStep === steps.length - 1) {
-                methods.handleSubmit(onSubmit)(); // Triggera la sottomissione finale
+                methods.handleSubmit(onSubmit)();
             } else {
                 setActiveStep((prev) => prev + 1);
             }
