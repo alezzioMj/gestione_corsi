@@ -139,7 +139,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         setSubmitError(null);
         try {
             // 1. Crea il corso principale
-            const corsoResponse = await fetch("/corsi", {
+            const corsoResponse = await fetch("/api/corsi", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(corsoData),
@@ -152,7 +152,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             const corsoId = newCorso.id;
 
             // 2. Associa i docenti al corso
-            const docentiResponse = await fetch(`/corsi/${corsoId}/docenti`, {
+            const docentiResponse = await fetch(`/api/corsi/${corsoId}/docenti`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ docenti_cfs: data.docenti }),
@@ -163,7 +163,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             }
 
             // 3. Associa le sedi al corso
-            const sediResponse = await fetch(`/corsi/${corsoId}/sedi`, {
+            const sediResponse = await fetch(`/api/corsi/${corsoId}/sedi`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sedi_names: data.sedi }),
@@ -175,7 +175,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
 
             // 4. Genera le sessioni per il corso
             // Questa chiamata attiverà il scheduler.service.ts nel backend
-            const generateSessionsResponse = await fetch(`corsi/${corsoId}/schedule`, {
+            const generateSessionsResponse = await fetch(`/api/corsi/${corsoId}/schedule`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ giorniDisponibili: data.giorni }),
