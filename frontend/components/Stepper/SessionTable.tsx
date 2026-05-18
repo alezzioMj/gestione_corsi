@@ -19,27 +19,49 @@ import {
 import { SessioneWithRelations } from "../../validation/types";
 import { API_BASE_URL } from "@/lib/config";
 
-export default function SessionsTable({ sessions, }: { sessions: SessioneWithRelations[]; }) {
+interface SessionsTableProps {
+  sessions: SessioneWithRelations[];
+}
+
+export default function SessionsTable({ sessions }: SessionsTableProps) {
   const [edit, setEdit] = React.useState(false);
   const [localSessions, setLocalSessions] = React.useState<SessioneWithRelations[]>(sessions);
+  const [modifiedIds, setModifiedIds] = React.useState<Set<number>>(new Set());
 
-  // Risincronizza i dati locali se le props cambiano (es. per filtraggio)
+  // Sincronizza lo stato locale se cambiano le props (es. filtri applicati nel server)
   React.useEffect(() => {
     setLocalSessions(sessions);
-    setEdit(false); // Toglie modalità edit
+    setEdit(false);
+    setModifiedIds(new Set());
   }, [sessions]);
 
   const handleFieldChange = (id: number, field: keyof SessioneWithRelations, value: any) => {
     setLocalSessions(prev =>
       prev.map(s => (s.id === id ? { ...s, [field]: value } : s))
     );
+    setModifiedIds(prev => {
+      const next = new Set(prev);
+      next.add(id);
+      return next;
+    });
+  };
+
+  const handleCancel = () => {
+    setLocalSessions(sessions);
+    setEdit(false);
+    setModifiedIds(new Set());
   };
 
   const handleSave = async () => {
+    if (modifiedIds.size === 0) {
+      setEdit(false);
+      return;
+    }
+
     try {
-      // In un'app reale potresti voler salvare solo le righe modificate
-      // Qui facciamo una chiamata per ogni sessione per semplicità
-      const updatePromises = localSessions.map(async (s) => {
+      const sessionsToUpdate = localSessions.filter(s => modifiedIds.has(s.id));
+
+      const updatePromises = sessionsToUpdate.map(async (s) => {
         const res = await fetch(`${API_BASE_URL}/sessioni/${s.id}`, {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
@@ -59,13 +81,17 @@ export default function SessionsTable({ sessions, }: { sessions: SessioneWithRel
         });
 
         if (!res.ok) {
-          throw new Error("Errore durante il salvataggio delle sessioni.");
+          throw new Error(`Errore nel salvataggio della sessione ${s.id}`);
         }
       });
 
       await Promise.all(updatePromises);
       alert("Modifiche salvate con successo!");
       setEdit(false);
+      setModifiedIds(new Set());
+      
+      // NOTA: Se al termine del salvataggio i campi tornano N/D, controlla 
+      // la risposta dell'endpoint PUT del backend: deve includere le relazioni!
     } catch (err) {
       console.error("Errore durante il salvataggio:", err);
       alert("Errore durante il salvataggio delle sessioni.");
@@ -75,15 +101,22 @@ export default function SessionsTable({ sessions, }: { sessions: SessioneWithRel
   return (
     <Box>
       <Box sx={{ mb: 2, display: 'flex', gap: 2 }}>
-        <Button variant="contained" onClick={() => setEdit(!edit)}>
+        <Button 
+          variant="contained" 
+          color={edit ? "error" : "primary"} 
+          onClick={edit ? handleCancel : () => setEdit(true)}
+        >
           {edit ? "Annulla" : "Modifica Sessioni"}
         </Button>
-        {edit && <Button variant="contained" color="success" onClick={handleSave}>Salva Tutto</Button>}
+        {edit && (
+          <Button variant="contained" color="success" onClick={handleSave}>
+            Salva Tutto ({modifiedIds.size})
+          </Button>
+        )}
       </Box>
       
       <TableContainer component={Paper}>
         <Table>
-
           {/* HEADER */}
           <TableHead>
             <TableRow>
@@ -104,23 +137,23 @@ export default function SessionsTable({ sessions, }: { sessions: SessioneWithRel
           <TableBody>
             {localSessions.map((s) => (
               <TableRow key={s.id} hover>
-                <TableCell>{ s.id }</TableCell>
-                <TableCell>{s.corso?.cliente}</TableCell>
+                <TableCell>{s.id}</TableCell>
+                <TableCell>{s.corso?.cliente ?? "N/D"}</TableCell>
                 <TableCell>
-                  {s.docente?.nome} {s.docente?.cognome}
+                  {s.docente ? `${s.docente.nome} ${s.docente.cognome}` : "N/D"}
                 </TableCell>
-                <TableCell>{s.sede?.nome}</TableCell>
-                <TableCell>{s.aula?.nome}</TableCell>
+                <TableCell>{s.sede?.nome ?? "N/D"}</TableCell>
+                <TableCell>{s.aula?.nome ?? "N/D"}</TableCell>
                 <TableCell>
                   {edit ? (
                     <TextField
                       type="date"
                       size="small"
-                      value={s.data.toString().split('T')[0]}
+                      value={s.data ? s.data.toString().split('T')[0] : ""}
                       onChange={(e) => handleFieldChange(s.id, "data", e.target.value)}
                     />
                   ) : (
-                    new Date(s.data).toLocaleDateString("it-IT")
+                    s.data ? new Date(s.data).toLocaleDateString("it-IT") : "-"
                   )}
                 </TableCell>
                 <TableCell>
@@ -128,26 +161,26 @@ export default function SessionsTable({ sessions, }: { sessions: SessioneWithRel
                     <Box sx={{ display: 'flex', gap: 1 }}>
                       <TextField
                         size="small"
-                        value={s.ora_inizio}
+                        value={s.ora_inizio ?? ""}
                         onChange={(e) => handleFieldChange(s.id, "ora_inizio", e.target.value)}
                         sx={{ width: 80 }}
                       />
                       <TextField
                         size="small"
-                        value={s.ora_fine}
+                        value={s.ora_fine ?? ""}
                         onChange={(e) => handleFieldChange(s.id, "ora_fine", e.target.value)}
                         sx={{ width: 80 }}
                       />
                     </Box>
                   ) : (
-                    `${s.ora_inizio} - ${s.ora_fine}`
+                    `${s.ora_inizio ?? "-"} - ${s.ora_fine ?? "-"}`
                   )}
                 </TableCell>
                 <TableCell>
                   {edit ? (
                     <Select
                       size="small"
-                      value={s.stato}
+                      value={s.stato ?? "Bozza"}
                       onChange={(e) => handleFieldChange(s.id, "stato", e.target.value)}
                     >
                       <MenuItem value="Bozza">Bozza</MenuItem>
@@ -155,7 +188,7 @@ export default function SessionsTable({ sessions, }: { sessions: SessioneWithRel
                     </Select>
                   ) : (
                     <Chip
-                      label={s.stato}
+                      label={s.stato ?? "Bozza"}
                       color={s.stato === "Bozza" ? "warning" : "success"}
                       size="small"
                     />
@@ -172,11 +205,10 @@ export default function SessionsTable({ sessions, }: { sessions: SessioneWithRel
                     s.note ?? "-"
                   )}
                 </TableCell>
-                <TableCell>{s.modulo.titolo}</TableCell>
+                <TableCell>{s.modulo_id ?? "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
-
         </Table>
       </TableContainer>
     </Box>

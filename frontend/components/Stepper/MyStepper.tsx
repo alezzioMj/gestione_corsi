@@ -1,6 +1,5 @@
 "use client";
 
-import SessionsTable from "./SessionTable";
 import {
     Stepper,
     Step,
@@ -138,7 +137,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         setIsSubmitting(true);
         setSubmitError(null);
         try {
-            // 1. Crea il corso principale
+            //  Crea il corso principale
             const corsoResponse = await fetch("/api/corsi", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -151,7 +150,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             const newCorso = await corsoResponse.json();
             const corsoId = newCorso.id;
 
-            // 2. Associa i docenti al corso
+            //  Associa i docenti al corso
             const docentiResponse = await fetch(`/api/corsi/${corsoId}/docenti`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -162,7 +161,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                 throw new Error(errorData.message || "Errore durante l'associazione dei docenti");
             }
 
-            // 3. Associa le sedi al corso
+            // Associa le sedi al corso
             const sediResponse = await fetch(`/api/corsi/${corsoId}/sedi`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -173,7 +172,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                 throw new Error(errorData.message || "Errore durante l'associazione delle sedi");
             }
 
-            // 4. Genera le sessioni per il corso
+            // Genera le sessioni per il corso
             // Questa chiamata attiverà il scheduler.service.ts nel backend
             const generateSessionsResponse = await fetch(`/api/corsi/${corsoId}/schedule`, {
                 method: "POST",

@@ -3,6 +3,7 @@ import "./globals.css";
 import Providers from "./providers";
 import SideDrawer from "@/components/Navigation/Drawer";
 import { Box, Toolbar } from "@mui/material";
+import ThemeRegistry from "@/components/ThemeRegistry";
 const drawerWidth = 240;
 
 export const metadata: Metadata = {
@@ -18,27 +19,27 @@ export default function RootLayout({
   return (
     <html lang="it">
       <body>
-        <Providers>
-          <Box sx={{ display: "flex" }}>
-            
-            {/* SIDEBAR */}
-            <SideDrawer />
+          <Providers>
+            <Box sx={{ display: "flex" }}>
 
-            {/* CONTENUTO PRINCIPALE */}
-            <Box
-              component="main"
-              sx={{
-                flexGrow: 1,
-                p: 3,
-                width: `calc(100% - ${drawerWidth}px)`,
-              }}
-            >
-              <Toolbar />
-              {children}
+              {/* SIDEBAR */}
+              <SideDrawer />
+
+              {/* CONTENUTO PRINCIPALE */}
+              <Box
+                component="main"
+                sx={{
+                  flexGrow: 1,
+                  p: 3,
+                  width: `calc(100% - ${drawerWidth}px)`,
+                }}
+              >
+                <Toolbar />
+                {children}
+              </Box>
+
             </Box>
-
-          </Box>
-        </Providers>
+          </Providers>
       </body>
     </html>
   );

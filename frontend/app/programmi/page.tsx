@@ -12,7 +12,6 @@ import ProgrammaCard from "@/components/Programmi/ProgrammaCard";
 import { ProgrammaConModuli } from "@/components/Stepper/MyStepper";
 import { API_BASE_URL } from "@/lib/config";
 import DelayedLoading from "@/components/DelayedLoading";
-import AddIcon from "@mui/icons-material/Add";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import AddProgrammaModal from "@/components/Programmi/AddProgrammaModal";
@@ -39,7 +38,7 @@ export default function ProgrammiPage() {
     };
 
     return (
-        <Container maxWidth="xl" >
+        <Container maxWidth="lg" sx={{ py: 4 }}>
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',

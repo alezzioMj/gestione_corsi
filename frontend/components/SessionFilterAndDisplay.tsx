@@ -4,7 +4,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { Box, Typography, Button, Select, MenuItem, FormControl, InputLabel, CircularProgress, Alert } from "@mui/material";
 import SessionsTable from "@/components/Stepper/SessionTable";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Corso, SessioneWithRelations } from "../validation/types";
+import { SessioneWithRelations } from "../validation/types";
 import { API_BASE_URL } from "@/lib/config";
 import { SelectChangeEvent } from '@mui/material/Select';
 
@@ -14,7 +14,6 @@ interface SessionFilterAndDisplayProps {
     initialCorsoIdFilter?: string | string[];
 }
 
-// Definizione locale dell'interfaccia Corso per includere 'nome' se non è già in validation/types
 interface Corso {
     id: number;
     nome: string;
@@ -27,7 +26,10 @@ interface Corso {
 }
 
 async function getSessionsFiltered(corsoId?: string): Promise<SessioneWithRelations[]> {
-    const url = corsoId ? `${API_BASE_URL}/sessioni?corsoId=${corsoId}` : `${API_BASE_URL}/sessioni`;
+    const url = corsoId 
+        ? `${API_BASE_URL}/sessioni/full?corsoId=${corsoId}` 
+        : `${API_BASE_URL}/sessioni/full`; 
+        
     const res = await fetch(url, { cache: "no-store" });
     if (!res.ok) {
         if (res.status === 404) {
@@ -49,11 +51,13 @@ export default function SessionFilterAndDisplay({ initialSessions, allCorsi, ini
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
+    // Funzione di fetch corretta
     const fetchSessions = useCallback(async (corsoId: string) => {
         setLoading(true);
         setError(null);
         try {
             const fetchedSessions = await getSessionsFiltered(corsoId);
+            // ✅ CORRETTO: Adesso stampi i dati estratti, non la funzione stessa
             setSessions(fetchedSessions);
         } catch (err: unknown) {
             console.error("Errore nel recupero delle sessioni filtrate:", err);
@@ -64,16 +68,18 @@ export default function SessionFilterAndDisplay({ initialSessions, allCorsi, ini
         }
     }, []);
 
+    // Sincronizza lo stato locale se i searchParams nell'URL cambiano (es. navigazione avanti/indietro)
+    const urlCorsoId = searchParams.get("corsoId") || "";
     useEffect(() => {
-        fetchSessions(selectedCorsoId);
-    }, [selectedCorsoId, fetchSessions]);
+        setSelectedCorsoId(urlCorsoId);
+        fetchSessions(urlCorsoId);
+    }, [urlCorsoId, fetchSessions]);
 
-    const handleCorsoChange = async (event: SelectChangeEvent<string>) => {
+    const handleCorsoChange = (event: SelectChangeEvent<string>) => {
         const newCorsoId = event.target.value as string;
         setSelectedCorsoId(newCorsoId);
-        setLoading(true);
-        setError(null);
 
+        // Aggiorna la URL query string in Next.js
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         if (newCorsoId) {
             current.set("corsoId", newCorsoId);
@@ -86,9 +92,6 @@ export default function SessionFilterAndDisplay({ initialSessions, allCorsi, ini
 
     const handleRemoveFilter = () => {
         setSelectedCorsoId("");
-        setLoading(true);
-        setError(null);
-
         const current = new URLSearchParams(Array.from(searchParams.entries()));
         current.delete("corsoId");
         const query = current.toString();
@@ -122,7 +125,7 @@ export default function SessionFilterAndDisplay({ initialSessions, allCorsi, ini
                     </MenuItem>
                     {allCorsi.map((corso) => (
                         <MenuItem key={corso.id} value={corso.id.toString()}>
-                            {corso.nome} (ID: {corso.id})
+                            {corso.nome || corso.cliente} (ID: {corso.id})
                         </MenuItem>
                     ))}
                 </Select>

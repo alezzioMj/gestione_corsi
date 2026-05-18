@@ -7,8 +7,9 @@ type Sessione = {
     data: string;
 }
 
+// 1. In Next.js 15, searchParams deve essere una Promise
 interface CorsoSessionsPageProps {
-    searchParams: { [key: string]: string | string[] | undefined };
+    searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
 async function getAllCorsi() {
@@ -24,7 +25,9 @@ async function getAllSessions() {
 }
 
 export default async function SessionsPage({ searchParams }: CorsoSessionsPageProps) {
-    const corsoIdFilter = searchParams.corsoId;
+    // 2. Risolviamo la Promise prima di accedere alle sue proprietà
+    const resolvedSearchParams = await searchParams;
+    const corsoIdFilter = resolvedSearchParams.corsoId;
 
     // Carichiamo dati iniziali lato server per velocità
     const [allSessions, allCorsi] = await Promise.all([
@@ -32,7 +35,7 @@ export default async function SessionsPage({ searchParams }: CorsoSessionsPagePr
         getAllCorsi()
     ]);
 
-    // Filtraggio iniziale (opzionale, il componente client lo gestirà comunque)
+    // Filtraggio iniziale basato sul parametro appena scompattato
     const initialSessions = corsoIdFilter 
         ? allSessions.filter((s: Sessione) => s.corso_id === Number(corsoIdFilter))
         : allSessions;
