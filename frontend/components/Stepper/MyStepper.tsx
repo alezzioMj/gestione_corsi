@@ -138,7 +138,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         setSubmitError(null);
         try {
             //  Crea il corso principale
-            const corsoResponse = await fetch("/api/corsi", {
+            const corsoResponse = await fetch("/corsi", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(corsoData),
@@ -151,7 +151,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             const corsoId = newCorso.id;
 
             //  Associa i docenti al corso
-            const docentiResponse = await fetch(`/api/corsi/${corsoId}/docenti`, {
+            const docentiResponse = await fetch(`/corsi/${corsoId}/docenti`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ docenti_cfs: data.docenti }),
@@ -162,7 +162,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             }
 
             // Associa le sedi al corso
-            const sediResponse = await fetch(`/api/corsi/${corsoId}/sedi`, {
+            const sediResponse = await fetch(`/corsi/${corsoId}/sedi`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sedi_names: data.sedi }),
