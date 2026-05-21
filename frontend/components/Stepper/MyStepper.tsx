@@ -18,6 +18,8 @@ import StepDocenti from "./StepDocenti";
 import { useRouter } from "next/navigation";
 import StepReview from "./StepReview";
 import { Docente, Programma } from "../../validation/types"
+import { API_BASE_URL } from "@/lib/config";
+
 
 export const formSchema = z.object({
     nomeCorso: z.string().min(1, "Il nome del corso è obbligatorio"),
@@ -138,7 +140,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         setSubmitError(null);
         try {
             //  Crea il corso principale
-            const corsoResponse = await fetch("/corsi", {
+            const corsoResponse = await fetch(`${API_BASE_URL}/corsi`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(corsoData),
@@ -151,7 +153,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             const corsoId = newCorso.id;
 
             //  Associa i docenti al corso
-            const docentiResponse = await fetch(`/corsi/${corsoId}/docenti`, {
+            const docentiResponse = await fetch(`${API_BASE_URL}/corsi/${corsoId}/docenti`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ docenti_cfs: data.docenti }),
@@ -162,7 +164,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             }
 
             // Associa le sedi al corso
-            const sediResponse = await fetch(`/corsi/${corsoId}/sedi`, {
+            const sediResponse = await fetch(`${API_BASE_URL}/corsi/${corsoId}/sedi`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sedi_names: data.sedi }),
@@ -174,7 +176,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
 
             // Genera le sessioni per il corso
             // Questa chiamata attiverà il scheduler.service.ts nel backend
-            const generateSessionsResponse = await fetch(`/api/corsi/${corsoId}/schedule`, {
+            const generateSessionsResponse = await fetch(`${API_BASE_URL}/corsi/${corsoId}/schedule`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ giorniDisponibili: data.giorni }),
