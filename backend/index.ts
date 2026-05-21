@@ -3,7 +3,13 @@ import cors from "cors";
 
 const app = express();
 
-app.use(cors()); // Abilita CORS per tutte le origini
+const corsOptions = {
+  origin: 'https://gestione-corsi-ronr.vercel.app/', // o '*' se vuoi testare, ma meglio specifico
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+  optionsSuccessStatus: 204 // Cruciale per alcuni browser vecchi o specifici
+};
+
+app.use(cors(corsOptions)); // Abilita CORS per tutte le origini
 app.use(express.json());
 
 import docenteRoutes from "./routes/docenteRouter"; 
