@@ -4,7 +4,7 @@ import cors from "cors";
 const app = express();
 
 const corsOptions = {
-  origin: 'https://gestione-corsi-ronr.vercel.app/', // o '*' se vuoi testare, ma meglio specifico
+  origin: 'https://gestione-corsi-ronr.vercel.app', // o '*' se vuoi testare, ma meglio specifico
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
   optionsSuccessStatus: 204 // Cruciale per alcuni browser vecchi o specifici
 };
