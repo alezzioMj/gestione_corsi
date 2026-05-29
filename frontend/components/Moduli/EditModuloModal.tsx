@@ -8,8 +8,10 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    Box,
-    MenuItem // Added MenuItem
+    Box, 
+    MenuItem,
+    Snackbar,
+    Alert
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { API_BASE_URL } from "@/lib/config";
@@ -30,6 +32,11 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
         descrizione: "",
         ore: 0,
         competenza: "", // Added competenza
+    });
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+        open: false,
+        message: '',
+        severity: 'success',
     });
 
     useEffect(() => {
@@ -60,16 +67,25 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                 onSaveSuccess();
                 onClose();
             } else {
-                alert("Errore durante l'aggiornamento del modulo");
+                const errorData = await res.json();
+                const msg = errorData.issues 
+                    ? errorData.issues.map((i: any) => i.message).join(", ")
+                    : (errorData.error || errorData.message || "Errore durante l'aggiornamento");
+                throw new Error(msg);
             }
-        } catch (err) {
-            alert("Errore di rete");
+        } catch (err: unknown) {
+            setSnackbar({ 
+                open: true, 
+                message: err instanceof Error ? err.message : "Errore di rete", 
+                severity: "error" 
+            });
         } finally {
             setLoading(false);
         }
     };
 
     return (
+        <>
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
             <form onSubmit={handleSubmit}>
                 <DialogTitle>Modifica Modulo</DialogTitle>
@@ -108,5 +124,16 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                 </DialogActions>
             </form>
         </Dialog>
+
+        <Snackbar 
+            open={snackbar.open} 
+            autoHideDuration={6000} 
+            onClose={() => setSnackbar({ ...snackbar, open: false })}
+        >
+            <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled">
+                {snackbar.message}
+            </Alert>
+        </Snackbar>
+        </>
     );
 }

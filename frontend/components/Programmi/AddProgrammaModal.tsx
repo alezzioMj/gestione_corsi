@@ -164,10 +164,10 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
         let trasversali = 0;
 
         orderedSelectedModuli.forEach(m => {
-            total += m.ore;
-            if (m.competenza === "Pratica") pratiche += m.ore;
-            else if (m.competenza === "Teorica") teoriche += m.ore;
-            else if (m.competenza === "Trasversale") trasversali += m.ore;
+            total += m.n_ore;
+            if (m.competenza === "Pratica") pratiche += m.n_ore;
+            else if (m.competenza === "Teorica") teoriche += m.n_ore;
+            else if (m.competenza === "Trasversale") trasversali += m.n_ore;
         });
 
         return {
@@ -248,16 +248,16 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
 
                             <Typography variant="subtitle2" color="primary">Riepilogo Ore</Typography>
                             <Grid container spacing={2}>
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, md: 6 }}>
                                     <TextField label="Durata Totale (ore)" fullWidth value={durata_totale} InputProps={{ readOnly: true }} />
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, md: 6 }}>
                                     <TextField label="Ore Pratiche" fullWidth value={ore_pratiche} InputProps={{ readOnly: true }} />
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, md: 6 }}>
                                     <TextField label="Ore Teoriche" fullWidth value={ore_teoriche} InputProps={{ readOnly: true }} />
                                 </Grid>
-                                <Grid item xs={12} sm={6}>
+                                <Grid size={{ xs: 12, md: 6 }}>
                                     <TextField label="Ore Trasversali" fullWidth value={ore_trasversali} InputProps={{ readOnly: true }} />
                                 </Grid>
                             </Grid>
@@ -266,7 +266,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
 
                             <Grid container spacing={4}>
                                 {/* Colonna Sinistra: Sequenza Ordinabile */}
-                                <Grid item xs={12} md={6}>
+                                <Grid size={{ xs: 12, md: 6 }}>
                                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', mb: 2, color: 'primary.main' }}>
                                         MODULI SELEZIONATI (Trascina per ordinare)
                                     </Typography>
@@ -294,7 +294,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
                                 </Grid>
 
                                 {/* Colonna Destra: Catalogo Selezione */}
-                                <Grid item xs={12} md={6}>
+                                <Grid size={{ xs: 12, md: 6 }}>
                                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
                                         CATALOGO MODULI DISPONIBILI
                                     </Typography>
@@ -314,7 +314,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
                                         <Box sx={{ maxHeight: 400, overflowY: "auto", pr: 1 }}>
                                             <Grid container spacing={0}>
                                                 {filteredAvailableModuli.map((modulo) => (
-                                                    <Grid item xs={12} key={modulo.id}>
+                                                    <Grid size={{ xs: 12, md: 6 }} key={modulo.id}>
                                                         <FormControlLabel
                                                             sx={{ width: '100%', ml: 0 }}
                                                             control={<Checkbox size="small" checked={selectedModuleIds.includes(modulo.id)} onChange={handleToggleModule(modulo.id)} />}

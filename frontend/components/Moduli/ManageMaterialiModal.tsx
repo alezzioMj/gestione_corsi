@@ -4,7 +4,7 @@ import React, { useState, useEffect } from "react";
 import {
     Button, Dialog, DialogTitle, DialogContent, DialogActions,
     List, ListItem, ListItemText, IconButton, Typography,
-    Box, CircularProgress, TextField, Divider
+    Box, CircularProgress, TextField, Divider, Snackbar, Alert
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
@@ -39,6 +39,11 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
     const [materialiAssociati, setMaterialiAssociati] = useState<ModuloMaterialeAssociation[]>([]);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [fileDescription, setFileDescription] = useState<string>(""); // State for file description
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+        open: false,
+        message: '',
+        severity: 'success',
+    });
 
     const fetchData = async () => {
         setLoading(true);
@@ -49,6 +54,9 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                 const data: ModuloMaterialeAssociation[] = await resAssoc.json();
                 setMaterialiAssociati(data);
             } else {
+                const errorData = await resAssoc.json();
+                const msg = errorData.message || `Errore nel recupero materiali: ${resAssoc.statusText}`;
+                setSnackbar({ open: true, message: msg, severity: "error" });
                 setMaterialiAssociati([]);
             }
         } catch (error) {
@@ -74,13 +82,17 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             }
 
             // Assuming a new endpoint for file upload and material creation
-            const uploadRes = await fetch(`${API_BASE_URL}/materiali/upload`, {
+            const uploadRes = await fetch(`${API_BASE_URL}/materiali`, {
                 method: "POST",
                 body: uploadFormData,
             });
 
             if (!uploadRes.ok) {
-                throw new Error("Errore durante il caricamento del file.");
+                const errorData = await uploadRes.json();
+                const msg = errorData.issues 
+                    ? errorData.issues.map((i: any) => i.message).join(", ")
+                    : (errorData.message || errorData.error || "Errore durante il caricamento.");
+                throw new Error(msg);
             }
             const newMateriale = await uploadRes.json(); // Expecting the created Materiale object with an ID
 
@@ -95,9 +107,21 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                 await fetchData();
                 setSelectedFile(null);
                 setFileDescription("");
+                setSnackbar({ open: true, message: "Materiale caricato e associato con successo!", severity: "success" });
+            } else {
+                const errorData = await associateRes.json();
+                const msg = errorData.issues 
+                    ? errorData.issues.map((i: any) => i.message).join(", ")
+                    : (errorData.message || errorData.error || "Errore durante l'associazione.");
+                throw new Error(msg);
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("Errore durante l'upload:", error);
+            setSnackbar({ 
+                open: true, 
+                message: error instanceof Error ? error.message : "Errore sconosciuto durante l'upload", 
+                severity: "error" 
+            });
         } finally {
             setLoading(false);
         }
@@ -109,8 +133,24 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/materiali/${materiale_id}`, {
                 method: "DELETE",
             });
-            if (res.ok) fetchData();
-        } catch (error) { console.error(error); } finally { setLoading(false); }
+            if (res.ok) {
+                fetchData();
+                setSnackbar({ open: true, message: "Materiale rimosso con successo!", severity: "success" });
+            } else {
+                const errorData = await res.json();
+                const msg = errorData.message || `Errore nella rimozione: ${res.statusText}`;
+                throw new Error(msg);
+            }
+        } catch (error: unknown) { 
+            console.error("Errore nella rimozione:", error);
+            setSnackbar({ 
+                open: true, 
+                message: error instanceof Error ? error.message : "Errore sconosciuto durante la rimozione", 
+                severity: "error" 
+            });
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     return (
@@ -200,6 +240,18 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                 </DialogContent>
                 <DialogActions><Button onClick={() => setOpen(false)}>Chiudi</Button></DialogActions>
             </Dialog>
+
+            {/* Snackbar per feedback success/error */}
+            <Snackbar 
+                open={snackbar.open} 
+                autoHideDuration={6000} 
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled" sx={{ width: '100%' }}>
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </>
     );
 }

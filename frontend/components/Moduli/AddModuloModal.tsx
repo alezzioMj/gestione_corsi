@@ -4,7 +4,7 @@ import React, { useState, useRef } from "react";
 import {
     Button, Dialog, DialogTitle, DialogContent,
     DialogActions, TextField, CircularProgress,
-    Box, Typography, Divider, MenuItem
+    Box, Typography, Divider, MenuItem, Snackbar, Alert
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -27,6 +27,11 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
     const [file, setFile] = useState<File | null>(null);
     const [open, setOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
+    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
+        open: false,
+        message: '',
+        severity: 'success',
+    });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleOpen = () => setOpen(true);
@@ -51,7 +56,7 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!file) {
-            alert("Per favore, seleziona un file.");
+            setSnackbar({ open: true, message: "Per favore, seleziona un file.", severity: "error" });
             return;
         }
 
@@ -75,11 +80,17 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                 handleClose();
             } else {
                 const errorData = await res.json();
-                alert(`Errore: ${errorData.error || "Impossibile creare il modulo"}`);
+                const msg = errorData.issues 
+                    ? errorData.issues.map((i: any) => i.message).join(", ")
+                    : (errorData.error || errorData.message || "Impossibile creare il modulo");
+                throw new Error(msg);
             }
-        } catch (error) {
-            console.error("Errore invio:", error);
-            alert("Errore di rete durante il caricamento.");
+        } catch (error: unknown) {
+            setSnackbar({ 
+                open: true, 
+                message: error instanceof Error ? error.message : "Errore di rete", 
+                severity: "error" 
+            });
         } finally {
             setSubmitting(false);
         }
@@ -179,6 +190,16 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                     </DialogActions>
                 </form>
             </Dialog>
+
+            <Snackbar 
+                open={snackbar.open} 
+                autoHideDuration={6000} 
+                onClose={() => setSnackbar({ ...snackbar, open: false })}
+            >
+                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled">
+                    {snackbar.message}
+                </Alert>
+            </Snackbar>
         </>
     );
 }
