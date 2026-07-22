@@ -9,16 +9,16 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 exports.supabase = (0, supabase_js_1.createClient)(supabaseUrl, supabaseKey);
 const getModuli = async (req, res) => {
     try {
-        const moduli = await prisma_1.prisma.modulo.findMany({
-            select: {
-                id: true,
-                titolo: true,
-                n_ore: true,
-                competenza: true,
-                multiplo: true
-            }
-        });
-        res.json(moduli);
+        const moduli = await prisma_1.prisma.modulo.findMany();
+        // Mappatura esplicita per garantire che i campi siano sempre presenti
+        const result = moduli.map((m) => ({
+            id: m.id,
+            titolo: m.titolo,
+            n_ore: m.n_ore !== null ? m.n_ore : 4,
+            competenza: m.competenza,
+            multiplo: m.multiplo === true ? true : false
+        }));
+        res.json(result);
     }
     catch (error) {
         console.error("Errore nel recupero dei moduli:", error);
@@ -30,19 +30,18 @@ const getModulo = async (req, res) => {
     try {
         const id = Number(req.params.id);
         const modulo = await prisma_1.prisma.modulo.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                titolo: true,
-                n_ore: true,
-                competenza: true,
-                multiplo: true
-            }
+            where: { id }
         });
         if (!modulo) {
             return res.status(404).send("Modulo non trovato");
         }
-        res.json(modulo);
+        res.json({
+            id: modulo.id,
+            titolo: modulo.titolo,
+            n_ore: modulo.n_ore !== null ? modulo.n_ore : 4,
+            competenza: modulo.competenza,
+            multiplo: modulo.multiplo === true ? true : false
+        });
     }
     catch (error) {
         console.error("Errore nel recupero del modulo:", error);
@@ -53,16 +52,14 @@ exports.getModulo = getModulo;
 const createModulo = async (req, res) => {
     try {
         const { titolo, n_ore, competenza, multiplo, created_by } = req.body;
-        // Parsing con conversione tipi sicura per Zod e Prisma
-        const parsedData = {
-            titolo,
-            n_ore: n_ore ? Number(n_ore) : 4,
-            competenza,
-            multiplo: Boolean(multiplo === true || multiplo === "true"),
-            created_by
-        };
         const modulo = await prisma_1.prisma.modulo.create({
-            data: parsedData
+            data: {
+                titolo,
+                n_ore: n_ore ? Number(n_ore) : 4,
+                competenza,
+                multiplo: Boolean(multiplo === true || multiplo === "true"),
+                created_by
+            }
         });
         res.status(201).json(modulo);
     }
