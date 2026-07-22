@@ -31,17 +31,20 @@ const getModulo = async (req: express.Request, res: express.Response) => {
     const id = Number(req.params.id);
     const modulo = await prisma.modulo.findUnique({
       where: { id },
+      select: {
+        id: true,
+        titolo: true,
+        n_ore: true,
+        competenza: true,
+        multiplo: true
+      }
     });
 
     if (!modulo) {
       return res.status(404).send("Modulo non trovato");
     }
 
-    res.json({
-      ...modulo,
-      n_ore: modulo.n_ore ?? 4,
-      multiplo: Boolean(modulo.multiplo)
-    });
+    res.json(modulo);
   } catch (error) {
     console.error("Errore nel recupero del modulo:", error);
     res.status(500).send("Errore del server");
