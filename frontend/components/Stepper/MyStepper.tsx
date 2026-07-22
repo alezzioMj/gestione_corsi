@@ -19,15 +19,17 @@ import { useRouter } from "next/navigation";
 import StepReview from "./StepReview";
 import { Docente, Programma } from "../../validation/types"
 import { API_BASE_URL } from "@/lib/config";
+import StepProgrammazione from "./StepProgrammazione";
 
 
 export const formSchema = z.object({
-    nomeCorso: z.string().min(1, "Il nome del corso è obbligatorio"),
+    nome: z.string().min(1, "Il nome del corso è obbligatorio"),
     cliente: z.string().min(1, "Il cliente è obbligatorio"),
     sedi: z.array(z.string()).min(1, "Seleziona almeno una sede"),
     programmi: z.number().min(1, "Seleziona un programma"),
     docenti: z.array(z.string()).min(1, "Seleziona almeno un docente"),
-    oreTotali: z.coerce.number().min(1, "Le ore totali devono essere maggiori di 0"),
+    oreTotali: z.coerce.number().min(0, "Le ore totali non possono essere negative"), // Changed min to 0, dynamic validation will handle the lower bound
+    moduliOrdinati: z.array(z.string()).min(1, "L'ordine dei moduli è obbligatorio"),
     dataInizio: z.string().min(1, "Data inizio obbligatoria"),
     dataFine: z.string().min(1, "Data fine obbligatoria"),
     giorni: z.array(z.number()).min(1, "Seleziona almeno un giorno di lezione"),
@@ -43,7 +45,8 @@ export type FormType = z.infer<typeof formSchema>;
 // Interfacce per i dati arricchiti dal backend
 export interface ModuloRelation {
     modulo_id: number;
-    modulo: { titolo: string };
+    modulo: { titolo: string; n_ore?: number; competenza?: string };
+    n_ripetizioni: number;
 }
 
 export interface ProgrammaConModuli extends Programma {
@@ -63,7 +66,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
     programmi: ProgrammaConModuli[],
     docenti: DocenteConModuli[]
 }) {
-    const steps = ["Anagrafica corso", "Docenti", "Conferma"];
+    const steps = ["Anagrafica corso", "Docenti", "Programmazione", "Conferma"];
 
     const dynamicSchema = React.useMemo(() => {
         return formSchema.superRefine((data, ctx) => {
@@ -94,6 +97,16 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                     path: ["docenti"],
                 });
             }
+
+            // New validation for oreTotali
+            if (selectedProgram.durata_totale && data.oreTotali < selectedProgram.durata_totale) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    message: `Le ore totali non possono essere inferiori a quelle del programma selezionato (${selectedProgram.durata_totale}h).`,
+                    path: ["oreTotali"],
+                });
+            }
+
         });
     }, [programmi, docenti]);
 
@@ -101,10 +114,11 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         resolver: zodResolver(dynamicSchema),
         defaultValues: {
             cliente: "",
-            nomeCorso: "",
+            nome: "",
             sedi: [],
             programmi: 0,
             docenti: [],
+            moduliOrdinati: [],
             oreTotali: 0,
             dataInizio: "",
             dataFine: "",
@@ -123,7 +137,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
 
     const onSubmit = async (data: FormType) => {
         const corsoData = {
-            nome: data.nomeCorso,
+            nome: data.nome,
             cliente: data.cliente,
             programma_id: data.programmi,
             n_ore: data.oreTotali,
@@ -179,7 +193,13 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             const generateSessionsResponse = await fetch(`${API_BASE_URL}/corsi/${corsoId}/schedule`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ giorniDisponibili: data.giorni }),
+                body: JSON.stringify({ 
+                    giorniDisponibili: data.giorni,
+                    ordine: data.moduliOrdinati.map((uniqueKey, index) => ({ 
+                        modulo_id: Number(uniqueKey.split('-')[0]), 
+                        ordine: index + 1 
+                    }))
+                }),
             });
             if (!generateSessionsResponse.ok) {
                 const errorData = await generateSessionsResponse.json();
@@ -202,9 +222,11 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         let fieldsToValidate: (keyof FormType)[] = [];
 
         if (activeStep === 0) {
-            fieldsToValidate = ["nomeCorso", "cliente", "sedi", "programmi", "oreTotali", "dataInizio", "dataFine"];
+            fieldsToValidate = ["nome", "cliente", "sedi", "programmi", "oreTotali", "dataInizio", "dataFine"];
         } else if (activeStep === 1) {
             fieldsToValidate = ["docenti", "giorni", "mattina_inizio", "mattina_fine", "pomeriggio_inizio", "pomeriggio_fine"];
+        } else if (activeStep === 2) {
+            fieldsToValidate = ["moduliOrdinati"];
         }
 
         const isStepValid = fieldsToValidate.length > 0
@@ -242,7 +264,8 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                         programmi={programmi}
                     />}
                     {activeStep === 1 && <StepDocenti docenti={docenti}></StepDocenti>}
-                    {activeStep === 2 && <StepReview docenti={docenti} />}
+                    {activeStep === 2 && <StepProgrammazione programmi={programmi} />}
+                    {activeStep === 3 && <StepReview docenti={docenti} programmi={programmi} />}
                 </Box>
 
                 {/* BOTTONI */}

@@ -3,19 +3,24 @@
 import React from "react";
 import { Box, Typography, Grid, List, ListItem, ListItemText, Divider, Paper } from "@mui/material";
 import { useFormContext } from "react-hook-form";
-import { FormType, DocenteConModuli } from "./MyStepper";
+import { FormType, DocenteConModuli, ProgrammaConModuli } from "./MyStepper";
 
 const giorniLabels: Record<number, string> = {
     1: "Lunedì", 2: "Martedì", 3: "Mercoledì", 4: "Giovedì", 5: "Venerdì", 6: "Sabato", 7: "Domenica"
 };
 
-export default function StepReview({ docenti }: { docenti: DocenteConModuli[] }) {
+export default function StepReview({ docenti, programmi }: { docenti: DocenteConModuli[], programmi: ProgrammaConModuli[] }) {
     const { getValues } = useFormContext<FormType>();
     const data = getValues();
 
     const getDocenteNome = (cf: string) => {
         const d = docenti.find(doc => doc.codice_fiscale === cf);
         return d ? `${d.nome} ${d.cognome}` : cf;
+    };
+
+    const getProgrammaTitolo = (id: number) => {
+        const p = programmi.find(prog => prog.id === id);
+        return p ? p.titolo : `Programma #${id}`;
     };
 
     return (
@@ -29,9 +34,9 @@ export default function StepReview({ docenti }: { docenti: DocenteConModuli[] })
                             Dati Generali
                             </Typography>
                         <List dense>
-                            <ListItem><ListItemText primary="Nome Corso" secondary={data.nomeCorso} /></ListItem>
+                            <ListItem><ListItemText primary="Nome Commessa" secondary={data.nome} /></ListItem>
                             <ListItem><ListItemText primary="Cliente" secondary={data.cliente} /></ListItem>
-                            <ListItem><ListItemText primary="Programma" secondary={data.programmi} /></ListItem>
+                            <ListItem><ListItemText primary="Programma" secondary={getProgrammaTitolo(data.programmi)} /></ListItem>
                             <ListItem><ListItemText primary="Sedi" secondary={Array.isArray(data.sedi) ? data.sedi.join(", ") : data.sedi} /></ListItem>
                             <ListItem><ListItemText primary="Ore Totali" secondary={`${data.oreTotali}h`} /></ListItem>
                             <ListItem><ListItemText primary="Periodo" secondary={`${data.dataInizio} / ${data.dataFine}`} /></ListItem>

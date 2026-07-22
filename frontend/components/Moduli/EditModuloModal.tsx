@@ -11,7 +11,9 @@ import {
     Box, 
     MenuItem,
     Snackbar,
-    Alert
+    Alert,
+    FormControlLabel,
+    Checkbox
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { API_BASE_URL } from "@/lib/config";
@@ -19,19 +21,25 @@ import { API_BASE_URL } from "@/lib/config";
 interface EditModuloModalProps {
     open: boolean;
     onClose: () => void;
-    modulo: { id: number; titolo: string; ore: number; competenza: string; descrizione?: string }; // More specific type
+    modulo: { 
+        id: number; 
+        titolo: string; 
+        competenza: string; 
+        descrizione?: string;
+        multiplo?: boolean | string; // <--- Può arrivare come boolean o stringa dal DB
+    };
     onSaveSuccess: () => void;
 }
 
-const COMPETENZE_ENUM = ["Teorica", "Trasversale", "Pratica"]; // Re-use enum
+const COMPETENZE_ENUM = ["Teorica", "Trasversale", "Pratica"];
 
 export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }: EditModuloModalProps) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
-        titolo: "", // Changed from nome to titolo
+        titolo: "",
         descrizione: "",
-        ore: 0,
-        competenza: "", // Added competenza
+        competenza: "",
+        multiplo: false,
     });
     const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
         open: false,
@@ -41,17 +49,28 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
 
     useEffect(() => {
         if (modulo) {
+            // Conversione sicura per evitare che "false" (stringa) o undefined resettino lo stato
+            const isMultiplo = typeof modulo.multiplo === "string" 
+                ? modulo.multiplo === "true" 
+                : Boolean(modulo.multiplo);
+
             setFormData({
-                titolo: modulo.titolo || "", // Changed from nome to titolo
+                titolo: modulo.titolo || "",
                 descrizione: modulo.descrizione || "",
-                ore: modulo.ore || 0,
                 competenza: modulo.competenza || "",
+                multiplo: isMultiplo, // <--- Prende il valore reale salvato sul modulo
             });
         }
     }, [modulo, open]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!modulo?.id) {
+            setSnackbar({ open: true, message: "ID Modulo non valido", severity: "error" });
+            return;
+        }
+
         setLoading(true);
         try {
             const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}`, {
@@ -59,7 +78,7 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     ...formData,
-                    ore: Number(formData.ore), // Ensure ore is sent as a number
+                    n_ore: 4 // Passa la chiave corretta attesa dal backend
                 }),
             });
 
@@ -69,7 +88,7 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
             } else {
                 const errorData = await res.json();
                 const msg = errorData.issues 
-                    ? errorData.issues.map((i: any) => i.message).join(", ")
+                    ? errorData.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join(", ")
                     : (errorData.error || errorData.message || "Errore durante l'aggiornamento");
                 throw new Error(msg);
             }
@@ -96,11 +115,7 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                             value={formData.titolo} 
                             onChange={(e) => setFormData({ ...formData, titolo: e.target.value })} 
                         />
-                        <TextField 
-                            label="Ore" type="number" fullWidth required 
-                            value={formData.ore} 
-                            onChange={(e) => setFormData({ ...formData, ore: Number(e.target.value) })} 
-                        />
+                        
                         <TextField
                             select
                             label="Livello Competenza"
@@ -113,7 +128,26 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                                 <MenuItem key={option} value={option}>{option}</MenuItem>
                             ))}
                         </TextField>
-                        <TextField label="Descrizione" fullWidth multiline rows={4} value={formData.descrizione || ""} onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} />
+
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={formData.multiplo}
+                                    onChange={(e) => setFormData({ ...formData, multiplo: e.target.checked })}
+                                    color="primary"
+                                />
+                            }
+                            label="Modulo Multiplo"
+                        />
+
+                        <TextField 
+                            label="Descrizione" 
+                            fullWidth 
+                            multiline 
+                            rows={4} 
+                            value={formData.descrizione || ""} 
+                            onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} 
+                        />
                     </Box>
                 </DialogContent>
                 <DialogActions>

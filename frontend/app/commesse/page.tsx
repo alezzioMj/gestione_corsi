@@ -119,8 +119,8 @@ export default function CommessePage() {
                         {corsi && corsi.map((corso: Corso) => ( // Check esistenza corsi
                             <Box key={corso.id} sx={{ mb: 2, p: 2, border: '1px solid #eee', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                 <Box>
-                                    <Typography variant="subtitle1">{corso.nome} (ID: {corso.id})</Typography>
-                                    <Typography variant="body2">Cliente: {corso.cliente}</Typography>
+                                    <Typography variant="subtitle1">Cliente: {corso.cliente}</Typography>
+                                    <Typography variant="body2">(ID: {corso.id})</Typography>
                                 </Box>
                                 <Box>
                                     <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }} onClick={() => handleOpenInfo(corso.id)} startIcon={<InfoIcon />}>

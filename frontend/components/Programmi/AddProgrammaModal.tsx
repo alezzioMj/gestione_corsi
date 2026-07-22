@@ -45,7 +45,6 @@ import { CSS } from "@dnd-kit/utilities";
 interface ModuloForProgram {
     id: number;
     titolo: string;
-    n_ore: number;
     competenza: "Teorica" | "Trasversale" | "Pratica";
     descrizione?: string;
 }
@@ -85,7 +84,7 @@ function SortableModuloItem({ modulo, onRemove }: { modulo: ModuloForProgram; on
             <Box {...attributes} {...listeners} sx={{ cursor: "grab", display: "flex", alignItems: "center" }}>
                 <DragIndicatorIcon color="action" />
             </Box>
-            <Typography sx={{ flexGrow: 1, fontSize: '0.875rem' }}>{modulo.titolo} ({modulo.ore}h - {modulo.competenza})</Typography>
+            <Typography sx={{ flexGrow: 1, fontSize: '0.875rem' }}>{modulo.titolo} (4h - {modulo.competenza})</Typography>
             <IconButton size="small" onClick={onRemove} color="error">
                 <DeleteIcon fontSize="small" />
             </IconButton>
@@ -163,11 +162,12 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
         let teoriche = 0;
         let trasversali = 0;
 
+        const ORE_BASE = 4;
         orderedSelectedModuli.forEach(m => {
-            total += m.n_ore;
-            if (m.competenza === "Pratica") pratiche += m.n_ore;
-            else if (m.competenza === "Teorica") teoriche += m.n_ore;
-            else if (m.competenza === "Trasversale") trasversali += m.n_ore;
+            total += ORE_BASE;
+            if (m.competenza === "Pratica") pratiche += ORE_BASE;
+            else if (m.competenza === "Teorica") teoriche += ORE_BASE;
+            else if (m.competenza === "Trasversale") trasversali += ORE_BASE;
         });
 
         return {
@@ -318,7 +318,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
                                                         <FormControlLabel
                                                             sx={{ width: '100%', ml: 0 }}
                                                             control={<Checkbox size="small" checked={selectedModuleIds.includes(modulo.id)} onChange={handleToggleModule(modulo.id)} />}
-                                                            label={<Typography variant="body2">{modulo.titolo} ({modulo.n_ore}h - {modulo.competenza})</Typography>}
+                                                            label={<Typography variant="body2">{modulo.titolo} (4h - {modulo.competenza})</Typography>}
                                                         />
                                                     </Grid>
                                                 ))}

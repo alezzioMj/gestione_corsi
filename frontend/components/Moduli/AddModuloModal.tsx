@@ -4,7 +4,8 @@ import React, { useState, useRef } from "react";
 import {
     Button, Dialog, DialogTitle, DialogContent,
     DialogActions, TextField, CircularProgress,
-    Box, Typography, Divider, MenuItem, Snackbar, Alert
+    Box, Typography, Divider, MenuItem, Snackbar, Alert,
+    FormControlLabel, Checkbox
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
@@ -20,9 +21,9 @@ const COMPETENZE_ENUM = ["Teorica", "Trasversale", "Pratica"];
 export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
     const [formData, setFormData] = useState({
         titolo: "",
-        n_ore: "",
         competenza: "",
         descrizioneMateriale: "",
+        multiplo: false
     });
     const [file, setFile] = useState<File | null>(null);
     const [open, setOpen] = useState(false);
@@ -40,9 +41,9 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
         setOpen(false);
         setFormData({
             titolo: "",
-            n_ore: "",
             competenza: "",
-            descrizioneMateriale: ""
+            descrizioneMateriale: "",
+            multiplo: false
         });
         setFile(null);
     };
@@ -65,9 +66,9 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
         try {
             const data = new FormData();
             data.append("titolo", formData.titolo);
-            data.append("n_ore", formData.n_ore);
             data.append("competenza", formData.competenza);
             data.append("descrizioneMateriale", formData.descrizioneMateriale);
+            data.append("multiplo", String(formData.multiplo)); // <--- Inviato come stringa ("true"/"false")
             data.append("file", file);
 
             const res = await fetch(`${API_BASE_URL}/moduli/completo`, {
@@ -116,11 +117,6 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                                     value={formData.titolo}
                                     onChange={(e) => setFormData({ ...formData, titolo: e.target.value })}
                                 />
-                                <TextField
-                                    label="Ore" type="number" sx={{ width: '120px' }} required
-                                    value={formData.n_ore}
-                                    onChange={(e) => setFormData({ ...formData, n_ore: e.target.value })}
-                                />
                             </Box>
 
                             <TextField
@@ -138,6 +134,18 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                                     </MenuItem>
                                 ))}
                             </TextField>
+
+                            {/* Checkbox per il campo "multiplo" */}
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={formData.multiplo}
+                                        onChange={(e) => setFormData({ ...formData, multiplo: e.target.checked })}
+                                        color="primary"
+                                    />
+                                }
+                                label="Modulo Multiplo"
+                            />
 
                             <Divider sx={{ my: 1 }} />
                             <Typography variant="subtitle2" color="primary">Upload Materiale Didattico</Typography>
@@ -182,8 +190,8 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                         <Button
                             type="submit"
                             variant="contained"
-                            disabled={submitting || !formData.titolo || !formData.n_ore || !file}
-                            min-width="120px"
+                            disabled={submitting || !formData.titolo || !file}
+                            sx={{ minWidth: '120px' }}
                         >
                             {submitting ? <CircularProgress size={24} color="inherit" /> : "Crea Modulo"}
                         </Button>

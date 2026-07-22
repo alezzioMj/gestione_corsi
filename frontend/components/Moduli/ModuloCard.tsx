@@ -1,18 +1,18 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, Typography, Box, Divider, Button } from "@mui/material";
+import { Card, CardContent, Typography, Box, Divider, Button, Chip } from "@mui/material";
 import ManageMaterialiModal from "./ManageMaterialiModal";
-import EditModuloModal from "./EditModuloModal"; // Importa il modal di modifica
+import EditModuloModal from "./EditModuloModal";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 type Modulo = {
     id: number;
     titolo: string;
-    ore: number;
     competenza: "Teorica" | "Trasversale" | "Pratica";
     descrizione?: string;
+    multiplo?: boolean; // <--- Aggiunto il campo al tipo
 }
 
 interface ModuloCardProps {
@@ -32,12 +32,19 @@ export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: 
                 </Typography>
                 
                 <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" color="text.secondary">
-                        <strong>Ore:</strong> {modulo.ore}
-                    </Typography>
-                    <Typography variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary" gutterBottom>
                         <strong>Descrizione:</strong> {modulo.descrizione || "N/A"}
                     </Typography>
+
+                    {/* Badge visivo per indicare se il modulo è multiplo o singolo */}
+                    <Box sx={{ mt: 1 }}>
+                        <Chip 
+                            label={modulo.multiplo ? "Multiplo" : "Singolo"} 
+                            color={modulo.multiplo ? "secondary" : "default"} 
+                            size="small" 
+                            variant={modulo.multiplo ? "filled" : "outlined"}
+                        />
+                    </Box>
                 </Box>
 
                 <Divider sx={{ my: 1.5, mt: 'auto' }} />
@@ -48,11 +55,17 @@ export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: 
                         variant="outlined"
                         size="small"
                         startIcon={<EditIcon />}
-                        onClick={() => setIsEditModalOpen(true)} // Apre il modal di modifica
+                        onClick={() => setIsEditModalOpen(true)}
                     >
                         Modifica
                     </Button>
-                    <Button variant="outlined" color="error" size="small" startIcon={<DeleteIcon />} onClick={() => onDeleteModulo(modulo.id)}>
+                    <Button 
+                        variant="outlined" 
+                        color="error" 
+                        size="small" 
+                        startIcon={<DeleteIcon />} 
+                        onClick={() => onDeleteModulo(modulo.id)}
+                    >
                         Elimina
                     </Button>
                 </Box>

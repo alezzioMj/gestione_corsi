@@ -205,7 +205,7 @@ export default function SessionsTable({ sessions }: SessionsTableProps) {
                     s.note ?? "-"
                   )}
                 </TableCell>
-                <TableCell>{s.modulo_id ?? "-"}</TableCell>
+                <TableCell>{s.modulo?.titolo ?? "-"}</TableCell>
               </TableRow>
             ))}
           </TableBody>
