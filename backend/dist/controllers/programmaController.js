@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteModuloFromProgramma = exports.addModuloToProgramma = exports.getModuliByProgramma = exports.deleteProgramma = exports.updateProgramma = exports.createProgramma = exports.getProgramma = exports.getProgrammi = exports.addModuloToProgrammaBulk = void 0;
+exports.createCompleteProgramma = exports.deleteModuloFromProgramma = exports.addModuloToProgramma = exports.getModuliByProgramma = exports.deleteProgramma = exports.updateProgramma = exports.createProgramma = exports.getProgramma = exports.getProgrammi = exports.addModuloToProgrammaBulk = void 0;
 const prisma_1 = require("../prisma");
 const getProgrammi = async (req, res) => {
     try {
@@ -13,9 +13,6 @@ const getProgrammi = async (req, res) => {
                 }
             }
         });
-        if (programmi.length === 0) {
-            return res.status(404).send("Nessun programma trovato");
-        }
         res.json(programmi);
     }
     catch (error) {
@@ -201,3 +198,39 @@ const deleteModuloFromProgramma = async (req, res) => {
     }
 };
 exports.deleteModuloFromProgramma = deleteModuloFromProgramma;
+const createCompleteProgramma = async (req, res) => {
+    try {
+        const { titolo, descrizione, durata_totale, ore_pratiche, ore_teoriche, ore_trasversali, moduli_ids, // Array of module IDs in desired order
+         } = req.body;
+        if (!titolo || !moduli_ids || moduli_ids.length === 0) {
+            return res.status(400).json({ error: "Titolo e almeno un modulo sono obbligatori." });
+        }
+        const newProgramma = await prisma_1.prisma.programma.create({
+            data: {
+                titolo,
+                descrizione,
+                durata_totale: Number(durata_totale),
+                ore_pratiche: Number(ore_pratiche),
+                ore_teoriche: Number(ore_teoriche),
+                ore_trasversali: Number(ore_trasversali),
+                programma_modulo: {
+                    create: moduli_ids.map((moduloId, index) => ({
+                        modulo_id: moduloId,
+                        ordine: index + 1, // Assign order based on array index
+                    })),
+                },
+            },
+            include: {
+                programma_modulo: true, // Include associations in response
+            },
+        });
+        res.status(201).json(newProgramma);
+    }
+    catch (err) {
+        if (err.code === "P2002") {
+            return res.status(400).json({ error: "Un programma con questo titolo esiste già." });
+        }
+        res.status(500).json({ error: "Errore creazione programma" });
+    }
+};
+exports.createCompleteProgramma = createCompleteProgramma;

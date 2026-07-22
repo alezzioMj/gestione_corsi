@@ -30,10 +30,23 @@ const getCorso = async (req: express.Request, res: express.Response) => {
   }
 };
 
+interface CreateCorsoBody {
+  nome: string;
+  cliente: string;
+  programma_id: number;
+  n_ore: number;
+  inizio: string | Date;
+  fine: string | Date;
+  mattina_inizio: string;
+  mattina_fine: string;
+  pomeriggio_inizio: string;
+  pomeriggio_fine: string;
+}
+
 const createCorso = async (req: express.Request, res: express.Response) => {
   try {
     const {
-      nome, // Nuovo campo
+      nome,
       cliente,
       programma_id,
       n_ore,
@@ -73,10 +86,13 @@ const createCorso = async (req: express.Request, res: express.Response) => {
   }
 };
 
+type UpdateCorsoBody = Partial<CreateCorsoBody>;
+
 const updateCorso = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);
     const {
+      nome,
       cliente,
       programma_id,
       n_ore,
@@ -91,6 +107,7 @@ const updateCorso = async (req: express.Request, res: express.Response) => {
     const corso = await prisma.corso.update({
       where: { id },
       data: {
+        nome,
         cliente,
         programma_id,
         n_ore,
@@ -258,6 +275,18 @@ const addSedeToCorso = async (req: express.Request, res: express.Response) => {
   }
 };
 
+const deleteSessioni = async (req: express.Request, res: express.Response) => {
+  try {
+    const corso_id = Number(req.params.id);
+    await prisma.sessione.deleteMany({
+      where: { corso_id },
+    });
+    res.status(204).send();
+  }catch{
+    res.status(500).json({ error: "Errore cancellazione sessioni" });
+  }
+}
+
 const deleteSedeFromCorso = async (req: express.Request, res: express.Response) => {
   try {
     const corso_id = Number(req.params.corso_id);
@@ -290,5 +319,6 @@ export {
   deleteDocenteFromCorso,
   getSediByCorso,
   addSedeToCorso,
-  deleteSedeFromCorso
+  deleteSedeFromCorso,
+  deleteSessioni
 };

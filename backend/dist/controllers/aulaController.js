@@ -5,9 +5,6 @@ const prisma_1 = require("../prisma");
 const getAule = async (req, res) => {
     try {
         const aule = await prisma_1.prisma.aula.findMany();
-        if (aule.length === 0) {
-            return res.status(404).send("Nessun aula trovata");
-        }
         res.json(aule);
     }
     catch (error) {

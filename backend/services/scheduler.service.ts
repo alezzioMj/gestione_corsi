@@ -1,6 +1,6 @@
 import { prisma } from "../prisma";
 import { sessione, stato_sessione_enum } from "@prisma/client";
-import { generateSlots, findDocente, findAula } from "./availability.service";
+import { generateSlots, findDocente, findAula, Ordine } from "./availability.service";
 import { createSessioneMany } from "./sessione.service";
 import { Prisma } from '@prisma/client';
 
@@ -18,7 +18,7 @@ const logger = {
     error: (msg: string, ...args: any[]) => { console.error(msg, ...args); }
 };
 
-export const schedule = async (corso_id: number, giorniDisponibili: number[]) => {
+export const schedule = async (corso_id: number, giorniDisponibili: number[], ordine: Ordine[]) => {
     const sessioniBulk: any[] = []; // Array per il bulk insert
     // Caricamento dati iniziali (Pre-fetch)
     const corso = await prisma.corso.findUnique({
@@ -71,7 +71,8 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[]) =>
         corso.mattina_fine!,
         corso.pomeriggio_inizio!,
         corso.pomeriggio_fine!,
-        giorniDisponibili
+        giorniDisponibili,
+        ordine
     );
 
     // Recupero Moduli del Programma
@@ -84,13 +85,20 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[]) =>
     const moduliValidi = pm.filter(item => item.modulo !== null);
     if (moduliValidi.length === 0) throw new Error("Nessun modulo trovato nel programma");
 
+    // Ordina i moduli in base all'array di input 'ordine'
+    moduliValidi.sort((a, b) => {
+        const orderA = ordine.find(o => o.modulo_id === a.modulo_id)?.ordine ?? 999;
+        const orderB = ordine.find(o => o.modulo_id === b.modulo_id)?.ordine ?? 999;
+        return orderA - orderB;
+    });
+
     let slotIndex = 0;
 
     // LOOP PRINCIPALE SUI MODULI
     for (const { modulo } of moduliValidi) {
         if (!modulo) continue;
 
-        let oreRimanenti = modulo.n_ore;
+        let oreRimanenti = modulo.n_ore ?? 0;
         logger.info(`>>> Inizio Modulo: ${modulo.id} (${oreRimanenti} ore)`);
 
         // Filtro docenti per competenza modulo
@@ -143,11 +151,13 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[]) =>
                 logger.error(`[ERRORE] Slot ${currentSlot.data.toLocaleDateString()}: ${error.message}`);
                 slotIndex++;
             }
-            if (oreRimanenti > 0) {
-                logger.warn(`Modulo ${modulo.id} terminato con ${oreRimanenti} ore residue (Fine slot disponibili).`);
-            } else {
-                logger.info(`Modulo ${modulo.id} completato con successo.`);
-            }
+        }
+
+        // Log alla fine del ciclo 'while' per un modulo
+        if (oreRimanenti > 0) {
+            logger.warn(`Modulo ${modulo.id} terminato con ${oreRimanenti} ore residue (slot disponibili esauriti).`);
+        } else {
+            logger.info(`Modulo ${modulo.id} completato con successo.`);
         }
     }
     if (sessioniBulk.length > 0) {
@@ -160,9 +170,6 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[]) =>
         where: { corso_id, stato: stato_sessione_enum.Bozza },
         orderBy: { data: 'asc' }
     });
-
-    return sessioniCreate;
-
 
     logger.info(`Schedulazione terminata. Create ${sessioniCreate.length} sessioni.`);
     return sessioniCreate;

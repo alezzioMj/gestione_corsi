@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.corsoSchema = void 0;
 const zod_1 = require("zod");
 exports.corsoSchema = zod_1.z.object({
+    nome: zod_1.z.string().min(1, "Il nome del corso è obbligatorio"),
     cliente: zod_1.z.string().max(150),
     programma_id: zod_1.z.number(),
     n_ore: zod_1.z.number(),

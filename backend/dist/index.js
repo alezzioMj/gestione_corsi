@@ -6,7 +6,12 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
-app.use((0, cors_1.default)()); // Abilita CORS per tutte le origini
+const corsOptions = {
+    origin: '*', //'https://gestione-corsi-ronr.vercel.app', // o '*' se vuoi testare, ma meglio specifico
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
+    optionsSuccessStatus: 204 // Cruciale per alcuni browser vecchi o specifici
+};
+app.use((0, cors_1.default)(corsOptions)); // Abilita CORS per tutte le origini
 app.use(express_1.default.json());
 const docenteRouter_1 = __importDefault(require("./routes/docenteRouter"));
 const sedeRouter_1 = __importDefault(require("./routes/sedeRouter"));

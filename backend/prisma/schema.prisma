@@ -21,6 +21,8 @@ model aula {
 
 model corso {
   id                Int             @id @default(autoincrement())
+  nome              String          @db.VarChar(150)
+  descrizione       String?
   cliente           String          @db.VarChar(150)
   programma_id      Int?
   n_ore             Int?
@@ -120,8 +122,9 @@ model materiale {
 model modulo {
   id               Int                @id @default(autoincrement())
   titolo           String             @db.VarChar(150)
-  n_ore            Int
+  n_ore            Int?               @default(4)
   competenza       competenza_enum
+  multiplo         Boolean?           @default(false)
   created_at       DateTime          @default(now()) @db.Timestamp(6)
   created_by       String?            @db.VarChar(100)
   docente_modulo   docente_modulo[]
@@ -158,6 +161,7 @@ model programma_modulo {
   modulo_id    Int
   ordine       Int
   obbligatorio Boolean?  @default(true)
+  n_ripetizioni Int @default(1)
   modulo       modulo?   @relation(fields: [modulo_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   programma    programma @relation(fields: [programma_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 

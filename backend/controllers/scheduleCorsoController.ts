@@ -9,6 +9,8 @@ const scheduleCorsoController = async (
     const corso_id = Number(req.params.id);
 
     const { giorniDisponibili } = req.body;
+    
+    const { ordine } = req.body;
 
     if (!Array.isArray(giorniDisponibili)) {
       return res.status(400).json({
@@ -16,7 +18,15 @@ const scheduleCorsoController = async (
       });
     }
 
-    const result = await schedule(corso_id, giorniDisponibili);
+    if (!Array.isArray(ordine)){
+      return res.status(400).json({
+        error: "ordine deve essere un array di oggetto Ordine (modulo_id, ordine)",
+      });
+    }
+
+
+
+    const result = await schedule(corso_id, giorniDisponibili, ordine);
 
     return res.status(200).json({
       message: "Scheduling completato con successo",

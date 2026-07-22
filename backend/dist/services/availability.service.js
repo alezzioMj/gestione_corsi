@@ -2,9 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.checkAulaDisponibileMemoria = exports.checkDocenteDisponibileMemoria = exports.findAula = exports.findDocente = exports.generateSlots = void 0;
 const time_utils_1 = require("../utils/time.utils");
-const generateSlots = (inizio, fine, mattino_inizio, mattino_fine, pomeriggio_inizio, pomeriggio_fine, giorniDisponibili
-// oreDaSchedulare: number // <-- PUOI ANCHE TOGLIERLO, non serve più qui
-) => {
+const generateSlots = (inizio, fine, mattino_inizio, mattino_fine, pomeriggio_inizio, pomeriggio_fine, giorniDisponibili, ordine) => {
     const slots = [];
     const durataMattina = (0, time_utils_1.calculateHours)(mattino_inizio, mattino_fine);
     const durataPomeriggio = (0, time_utils_1.calculateHours)(pomeriggio_inizio, pomeriggio_fine);
@@ -38,7 +36,7 @@ const findDocente = async (listaDocenti, slot, cacheSessioni // Le sessioni cari
 ) => {
     for (const docente of listaDocenti) {
         try {
-            // Chiamiamo la validazione passandogli i 5 parametri richiesti
+            // Controlla la disponibilità del docente usando la cache delle sessioni
             (0, exports.checkDocenteDisponibileMemoria)(docente.codice_fiscale, slot.data, slot.ora_inizio, slot.ora_fine, cacheSessioni);
             // Se non lancia errori, il docente è disponibile
             return docente;
@@ -55,7 +53,9 @@ exports.findDocente = findDocente;
 const findAula = async (listaAule, slot, cacheSessioni) => {
     for (const aula of listaAule) {
         try {
+            // Controlla la disponibilità dell'aula usando la cache delle sessioni
             (0, exports.checkAulaDisponibileMemoria)(aula.id, slot.data, slot.ora_inizio, slot.ora_fine, cacheSessioni);
+            // Se non lancia errori, l'aula è disponibile
             return aula;
         }
         catch (err) {

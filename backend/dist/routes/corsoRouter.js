@@ -24,4 +24,5 @@ corsiRouter.post("/:id/sedi", corsoController_1.addSedeToCorso);
 corsiRouter.delete("/:id/sedi/:sede_id", corsoController_1.deleteSedeFromCorso);
 //SCHEDULAZIONE
 corsiRouter.post("/:id/schedule", scheduleCorsoController_1.scheduleCorsoController);
+corsiRouter.delete("/:id/sessioni", corsoController_1.deleteSessioni);
 exports.default = corsiRouter;

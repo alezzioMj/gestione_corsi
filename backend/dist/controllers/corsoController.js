@@ -1,13 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteSedeFromCorso = exports.addSedeToCorso = exports.getSediByCorso = exports.deleteDocenteFromCorso = exports.addDocenteToCorso = exports.getDocenti = exports.deleteCorso = exports.updateCorso = exports.createCorso = exports.getCorso = exports.getCorsi = void 0;
+exports.deleteSessioni = exports.deleteSedeFromCorso = exports.addSedeToCorso = exports.getSediByCorso = exports.deleteDocenteFromCorso = exports.addDocenteToCorso = exports.getDocenti = exports.deleteCorso = exports.updateCorso = exports.createCorso = exports.getCorso = exports.getCorsi = void 0;
 const prisma_1 = require("../prisma");
 const getCorsi = async (req, res) => {
     try {
         const corsi = await prisma_1.prisma.corso.findMany();
-        if (corsi.length === 0) {
-            return res.status(404).send("Nessun corso trovato");
-        }
         res.json(corsi);
     }
     catch (error) {
@@ -35,8 +32,7 @@ const getCorso = async (req, res) => {
 exports.getCorso = getCorso;
 const createCorso = async (req, res) => {
     try {
-        const { nome, // Nuovo campo
-        cliente, programma_id, n_ore, inizio, fine, mattina_inizio, mattina_fine, pomeriggio_inizio, pomeriggio_fine } = req.body;
+        const { nome, cliente, programma_id, n_ore, inizio, fine, mattina_inizio, mattina_fine, pomeriggio_inizio, pomeriggio_fine } = req.body;
         const corso = await prisma_1.prisma.corso.create({
             data: {
                 nome, // Includi il nome
@@ -68,10 +64,11 @@ exports.createCorso = createCorso;
 const updateCorso = async (req, res) => {
     try {
         const id = Number(req.params.id);
-        const { cliente, programma_id, n_ore, inizio, fine, mattina_inizio, mattina_fine, pomeriggio_inizio, pomeriggio_fine } = req.body;
+        const { nome, cliente, programma_id, n_ore, inizio, fine, mattina_inizio, mattina_fine, pomeriggio_inizio, pomeriggio_fine } = req.body;
         const corso = await prisma_1.prisma.corso.update({
             where: { id },
             data: {
+                nome,
                 cliente,
                 programma_id,
                 n_ore,
@@ -121,7 +118,7 @@ const getDocenti = async (req, res) => {
             }
         });
         if (docenti.length === 0) {
-            return res.status(404).send("Nessun docente trovato per questo corso");
+            return res.send("Nessun docente trovato per questo corso");
         }
         res.json(docenti);
     }
@@ -231,6 +228,19 @@ const addSedeToCorso = async (req, res) => {
     }
 };
 exports.addSedeToCorso = addSedeToCorso;
+const deleteSessioni = async (req, res) => {
+    try {
+        const corso_id = Number(req.params.id);
+        await prisma_1.prisma.sessione.deleteMany({
+            where: { corso_id },
+        });
+        res.status(204).send();
+    }
+    catch {
+        res.status(500).json({ error: "Errore cancellazione sessioni" });
+    }
+};
+exports.deleteSessioni = deleteSessioni;
 const deleteSedeFromCorso = async (req, res) => {
     try {
         const corso_id = Number(req.params.corso_id);

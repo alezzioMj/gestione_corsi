@@ -13,9 +13,6 @@ const getDocenti = async (req, res) => {
                 }
             }
         });
-        if (docenti.length === 0) {
-            return res.status(404).send("Nessun docente trovato");
-        }
         res.json(docenti);
     }
     catch (error) {

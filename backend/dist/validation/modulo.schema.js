@@ -5,6 +5,7 @@ const zod_1 = require("zod");
 exports.moduloSchema = zod_1.z.object({
     titolo: zod_1.z.string().min(1).max(150),
     n_ore: zod_1.z.number().int().positive(),
+    multiplo: zod_1.z.boolean().optional(),
     competenza: zod_1.z.enum([
         "Pratica",
         "Teorica",

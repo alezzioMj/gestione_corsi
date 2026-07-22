@@ -1,14 +1,32 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getProgrammiByModulo = exports.deleteMaterialeFromModulo = exports.addMaterialeToModulo = exports.getMaterialeByModulo = exports.getDocentiByModulo = exports.deleteModulo = exports.updateModulo = exports.createModulo = exports.getModulo = exports.getModuli = void 0;
+exports.uploadCompleteModulo = exports.getProgrammiByModulo = exports.deleteMaterialeFromModulo = exports.addMaterialeToModulo = exports.getMaterialeByModulo = exports.getDocentiByModulo = exports.deleteModulo = exports.updateModulo = exports.createModulo = exports.getModulo = exports.getModuli = exports.supabase = void 0;
+require("dotenv/config");
 const prisma_1 = require("../prisma");
+const supabase_js_1 = require("@supabase/supabase-js");
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+exports.supabase = (0, supabase_js_1.createClient)(supabaseUrl, supabaseKey);
 const getModuli = async (req, res) => {
     try {
-        const moduli = await prisma_1.prisma.modulo.findMany();
-        if (moduli.length === 0) {
-            return res.status(404).send("Nessun modulo trovato");
-        }
-        res.json(moduli);
+        const moduli = await prisma_1.prisma.modulo.findMany({
+            select: {
+                id: true,
+                titolo: true,
+                n_ore: true,
+                competenza: true,
+                multiplo: true,
+                created_at: true,
+                created_by: true
+            }
+        });
+        // Mappatura per garantire che 'multiplo' e 'n_ore' abbiano sempre valori definiti
+        const formattedModuli = moduli.map((m) => ({
+            ...m,
+            n_ore: m.n_ore ?? 4,
+            multiplo: Boolean(m.multiplo)
+        }));
+        res.json(formattedModuli);
     }
     catch (error) {
         console.error("Errore nel recupero dei moduli:", error);
@@ -25,7 +43,11 @@ const getModulo = async (req, res) => {
         if (!modulo) {
             return res.status(404).send("Modulo non trovato");
         }
-        res.json(modulo);
+        res.json({
+            ...modulo,
+            n_ore: modulo.n_ore ?? 4,
+            multiplo: Boolean(modulo.multiplo)
+        });
     }
     catch (error) {
         console.error("Errore nel recupero del modulo:", error);
@@ -35,48 +57,47 @@ const getModulo = async (req, res) => {
 exports.getModulo = getModulo;
 const createModulo = async (req, res) => {
     try {
-        const { titolo, n_ore, competenza } = req.body;
+        const { titolo, n_ore, competenza, multiplo, created_by } = req.body;
+        // Parsing con conversione tipi sicura per Zod e Prisma
+        const parsedData = {
+            titolo,
+            n_ore: n_ore ? Number(n_ore) : 4,
+            competenza,
+            multiplo: Boolean(multiplo === true || multiplo === "true"),
+            created_by
+        };
         const modulo = await prisma_1.prisma.modulo.create({
-            data: {
-                titolo,
-                n_ore,
-                competenza
-            }
+            data: parsedData
         });
         res.status(201).json(modulo);
     }
     catch (err) {
-        console.error({
-            message: "Errore nella creazione del modulo",
-            error: err,
-        });
+        console.error("Errore nella creazione del modulo:", err);
         if (err.code === "P2002") {
             return res.status(400).json({ error: "Il modulo esiste già" });
         }
-        res.status(500).json({ error: "Errore creazione modulo" });
+        res.status(500).json({ error: "Errore creazione modulo", details: err.message });
     }
 };
 exports.createModulo = createModulo;
 const updateModulo = async (req, res) => {
     try {
         const id = Number(req.params.id);
-        const { titolo, n_ore, competenza } = req.body;
+        const { titolo, n_ore, competenza, multiplo } = req.body;
         const modulo = await prisma_1.prisma.modulo.update({
             where: { id },
             data: {
                 titolo,
-                n_ore,
-                competenza
+                n_ore: n_ore ? Number(n_ore) : 4,
+                competenza,
+                multiplo: Boolean(multiplo === true || multiplo === "true")
             }
         });
         res.json(modulo);
     }
     catch (err) {
-        console.error({
-            message: "Errore nell'aggiornamento del modulo",
-            error: err,
-        });
-        res.status(500).json({ error: "Errore aggiornamento modulo" });
+        console.error("Errore nell'aggiornamento del modulo:", err);
+        res.status(500).json({ error: "Errore aggiornamento modulo", details: err.message });
     }
 };
 exports.updateModulo = updateModulo;
@@ -89,11 +110,8 @@ const deleteModulo = async (req, res) => {
         res.status(204).send();
     }
     catch (err) {
-        console.error({
-            message: "Errore nella cancellazione del modulo",
-            error: err,
-        });
-        res.status(500).json({ error: "Errore cancellazione moduolo" });
+        console.error("Errore nella cancellazione del modulo:", err);
+        res.status(500).json({ error: "Errore cancellazione modulo" });
     }
 };
 exports.deleteModulo = deleteModulo;
@@ -102,20 +120,12 @@ const getDocentiByModulo = async (req, res) => {
         const modulo_id = Number(req.params.id);
         const docenti = await prisma_1.prisma.docente_modulo.findMany({
             where: { modulo_id },
-            include: {
-                docente: true
-            }
+            include: { docente: true }
         });
-        if (docenti.length === 0) {
-            return res.status(404).send("Nessun docente trovato per questo modulo");
-        }
         res.json(docenti);
     }
     catch (err) {
-        console.error({
-            message: "Errore nella ricerca dei docenti per questo corso",
-            error: err,
-        });
+        console.error("Errore ricerca docenti:", err);
         res.status(500).json({ error: "Errore ricerca docenti" });
     }
 };
@@ -124,23 +134,13 @@ const getMaterialeByModulo = async (req, res) => {
     try {
         const modulo_id = Number(req.params.id);
         const materiali = await prisma_1.prisma.modulo_materiale.findMany({
-            where: {
-                modulo_id
-            },
-            include: {
-                materiale: true
-            }
+            where: { modulo_id },
+            include: { materiale: true }
         });
-        if (materiali.length === 0) {
-            return res.status(404).send("Nessun materiale trovato per questo modulo");
-        }
         res.json(materiali);
     }
     catch (err) {
-        console.error({
-            message: "Errore nella ricerca del materiale per questo modulo",
-            error: err,
-        });
+        console.error("Errore ricerca materiale:", err);
         res.status(500).json({ error: "Errore ricerca materiale" });
     }
 };
@@ -151,14 +151,14 @@ const addMaterialeToModulo = async (req, res) => {
         const { materiale_id } = req.body;
         const relazione = await prisma_1.prisma.modulo_materiale.create({
             data: {
-                modulo_id,
-                materiale_id
+                modulo_id: Number(modulo_id),
+                materiale_id: Number(materiale_id)
             }
         });
         res.status(201).json(relazione);
     }
     catch (err) {
-        console.error("Errore assegnazione materiale al modulo", err);
+        console.error("Errore assegnazione materiale al modulo:", err);
         res.status(500).json({ error: "Errore assegnazione materiale" });
     }
 };
@@ -175,11 +175,11 @@ const deleteMaterialeFromModulo = async (req, res) => {
                 },
             },
         });
-        res.status(201).json(relazione);
+        res.status(200).json(relazione);
     }
     catch (err) {
-        console.error("Errore cancellazione materiale dal modulo", err);
-        res.status(500).json({ error: "Errore cancellazione modulo" });
+        console.error("Errore cancellazione materiale dal modulo:", err);
+        res.status(500).json({ error: "Errore cancellazione materiale" });
     }
 };
 exports.deleteMaterialeFromModulo = deleteMaterialeFromModulo;
@@ -187,24 +187,62 @@ const getProgrammiByModulo = async (req, res) => {
     try {
         const modulo_id = Number(req.params.id);
         const programmi = await prisma_1.prisma.programma_modulo.findMany({
-            where: {
-                modulo_id
-            },
-            include: {
-                programma: true
-            }
+            where: { modulo_id },
+            include: { programma: true }
         });
-        if (programmi.length === 0) {
-            return res.status(404).send("Nessun programma trovato per questo modulo");
-        }
         res.json(programmi);
     }
     catch (err) {
-        console.error({
-            message: "Errore nella ricerca dei programmi per questo modulo",
-            error: err,
-        });
+        console.error("Errore ricerca programmi:", err);
         res.status(500).json({ error: "Errore ricerca programmi" });
     }
 };
 exports.getProgrammiByModulo = getProgrammiByModulo;
+const uploadCompleteModulo = async (req, res) => {
+    try {
+        if (!req.file)
+            return res.status(400).send("File mancante.");
+        const { titolo, n_ore, competenza, multiplo, descrizioneMateriale } = req.body;
+        const file = req.file;
+        const fileName = `${Date.now()}-${file.originalname}`;
+        const { error: uploadError } = await exports.supabase.storage
+            .from('Materiali')
+            .upload(fileName, file.buffer, { contentType: file.mimetype });
+        if (uploadError)
+            throw uploadError;
+        const { data: publicUrlData } = exports.supabase.storage
+            .from('Materiali')
+            .getPublicUrl(fileName);
+        const result = await prisma_1.prisma.$transaction(async (tx) => {
+            const nuovoModulo = await tx.modulo.create({
+                data: {
+                    titolo,
+                    n_ore: n_ore ? Number(n_ore) : 4,
+                    competenza,
+                    multiplo: Boolean(multiplo === true || multiplo === "true")
+                }
+            });
+            const nuovoMateriale = await tx.materiale.create({
+                data: {
+                    url: publicUrlData.publicUrl,
+                    file_name: file.originalname,
+                    tipo: file.mimetype,
+                    descrizione: descrizioneMateriale || `Materiale per ${titolo}`
+                }
+            });
+            await tx.modulo_materiale.create({
+                data: {
+                    modulo_id: nuovoModulo.id,
+                    materiale_id: nuovoMateriale.id
+                }
+            });
+            return nuovoModulo;
+        });
+        res.status(201).json(result);
+    }
+    catch (err) {
+        console.error("Errore upload completo modulo:", err);
+        res.status(500).json({ error: "Errore durante la creazione completa" });
+    }
+};
+exports.uploadCompleteModulo = uploadCompleteModulo;

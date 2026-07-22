@@ -5,9 +5,6 @@ const prisma_1 = require("../prisma");
 const getIndisponibilita = async (req, res) => {
     try {
         const indisponibilita = await prisma_1.prisma.indisponibilita.findMany();
-        if (indisponibilita.length === 0) {
-            return res.status(404).send("Nessuna indisponibilità trovata");
-        }
         res.json(indisponibilita);
     }
     catch (error) {

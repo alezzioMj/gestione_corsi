@@ -1,0 +1,3 @@
+-- AlterTable
+ALTER TABLE "modulo" ALTER COLUMN "n_ore" DROP NOT NULL,
+ALTER COLUMN "n_ore" SET DEFAULT 4;

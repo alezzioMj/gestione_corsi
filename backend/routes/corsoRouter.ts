@@ -15,7 +15,8 @@ import {
   deleteDocenteFromCorso,
   getSediByCorso,
   addSedeToCorso,
-  deleteSedeFromCorso
+  deleteSedeFromCorso,
+  deleteSessioni
 } from "../controllers/corsoController";
 import { scheduleCorsoController } from "../controllers/scheduleCorsoController";
 
@@ -38,5 +39,7 @@ corsiRouter.delete("/:id/sedi/:sede_id", deleteSedeFromCorso);
 
 //SCHEDULAZIONE
 corsiRouter.post("/:id/schedule", scheduleCorsoController);
+corsiRouter.delete("/:id/sessioni", deleteSessioni);
+
 
 export default corsiRouter;

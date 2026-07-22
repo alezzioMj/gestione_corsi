@@ -18,4 +18,5 @@ programmaRouter.get("/:id/moduli", programmaController_1.getModuliByProgramma);
 programmaRouter.post("/:id/moduli", programmaController_1.addModuloToProgramma);
 programmaRouter.post("/:id/moduli_bulk", programmaController_1.addModuloToProgrammaBulk);
 programmaRouter.delete("/:id/moduli/:modulo_id", programmaController_1.deleteModuloFromProgramma);
+programmaRouter.post("/completo", programmaController_1.createCompleteProgramma);
 exports.default = programmaRouter;

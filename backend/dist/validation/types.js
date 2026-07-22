@@ -1,11 +1,10 @@
 "use strict";
-// c:\Users\aless\Desktop\gestione_corsi\backend\src\types.ts
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.sedeDbSchema = exports.docenteDbSchema = exports.aulaDbSchema = exports.programmaDbSchema = exports.corsoDbSchema = void 0;
-const corso_schema_1 = require("../validation/corso.schema");
-const aula_schema_1 = require("../validation/aula.schema");
-const docente_schema_1 = require("../validation/docente.schema");
-const sede_schema_1 = require("../validation/sede.schema");
+const corso_schema_1 = require("./corso.schema");
+const aula_schema_1 = require("./aula.schema");
+const docente_schema_1 = require("./docente.schema");
+const sede_schema_1 = require("./sede.schema");
 const programma_schema_1 = require("./programma.schema");
 const zod_1 = require("zod");
 // Schema esteso per il FETCH (Dati che arrivano dal Database)
@@ -22,7 +21,7 @@ exports.aulaDbSchema = aula_schema_1.aulaSchema.extend({
     createdAt: zod_1.z.date().optional(),
 });
 exports.docenteDbSchema = docente_schema_1.docenteSchema.extend({
-    // Se il docente usa il CF come ID, non serve aggiungere id: z.number()
+    // Il docente usa il CF come chiave primaria, quindi non ha un campo 'id' numerico.
     createdAt: zod_1.z.date().optional()
 });
 exports.sedeDbSchema = sede_schema_1.sedeSchema.extend({

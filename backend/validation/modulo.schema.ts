@@ -5,6 +5,8 @@ export const moduloSchema = z.object({
 
   n_ore: z.number().int().positive(),
 
+  multiplo: z.boolean().optional(),
+
   competenza: z.enum([
     "Pratica",
     "Teorica",

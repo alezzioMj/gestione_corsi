@@ -5,9 +5,6 @@ const prisma_1 = require("../prisma");
 const getSedi = async (req, res) => {
     try {
         const sedi = await prisma_1.prisma.sede.findMany();
-        if (sedi.length === 0) {
-            return res.status(404).send("Nessuna sede trovata");
-        }
         res.json(sedi);
     }
     catch (error) {

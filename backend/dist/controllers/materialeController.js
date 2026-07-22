@@ -1,13 +1,15 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadFileAndCreateMateriale = exports.getModuliByMateriale = exports.deleteMateriale = exports.updateMateriale = exports.createMateriale = exports.getMateriale = exports.getMateriali = void 0;
+exports.getModuliByMateriale = exports.deleteMateriale = exports.updateMateriale = exports.createMateriale = exports.getMateriale = exports.getMateriali = exports.supabase = void 0;
+require("dotenv/config");
 const prisma_1 = require("../prisma");
+const supabase_js_1 = require("@supabase/supabase-js");
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY; // Usa la Service Role per bypassare le RLS nel backend
+exports.supabase = (0, supabase_js_1.createClient)(supabaseUrl, supabaseKey);
 const getMateriali = async (req, res) => {
     try {
         const materiali = await prisma_1.prisma.materiale.findMany();
-        if (materiali.length === 0) {
-            return res.status(404).send("Nessun materiale trovato");
-        }
         res.json(materiali);
     }
     catch (error) {
@@ -85,17 +87,32 @@ exports.updateMateriale = updateMateriale;
 const deleteMateriale = async (req, res) => {
     try {
         const id = Number(req.params.id);
+        // Recupero dati del materiale prima di cancellarlo
+        const materiale = await prisma_1.prisma.materiale.findUnique({
+            where: { id },
+        });
+        if (!materiale) {
+            return res.status(404).json({ error: "Materiale non trovato" });
+        }
+        // Estrarre il nome del file dall'URL
+        const fileName = materiale.url.split('/').pop();
+        if (fileName) {
+            // Elimina il file fisico da Supabase Storage
+            const { error: storageError } = await exports.supabase.storage
+                .from('materiali-didattici')
+                .remove([fileName]); // .remove() accetta un array di nomi file
+            if (storageError) {
+                console.error("Errore eliminazione file da Supabase:", storageError);
+            }
+        }
         await prisma_1.prisma.materiale.delete({
             where: { id },
         });
         res.status(204).send();
     }
     catch (err) {
-        console.error({
-            message: "Errore nella cancellazione del materiale",
-            error: err,
-        });
-        res.status(500).json({ error: "Errore cancellazione materiale" });
+        console.error("Errore nella cancellazione completa:", err);
+        res.status(500).json({ error: "Errore durante l'eliminazione" });
     }
 };
 exports.deleteMateriale = deleteMateriale;
@@ -124,29 +141,3 @@ const getModuliByMateriale = async (req, res) => {
     }
 };
 exports.getModuliByMateriale = getModuliByMateriale;
-const uploadFileAndCreateMateriale = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).send("Nessun file caricato.");
-        }
-        const { originalname, mimetype, filename, path: filePath } = req.file;
-        const { descrizione } = req.body; // Optional description from form fields
-        const materiale = await prisma_1.prisma.materiale.create({
-            data: {
-                url: `/uploads/${filename}`, // Store a relative path or URL
-                file_name: originalname,
-                tipo: mimetype || 'application/octet-stream', // Use mimetype from multer
-                descrizione: descrizione || '', // Use provided description or empty string
-            }
-        });
-        res.status(201).json(materiale);
-    }
-    catch (err) {
-        console.error({
-            message: "Errore nel caricamento del file e creazione del materiale",
-            error: err,
-        });
-        res.status(500).json({ error: "Errore caricamento file" });
-    }
-};
-exports.uploadFileAndCreateMateriale = uploadFileAndCreateMateriale;

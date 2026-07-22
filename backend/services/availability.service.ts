@@ -10,6 +10,11 @@ type Slot = {
     durata: number;
 };
 
+export type Ordine = {
+    modulo_id: number;
+    ordine: number;
+}
+
 export const generateSlots = (
     inizio: Date,
     fine: Date,
@@ -17,7 +22,8 @@ export const generateSlots = (
     mattino_fine: string,
     pomeriggio_inizio: string,
     pomeriggio_fine: string,
-    giorniDisponibili: number[]
+    giorniDisponibili: number[],
+    ordine: Ordine[],
     // oreDaSchedulare: number // <-- PUOI ANCHE TOGLIERLO, non serve più qui
 ): Slot[] => {
     const slots: Slot[] = [];
@@ -61,7 +67,7 @@ export const findDocente = async (
 ) => {
     for (const docente of listaDocenti) {
         try {
-            // Chiamiamo la validazione passandogli i 5 parametri richiesti
+            // Controlla la disponibilità del docente usando la cache delle sessioni
             checkDocenteDisponibileMemoria(
                 docente.codice_fiscale,
                 slot.data,
@@ -69,7 +75,6 @@ export const findDocente = async (
                 slot.ora_fine,
                 cacheSessioni
             );
-
             // Se non lancia errori, il docente è disponibile
             return docente;
         } catch (err: any) {
@@ -88,6 +93,7 @@ export const findAula = async (
 ) => {
     for (const aula of listaAule) {
         try {
+            // Controlla la disponibilità dell'aula usando la cache delle sessioni
             checkAulaDisponibileMemoria(
                 aula.id,
                 slot.data,
@@ -95,7 +101,7 @@ export const findAula = async (
                 slot.ora_fine,
                 cacheSessioni
             );
-
+            // Se non lancia errori, l'aula è disponibile
             return aula;
         } catch (err: any) {
             continue;
