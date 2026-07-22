@@ -15,20 +15,11 @@ const getModuli = async (req: express.Request, res: express.Response) => {
         titolo: true,
         n_ore: true,
         competenza: true,
-        multiplo: true,
-        created_at: true,
-        created_by: true
+        multiplo: true
       }
     });
 
-    // Mappatura per garantire che 'multiplo' e 'n_ore' abbiano sempre valori definiti
-    const formattedModuli = moduli.map((m) => ({
-      ...m,
-      n_ore: m.n_ore ?? 4,
-      multiplo: Boolean(m.multiplo)
-    }));
-
-    res.json(formattedModuli);
+    res.json(moduli);
   } catch (error) {
     console.error("Errore nel recupero dei moduli:", error);
     res.status(500).send("Errore del server");
