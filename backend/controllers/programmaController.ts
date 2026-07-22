@@ -9,6 +9,9 @@ const getProgrammi = async (req: express.Request, res: express.Response) => {
         programma_modulo: {
           include: {
             modulo: true
+          },
+          orderBy: {
+            ordine: 'asc'
           }
         }
       }
@@ -25,6 +28,16 @@ const getProgramma = async (req: express.Request, res: express.Response) => {
     const id = Number(req.params.id);
     const programma = await prisma.programma.findUnique({
       where: { id },
+      include: {
+        programma_modulo: {
+          include: {
+            modulo: true
+          },
+          orderBy: {
+            ordine: 'asc'
+          }
+        }
+      }
     });
 
     if (!programma) {
@@ -130,6 +143,9 @@ const getModuliByProgramma = async (req: express.Request, res: express.Response)
       where: { programma_id },
       include: {
         modulo: true
+      },
+      orderBy: {
+        ordine: 'asc'
       }
     })
 
@@ -150,15 +166,27 @@ const getModuliByProgramma = async (req: express.Request, res: express.Response)
 const addModuloToProgramma = async (req: express.Request, res: express.Response) => {
   try {
     const programma_id = Number(req.params.id);
-    const { modulo_id, obbligatorio, ordine } = req.body;
+    const { modulo_id, obbligatorio } = req.body;
+
+    // Trova l'ordine massimo attuale e aggiungi 1
+    const maxOrdine = await prisma.programma_modulo.findFirst({
+      where: { programma_id },
+      orderBy: { ordine: 'desc' },
+      select: { ordine: true }
+    });
+
+    const nuovoOrdine = (maxOrdine?.ordine || 0) + 1;
 
     const relazione = await prisma.programma_modulo.create({
       data: {
         programma_id,
         modulo_id,
-        obbligatorio,
-        ordine
+        obbligatorio: obbligatorio ?? true,
+        ordine: nuovoOrdine
       },
+      include: {
+        modulo: true
+      }
     });
 
     res.status(201).json(relazione);
@@ -208,16 +236,29 @@ export const addModuloToProgrammaBulk = async (
 const deleteModuloFromProgramma = async (req: express.Request, res: express.Response) => {
   try {
     const programma_id = Number(req.params.id);
-    const modulo_id = Number(req.params.modulo_id);
+    const programma_modulo_id = Number(req.params.programma_modulo_id);
 
+    // Elimina usando l'ID della relazione
     const relazione = await prisma.programma_modulo.delete({
       where: {
-        programma_id_modulo_id: {
-          programma_id,
-          modulo_id,
-        },
+        id: programma_modulo_id,
       },
     });
+
+    // Riordinare gli ordini rimanenti
+    const moduliRimanenti = await prisma.programma_modulo.findMany({
+      where: { programma_id },
+      orderBy: { ordine: 'asc' }
+    });
+
+    await prisma.$transaction(
+      moduliRimanenti.map((m, index) =>
+        prisma.programma_modulo.update({
+          where: { id: m.id },
+          data: { ordine: index + 1 }
+        })
+      )
+    );
 
     return res.status(200).json(relazione);
   } catch (err: any) {
@@ -259,7 +300,11 @@ const createCompleteProgramma = async (req: express.Request, res: express.Respon
         },
       },
       include: {
-        programma_modulo: true, // Include associations in response
+        programma_modulo: {
+          include: {
+            modulo: true
+          }
+        }
       },
     });
 
