@@ -60,7 +60,7 @@ export default function EditProgrammaModal({ open, onClose, programma, onSaveSuc
     };
 
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <form onSubmit={handleSubmit}>
                 <DialogTitle>Modifica Programma</DialogTitle>
                 <DialogContent dividers>

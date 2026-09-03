@@ -105,7 +105,7 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
 
     return (
         <>
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
             <form onSubmit={handleSubmit}>
                 <DialogTitle>Modifica Modulo</DialogTitle>
                 <DialogContent dividers>

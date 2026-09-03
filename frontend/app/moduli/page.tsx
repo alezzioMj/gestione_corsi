@@ -44,8 +44,14 @@ export default function ModuliPage() {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 4 }}>
+        <Container sx={{ py: 2 }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 2,
+                mb: 4
+            }}>
                 <Typography variant="h4" gutterBottom>Moduli Formativi</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Gestione dei moduli didattici e dei relativi materiali.
@@ -69,13 +75,23 @@ export default function ModuliPage() {
             )}
             {isLoading ? (
                 <DelayedLoading />
-            ) : moduli.length === 0 ? (
+            ) : !moduli || moduli.length === 0 ? (
                 <Typography variant="h6" color="text.secondary">Nessun modulo trovato. Inizia aggiungendo un nuovo modulo!</Typography>
             ) : (
-                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
+                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
                     {moduli.map((m: Modulo) => (
-                        <Paper key={m.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                            <ModuloCard
+                        <Paper
+                            key={m.id}
+                            variant="outlined"
+                            sx={{
+                                p: 2,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                justifyContent: 'space-between',
+                                width: '100%',
+                                height: '100%'
+                            }}
+                        >    <ModuloCard
                                 modulo={m}
                                 onModuloUpdated={() => mutate()}
                                 onDeleteModulo={handleDeleteModulo}

@@ -1,0 +1,15 @@
+**1. Root Layout (`app/layout.tsx`)**
+
+* **Espansione del main:** Aggiunti `flexGrow: 1`, `width: '100%'` e `minWidth: 0` al `<Box component="main">` per far occupare alla pagina l'intero spazio a destra della sidebar.
+* **Allineamento responsivo:** Impostati `flexDirection: 'column'` e `alignItems: 'stretch'` per impedire che il contenitore stringesse i contenuti al centro.
+* **Pulizia:** Rimosso il componente `<Toolbar/>` superfluo che applicava regole di centratura non necessarie.
+
+**2. Griglia della Pagina (`app/moduli/page.tsx`)**
+
+* **Rimozione limiti rigidi:** Sostituito il `<Container maxWidth="lg">` con un `<Box "100%" sx="{{" width: }}>` per eliminare i margini automatici ai lati.
+* **Dimensionamento fisso (Soluzione 2):** Impostato `gridTemplateColumns: "repeat(auto-fill, 350px)"` sul contenitore della griglia per mantenere le schede a una dimensione precisa e pulita da card, affiancandole a sinistra senza stirarle.
+
+**3. Card e Pulsanti (`ModuloCard.tsx` / `Paper`)**
+
+* **Larghezza completa:** Applicato `width: "100%"` al `<Paper>` o alla `<Card>` per occupare esattamente i 350px messi a disposizione dalla griglia.
+* **Layout dei tasti:** Aggiunto `flexWrap: "wrap"` (o `flex: "1 1 auto"`) nella sezione dei pulsanti in basso per eliminare del tutto le sovrapposizioni e il testo tagliato.

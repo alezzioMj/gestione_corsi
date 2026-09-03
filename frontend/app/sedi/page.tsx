@@ -9,7 +9,7 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 
 export default function SediPage() {
-    const { data: sedi, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/sedi`, fetcher);
+    const { data: sedi, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/sedi`, fetcher); //Hook di SWR
 
     const handleDeleteSede = async (sedeId: number) => {
         if (!window.confirm("Sei sicuro di voler eliminare questa sede? Verranno eliminate anche tutte le aule associate.")) return;
@@ -34,8 +34,14 @@ export default function SediPage() {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 4 }}>
+        <Container maxWidth="lg" sx={{ py: 2 }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 2,
+                mb: 4
+            }}>
                 <Typography variant="h4" gutterBottom>Sedi</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Visualizza e gestisci tutte le sedi create.
@@ -62,10 +68,10 @@ export default function SediPage() {
 
             {isLoading ? (
                 <DelayedLoading />
-            ) : sedi.length === 0 ? (
+            ) : !sedi || sedi.length === 0 ? (
                 <Typography variant="h6" color="text.secondary">Nessuna sede trovata. Inizia creando una nuova sede!</Typography>
             ) : (
-                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
+                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
                     {sedi.map((s: Sede) => (
                         <Paper key={s.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <SedeCard onDeleteSede={() => handleDeleteSede(s.id)} onSedeUpdated={() => mutate} sede={s} />

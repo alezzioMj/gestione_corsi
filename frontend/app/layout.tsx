@@ -1,10 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
-import SideDrawer from "@/components/Navigation/Drawer";
-import { Box, Toolbar } from "@mui/material";
-import ThemeRegistry from "@/components/ThemeRegistry";
-const drawerWidth = 240;
 
 export const metadata: Metadata = {
   title: "MongodiAPP",
@@ -18,30 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="it">
-      <body>
-          <Providers>
-            <Box sx={{ display: "flex" }}>
-
-              {/* SIDEBAR */}
-              <SideDrawer />
-
-              {/* CONTENUTO PRINCIPALE */}
-              <Box
-                component="main"
-                sx={{
-                  flexGrow: 1,
-                  p: 3,
-                  width: `calc(100% - ${drawerWidth}px)`,
-                }}
-              >
-                <Toolbar />
-                {children}
-              </Box>
-
-            </Box>
-          </Providers>
+      <body suppressHydrationWarning>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
 }
-

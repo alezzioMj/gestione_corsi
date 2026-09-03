@@ -19,7 +19,12 @@ import { useRouter } from "next/navigation";
 import StepReview from "./StepReview";
 import { Docente, Programma } from "../../validation/types"
 import { API_BASE_URL } from "@/lib/config";
-import StepProgrammazione from "./StepProgrammazione";
+import dynamic from "next/dynamic";
+
+const StepProgrammazione = dynamic(
+  () => import("./StepProgrammazione"), 
+  { ssr: false } // <--- Dice a Next.js di renderizzarlo SOLO sul client nel browser
+);
 
 
 export const formSchema = z.object({

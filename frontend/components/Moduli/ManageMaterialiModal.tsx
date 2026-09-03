@@ -158,7 +158,7 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             <Button variant="contained" size="small" startIcon={<AttachmentIcon />} onClick={() => setOpen(true)}>
                 Materiali
             </Button>
-            <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
+            <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
                 <DialogTitle>Gestione Materiali: {modulo.titolo}</DialogTitle>
                 <DialogContent dividers>
                     {/* Lista Materiali Associati in alto */}
@@ -198,7 +198,7 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                         CARICA NUOVO MATERIALE
                     </Typography>
                     <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
                             <Button
                                 variant="outlined"
                                 component="label"

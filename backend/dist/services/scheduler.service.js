@@ -20,7 +20,7 @@ const logger = {
     error: (msg, ...args) => { console.error(msg, ...args); }
 };
 const schedule = async (corso_id, giorniDisponibili, ordine) => {
-    const sessioniBulk = []; // Array per il bulk insert
+    const sessioniBulk = [];
     // Caricamento dati iniziali (Pre-fetch)
     const corso = await prisma_1.prisma.corso.findUnique({
         where: { id: corso_id },
@@ -38,7 +38,7 @@ const schedule = async (corso_id, giorniDisponibili, ordine) => {
         select: { corso_sede: { select: { sede: { select: { aula: true } } } } }
     });
     const listaAule = corsoConAule?.corso_sede.flatMap(cs => cs.sede.aula) ?? [];
-    //Pulizia sessioni esistenti 
+    // Pulizia sessioni esistenti in stato Bozza per questo corso
     await prisma_1.prisma.sessione.deleteMany({
         where: {
             corso_id: corso_id,
@@ -53,55 +53,60 @@ const schedule = async (corso_id, giorniDisponibili, ordine) => {
             data: { gte: dataInizio, lte: dataFine }
         }
     });
-    // cache locale con le sessioni già presenti nel DB
     let cacheSessioni = [...tutteLeSessioniEsistenti];
     // Generazione Slot potenziali
     const slots = (0, availability_service_1.generateSlots)(corso.inizio, corso.fine, corso.mattina_inizio, corso.mattina_fine, corso.pomeriggio_inizio, corso.pomeriggio_fine, giorniDisponibili, ordine);
-    // Recupero Moduli del Programma
+    // 1. Recupero Moduli del Programma associato al Corso
     const pm = await prisma_1.prisma.programma_modulo.findMany({
         where: { programma_id: corso.programma?.id },
-        include: { modulo: true },
-        orderBy: { ordine: 'asc' }
+        include: { modulo: true }
     });
     const moduliValidi = pm.filter(item => item.modulo !== null);
     if (moduliValidi.length === 0)
         throw new Error("Nessun modulo trovato nel programma");
-    // Ordina i moduli in base all'array di input 'ordine'
-    moduliValidi.sort((a, b) => {
-        const orderA = ordine.find(o => o.modulo_id === a.modulo_id)?.ordine ?? 999;
-        const orderB = ordine.find(o => o.modulo_id === b.modulo_id)?.ordine ?? 999;
-        return orderA - orderB;
-    });
     let slotIndex = 0;
-    // LOOP PRINCIPALE SUI MODULI
-    for (const { modulo } of moduliValidi) {
-        if (!modulo)
+    console.log(`[SCHEDULE] Ricevuti ${ordine?.length ?? 0} elementi nell'array ordine.`);
+    console.log(`[SCHEDULE] Slots totali generati: ${slots.length}`);
+    console.log("=== DIAGNOSTICA SLOT E DATE ===");
+    console.log("Data Inizio Corso:", corso.inizio);
+    console.log("Data Fine Corso:", corso.fine);
+    console.log("Giorni della settimana selezionati:", giorniDisponibili);
+    console.log("Totale SLOT potenziali generati da generateSlots:", slots.length);
+    console.log("Dettaglio Slots generati:", slots.map(s => `${s.data.toISOString().split('T')[0]} ${s.ora_inizio}-${s.ora_fine}`));
+    // 2. LOOP PRINCIPALE SULL'ARRAY 'ordine'
+    for (const item of ordine) {
+        if (!item)
             continue;
-        let oreRimanenti = modulo.n_ore ?? 0;
-        logger.info(`>>> Inizio Modulo: ${modulo.id} (${oreRimanenti} ore)`);
-        // Filtro docenti per competenza modulo
-        const docentiModulo = docentiAbilitati
-            .map(d => d.docente)
-            .filter(d => d.docente_modulo.some(dm => dm.modulo_id === modulo.id));
-        if (docentiModulo.length === 0) {
-            logger.error(`Nessun docente abilitato per il modulo ${modulo.id}`);
+        const relazioneModulo = moduliValidi.find(m => m.modulo_id === item.modulo_id);
+        const moduloDb = relazioneModulo?.modulo;
+        if (!moduloDb) {
+            logger.warn(`Modulo con ID ${item.modulo_id} non trovato tra i moduli del programma. Skip.`);
             continue;
         }
+        let oreRimanenti = moduloDb.n_ore ?? 0;
+        logger.info(`>>> Inizio Modulo: ${moduloDb.titolo} (ID: ${moduloDb.id}, ${oreRimanenti} ore) - Posizione Ordine: ${item.ordine}`);
+        const docentiModulo = docentiAbilitati
+            .map(d => d.docente)
+            .filter(d => d.docente_modulo.some(dm => dm.modulo_id === moduloDb.id));
+        if (docentiModulo.length === 0) {
+            logger.error(`Nessun docente abilitato per il modulo ID ${moduloDb.id}`);
+            continue;
+        }
+        // 3. ASSEGNAZIONE DEGLI SLOT PER QUESTO SPECIFICO MODULO
         while (oreRimanenti > 0 && slotIndex < slots.length) {
             const currentSlot = slots[slotIndex];
             try {
-                // Caricamento risorese
                 const docente = await (0, availability_service_1.findDocente)(docentiModulo, currentSlot, cacheSessioni);
                 const aula = await (0, availability_service_1.findAula)(listaAule, currentSlot, cacheSessioni);
                 if (!docente || !aula) {
-                    logger.warn(`[SKIP] Slot ${currentSlot.data.toLocaleDateString()} ${currentSlot.ora_inizio}: Docente trovato: ${!!docente}, Aula trovata: ${!!aula}. Docenti testati: ${docentiModulo.length}, Aule testate: ${listaAule.length}`);
+                    logger.warn(`[SKIP] Slot ${currentSlot.data.toLocaleDateString()} ${currentSlot.ora_inizio}: Docente: ${!!docente}, Aula: ${!!aula}`);
                     slotIndex++;
                     continue;
                 }
                 const nuovaSessioneDati = {
                     corso_id,
                     docente_cf: docente.codice_fiscale,
-                    modulo_id: modulo.id,
+                    modulo_id: moduloDb.id,
                     sede_id: aula.sede_id,
                     aula_id: aula.id,
                     data: currentSlot.data,
@@ -109,10 +114,9 @@ const schedule = async (corso_id, giorniDisponibili, ordine) => {
                     ora_fine: currentSlot.ora_fine,
                     stato: client_1.stato_sessione_enum.Bozza,
                     priorita: 1,
-                    note: `Modulo: ${modulo.id}`
+                    note: `Modulo: ${moduloDb.titolo} (Posizione ${item.ordine})`
                 };
                 sessioniBulk.push(nuovaSessioneDati);
-                // Aggiornamento cache locale
                 cacheSessioni.push(nuovaSessioneDati);
                 oreRimanenti -= currentSlot.durata;
                 slotIndex++;
@@ -122,19 +126,18 @@ const schedule = async (corso_id, giorniDisponibili, ordine) => {
                 slotIndex++;
             }
         }
-        // Log alla fine del ciclo 'while' per un modulo
         if (oreRimanenti > 0) {
-            logger.warn(`Modulo ${modulo.id} terminato con ${oreRimanenti} ore residue (slot disponibili esauriti).`);
+            logger.warn(`Modulo ${moduloDb.titolo} (ID: ${moduloDb.id}) terminato con ${oreRimanenti} ore residue (slot esauriti).`);
         }
         else {
-            logger.info(`Modulo ${modulo.id} completato con successo.`);
+            logger.info(`Modulo ${moduloDb.titolo} (ID: ${moduloDb.id}) completato con successo.`);
         }
     }
+    // 4. SALVATAGGIO MASSIVO E RETURN
     if (sessioniBulk.length > 0) {
         logger.info(`Salvataggio massivo di ${sessioniBulk.length} sessioni...`);
         await (0, sessione_service_1.createSessioneMany)(sessioniBulk);
     }
-    // Recupero finale 
     const sessioniCreate = await prisma_1.prisma.sessione.findMany({
         where: { corso_id, stato: client_1.stato_sessione_enum.Bozza },
         orderBy: { data: 'asc' }

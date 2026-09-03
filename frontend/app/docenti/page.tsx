@@ -35,8 +35,14 @@ export default function DocentiPage() {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
-            <Box sx={{ mb: 4 }}>
+        <Container sx={{ py: 2 }}>
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'flex-start',
+                gap: 2,
+                mb: 4
+            }}>
                 <Typography variant="h4" gutterBottom>Docenti</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Gestione dell'anagrafica docenti e dei relativi contatti.
@@ -68,7 +74,7 @@ export default function DocentiPage() {
                     Nessun docente trovato. Inizia aggiungendo un nuovo docente!
                 </Typography>
             ) : (
-                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
+                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
                     {docenti.map((d: Docente) => (
                         <Paper key={d.codice_fiscale} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <DocenteCard

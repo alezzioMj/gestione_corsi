@@ -237,7 +237,7 @@ const deleteModuloFromProgramma = async (req: express.Request, res: express.Resp
   try {
     const programma_id = Number(req.params.id);
     const programma_modulo_id = Number(req.params.programma_modulo_id);
-
+    
     // Elimina usando l'ID della relazione
     const relazione = await prisma.programma_modulo.delete({
       where: {

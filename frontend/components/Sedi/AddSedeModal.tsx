@@ -75,7 +75,7 @@ export default function AddSedeModal({ onSedeAdded } : {onSedeAdded : () => void
                 Crea Nuova Sede
             </Button>
 
-            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <form onSubmit={handleSubmit}>
                     <DialogTitle>Crea Nuova Sede</DialogTitle>
                     <DialogContent>

@@ -196,7 +196,7 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
                             <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', mb: 2, color: 'primary.main' }}>
                                 SEQUENZA PROGRAMMA (Trascina per ordinare)
                             </Typography>
-                            <Box sx={{ minHeight: 350, bgcolor: "grey.50", p: 2, borderRadius: 1, border: '1px dashed', borderColor: 'divider' }}>
+                            <Box sx={{ minHeight: 350, bgcolor: "auto.hover", p: 2, borderRadius: 1, border: '1px dashed', borderColor: 'divider' }}>
                                 <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                                     <SortableContext items={selectedIds} strategy={verticalListSortingStrategy}>
                                         {orderedSelectedModuli.length > 0 ? (

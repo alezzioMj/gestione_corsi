@@ -1,6 +1,6 @@
 // c:\Users\aless\Desktop\gestione_corsi\backend\src\types.ts
 
-import { Prisma } from '@prisma/client';
+import { Prisma } from "@backend/generated/prisma/client";
 import { corsoSchema } from '../validation/corso.schema';
 import { aulaSchema } from '../validation/aula.schema';
 import { docenteSchema } from '../validation/docente.schema';

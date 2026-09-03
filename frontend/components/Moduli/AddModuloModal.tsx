@@ -81,16 +81,16 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                 handleClose();
             } else {
                 const errorData = await res.json();
-                const msg = errorData.issues 
+                const msg = errorData.issues
                     ? errorData.issues.map((i: any) => i.message).join(", ")
                     : (errorData.error || errorData.message || "Impossibile creare il modulo");
                 throw new Error(msg);
             }
         } catch (error: unknown) {
-            setSnackbar({ 
-                open: true, 
-                message: error instanceof Error ? error.message : "Errore di rete", 
-                severity: "error" 
+            setSnackbar({
+                open: true,
+                message: error instanceof Error ? error.message : "Errore di rete",
+                severity: "error"
             });
         } finally {
             setSubmitting(false);
@@ -103,11 +103,11 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                 Aggiungi Modulo e Materiale
             </Button>
 
-            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="sm">
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
                 <form onSubmit={handleSubmit}>
                     <DialogTitle>Nuovo Modulo Formativo Completo</DialogTitle>
                     <DialogContent dividers>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
+                        <Box sx={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>
 
                             <Typography variant="subtitle2" color="primary">Informazioni Modulo</Typography>
 
@@ -157,7 +157,24 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                                 onChange={(e) => setFormData({ ...formData, descrizioneMateriale: e.target.value })}
                             />
 
-                            <Box sx={{ border: '2px dashed #e0e0e0', p: 3, textAlign: 'center', borderRadius: 2, bgcolor: '#fafafa' }}>
+                            <Box
+                                sx={{
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '2px dashed',
+                                    borderColor: 'divider',
+                                    p: 3,
+                                    textAlign: 'center',
+                                    borderRadius: 2,
+                                    bgcolor: 'action.hover',
+                                    transition: 'background-color 0.2s',
+                                    '&:hover': {
+                                        bgcolor: 'action.selected'
+                                    }
+                                }}
+                            >
                                 <input
                                     type="file"
                                     hidden
@@ -199,9 +216,9 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                 </form>
             </Dialog>
 
-            <Snackbar 
-                open={snackbar.open} 
-                autoHideDuration={6000} 
+            <Snackbar
+                open={snackbar.open}
+                autoHideDuration={6000}
                 onClose={() => setSnackbar({ ...snackbar, open: false })}
             >
                 <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled">

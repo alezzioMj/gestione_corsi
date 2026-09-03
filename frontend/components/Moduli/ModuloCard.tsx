@@ -6,6 +6,7 @@ import ManageMaterialiModal from "./ManageMaterialiModal";
 import EditModuloModal from "./EditModuloModal";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
+import Stack from "@mui/material/Stack";
 
 type Modulo = {
     id: number;
@@ -25,12 +26,12 @@ export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: 
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
     return (
-        <Card sx={{ height: "100%", display: "flex", flexDirection: "column", boxShadow: 2 }}>
+        <Card sx={{width: "100%", height: "100%", display: "flex", flexDirection: "column", boxShadow: 2 }}>
             <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                 <Typography variant="h6" color="primary" gutterBottom>
                     {modulo.titolo}
                 </Typography>
-                
+
                 <Box sx={{ mb: 2 }}>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
                         <strong>Descrizione:</strong> {modulo.descrizione || "N/A"}
@@ -38,18 +39,23 @@ export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: 
 
                     {/* Badge visivo per indicare se il modulo è multiplo o singolo */}
                     <Box sx={{ mt: 1 }}>
-                        <Chip 
-                            label={modulo.multiplo ? "Multiplo" : "Singolo"} 
-                            color={modulo.multiplo ? "secondary" : "default"} 
-                            size="small" 
+                        <Chip
+                            label={modulo.multiplo ? "Multiplo" : "Singolo"}
+                            color={modulo.multiplo ? "secondary" : "default"}
+                            size="small"
                             variant={modulo.multiplo ? "filled" : "outlined"}
                         />
                     </Box>
                 </Box>
 
                 <Divider sx={{ my: 1.5, mt: 'auto' }} />
-                
-                <Box sx={{ display: "flex", justifyContent: "flex-end", gap: 1 }}>
+
+                <Stack
+                    direction="row"
+                    spacing={1}
+                    useFlexGap
+                    sx={{ flexWrap: 'wrap', marginTop: 2 }}
+                >
                     <ManageMaterialiModal modulo={modulo} />
                     <Button
                         variant="outlined"
@@ -59,27 +65,29 @@ export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: 
                     >
                         Modifica
                     </Button>
-                    <Button 
-                        variant="outlined" 
-                        color="error" 
-                        size="small" 
-                        startIcon={<DeleteIcon />} 
+                    <Button
+                        variant="outlined"
+                        color="error"
+                        size="small"
+                        startIcon={<DeleteIcon />}
                         onClick={() => onDeleteModulo(modulo.id)}
                     >
                         Elimina
                     </Button>
-                </Box>
+                </Stack>
             </CardContent>
 
             {/* Modal di Modifica Modulo */}
-            {modulo && (
-                <EditModuloModal
-                    open={isEditModalOpen}
-                    onClose={() => setIsEditModalOpen(false)}
-                    modulo={modulo}
-                    onSaveSuccess={onModuloUpdated}
-                />
-            )}
-        </Card>
+            {
+                modulo && (
+                    <EditModuloModal
+                        open={isEditModalOpen}
+                        onClose={() => setIsEditModalOpen(false)}
+                        modulo={modulo}
+                        onSaveSuccess={onModuloUpdated}
+                    />
+                )
+            }
+        </Card >
     );
 }

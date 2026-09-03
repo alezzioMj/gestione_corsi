@@ -38,7 +38,7 @@ export default function ProgrammiPage() {
     };
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container sx={{ py: 2 }}>
             <Box sx={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -64,7 +64,7 @@ export default function ProgrammiPage() {
             ) : programmi.length === 0 ? (
                 <Typography variant="h6" color="text.secondary">Nessun programma trovato. Inizia aggiungendo un nuovo programma!</Typography>
             ) : (
-                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(300px, 1fr))", gap: 3 }}>
+                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
                     {programmi.map((p: ProgrammaConModuli) => (
                         <Paper key={p.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <ProgrammaCard

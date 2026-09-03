@@ -270,7 +270,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
                                     <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', mb: 2, color: 'primary.main' }}>
                                         MODULI SELEZIONATI (Trascina per ordinare)
                                     </Typography>
-                                    <Box sx={{ minHeight: 350, bgcolor: "grey.50", p: 2, borderRadius: 1, border: '1px dashed', borderColor: 'divider' }}>
+                                    <Box sx={{ minHeight: 350, bgcolor: "action.hover", p: 2, borderRadius: 1, border: '1px dashed', borderColor: 'divider' }}>
                                         <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                                             <SortableContext items={selectedModuleIds} strategy={verticalListSortingStrategy}>
                                                 {orderedSelectedModuli.length > 0 ? (
