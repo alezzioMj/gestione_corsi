@@ -41,6 +41,17 @@ export const sedeDbSchema = sedeSchema.extend({
     createdAt: z.date().optional(),
 });
 
+// Forma delle risposte di errore dalle API
+export const apiErrorSchema = z.object({
+  error: z.string().optional(),
+  issues: z.array(z.object({
+    message: z.string(),
+    path: z.array(z.string()).optional(),
+  })).optional(),
+});
+
+export type ApiErrorData = z.infer<typeof apiErrorSchema>;
+
 // Esportazione dei tipi derivati dagli schemi DB
 export type Corso = z.infer<typeof corsoDbSchema>;
 export type Programma = z.infer<typeof programmaDbSchema>;

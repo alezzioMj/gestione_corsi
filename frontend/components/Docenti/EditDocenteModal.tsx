@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete, CircularProgress } from "@mui/material";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useRouter } from "next/navigation";
 import EditIcon from "@mui/icons-material/Edit";
@@ -35,7 +35,6 @@ countries.registerLocale(itLocale);
 
 export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess }: EditDocenteModalProps) {
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
     
     const [formData, setFormData] = useState({
         nome: "",

@@ -36,7 +36,7 @@ export default function SessioniPage() {
 
                 // Chiamate in parallelo al backend per sessioni e docenti
                 const [resSessioni, resDocenti, resCorsi] = await Promise.all([
-                    fetch(`${API_BASE_URL}/sessioni`),
+                    fetch(`${API_BASE_URL}/sessioni/full`),
                     fetch(`${API_BASE_URL}/docenti`),
                     fetch(`${API_BASE_URL}/corsi`)
                 ]);
@@ -99,7 +99,7 @@ export default function SessioniPage() {
                     open={isModalOpen}
                     onClose={handleCloseModal}
                     giorno={new Date(selectedCellData.dateKey)} // O selectedCellData.dateKey se vuole la stringa
-                    commesse={sessioni}
+                    sessioni={sessioni}
                 />
             )}
             <div className="p-6 space-y-6">

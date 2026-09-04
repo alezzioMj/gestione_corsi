@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { API_BASE_URL } from "@/lib/config";
+import { ApiErrorData } from "@/validation/types";
 
 interface EditModuloModalProps {
     open: boolean;
@@ -86,10 +87,10 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                 onSaveSuccess();
                 onClose();
             } else {
-                const errorData = await res.json();
+                const errorData : ApiErrorData = await res.json();
                 const msg = errorData.issues 
-                    ? errorData.issues.map((i: any) => `${i.path.join('.')}: ${i.message}`).join(", ")
-                    : (errorData.error || errorData.message || "Errore durante l'aggiornamento");
+                    ? errorData.issues.map((i) => `${i.path?.join('.')}: ${i.message}`).join(", ")
+                    : (errorData.error || "Errore durante l'aggiornamento");
                 throw new Error(msg);
             }
         } catch (err: unknown) {

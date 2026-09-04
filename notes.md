@@ -1,0 +1,1 @@
+Usare hook SWR per richieste

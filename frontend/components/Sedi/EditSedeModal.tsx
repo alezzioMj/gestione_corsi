@@ -8,46 +8,32 @@ import {
     DialogContent,
     DialogActions,
     TextField,
-    CircularProgress,
     Box
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { API_BASE_URL } from "@/lib/config";
+import { Sede } from "@/validation/types";
 
 interface EditSedeModalProps {
     open: boolean;
     onClose: () => void;
-    sede: any; // Sostituisci con il tipo Sede appropriato
+    sede: Sede; // Sostituisci con il tipo Sede appropriato
     onSaveSuccess: () => void;
 }
 
 export default function EditSedeModal({ open, onClose, sede, onSaveSuccess }: EditSedeModalProps) {
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
-        nome: "",
-        indirizzo: "",
-        civico: "",
-        cap: "",
-        citta: "",
-        provincia: "",
-        descrizione: ""
+        nome: sede.nome || "",
+        indirizzo: sede.indirizzo || "",
+        civico: sede.civico || "",
+        cap: sede.cap || "",
+        citta: sede.citta || "",
+        provincia: sede.provincia || "",
+        descrizione: sede.descrizione || ""
     });
 
-    useEffect(() => {
-        if (sede) {
-            setFormData({
-                nome: sede.nome || "",
-                indirizzo: sede.indirizzo || "",
-                civico: sede.civico || "",
-                cap: sede.cap || "",
-                citta: sede.citta || "",
-                provincia: sede.provincia || "",
-                descrizione: sede.descrizione || ""
-            });
-        }
-    }, [sede, open]);
-
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
@@ -77,21 +63,21 @@ export default function EditSedeModal({ open, onClose, sede, onSaveSuccess }: Ed
                 <DialogTitle>Modifica Sede</DialogTitle>
                 <DialogContent dividers>
                     <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-                        <TextField 
-                            label="Nome Sede" fullWidth required 
-                            value={formData.nome} 
-                            onChange={(e) => setFormData({ ...formData, nome: e.target.value })} 
+                        <TextField
+                            label="Nome Sede" fullWidth required
+                            value={formData.nome}
+                            onChange={(e) => setFormData({ ...formData, nome: e.target.value })}
                         />
                         <Box sx={{ display: 'flex', gap: 2 }}>
-                            <TextField 
-                                label="Indirizzo" sx={{ flex: 2 }} required 
-                                value={formData.indirizzo} 
-                                onChange={(e) => setFormData({ ...formData, indirizzo: e.target.value })} 
+                            <TextField
+                                label="Indirizzo" sx={{ flex: 2 }} required
+                                value={formData.indirizzo}
+                                onChange={(e) => setFormData({ ...formData, indirizzo: e.target.value })}
                             />
-                            <TextField 
-                                label="Civ." sx={{ flex: 1 }} 
-                                value={formData.civico} 
-                                onChange={(e) => setFormData({ ...formData, civico: e.target.value })} 
+                            <TextField
+                                label="Civ." sx={{ flex: 1 }}
+                                value={formData.civico}
+                                onChange={(e) => setFormData({ ...formData, civico: e.target.value })}
                             />
                         </Box>
                         <Box sx={{ display: 'flex', gap: 2 }}>

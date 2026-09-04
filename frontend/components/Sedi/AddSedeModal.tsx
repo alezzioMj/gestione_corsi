@@ -11,13 +11,21 @@ import {
     Box
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
 
-export default function AddSedeModal({ onSedeAdded } : {onSedeAdded : () => void}){
+export default function AddSedeModal({ onSedeAdded }: { onSedeAdded: () => void }) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
-    const router = useRouter();
+
+    const fields = [
+        { key: 'nome', label: 'Nome Sede', required: true },
+        { key: 'indirizzo', label: 'Indirizzo', required: true },
+        { key: 'civico', label: 'Civico', required: false },
+        { key: 'cap', label: 'CAP', required: true },
+        { key: 'citta', label: 'Città', required: true },
+        { key: 'provincia', label: 'Provincia', required: true },
+        { key: 'descrizione', label: 'Descrizione', required: false, multiline: true, rows: 3 },
+    ] as const;
 
     const [formData, setFormData] = useState({
         nome: "",
@@ -29,6 +37,7 @@ export default function AddSedeModal({ onSedeAdded } : {onSedeAdded : () => void
         descrizione: ""
     });
 
+    // Handle modal opening and closing (reset form data)
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
         setOpen(false);
@@ -43,7 +52,11 @@ export default function AddSedeModal({ onSedeAdded } : {onSedeAdded : () => void
         });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleChange = (field: keyof typeof formData) => 
+    (e: React.ChangeEvent<HTMLInputElement>) => 
+      setFormData(prev => ({ ...prev, [field]: e.target.value }));
+
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setLoading(true);
 
@@ -80,14 +93,11 @@ export default function AddSedeModal({ onSedeAdded } : {onSedeAdded : () => void
                     <DialogTitle>Crea Nuova Sede</DialogTitle>
                     <DialogContent>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
-                            <TextField label="Nome Sede" fullWidth required value={formData.nome} onChange={(e) => setFormData({ ...formData, nome: e.target.value })} />
-                            <TextField label="Indirizzo" fullWidth required value={formData.indirizzo} onChange={(e) => setFormData({ ...formData, indirizzo: e.target.value })} />
-                            <TextField label="Civico" fullWidth value={formData.civico} onChange={(e) => setFormData({ ...formData, civico: e.target.value })} />
-                            <TextField label="CAP" fullWidth required value={formData.cap} onChange={(e) => setFormData({ ...formData, cap: e.target.value })} />
-                            <TextField label="Città" fullWidth required value={formData.citta} onChange={(e) => setFormData({ ...formData, citta: e.target.value })} />
-                            <TextField label="Provincia" fullWidth required value={formData.provincia} onChange={(e) => setFormData({ ...formData, provincia: e.target.value })} />
-                            <TextField label="Descrizione" fullWidth multiline rows={3} value={formData.descrizione} onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })} />
-                        </Box>
+                            {fields.map((f) => ( 
+                                <TextField key={f.key} label={ f.label } fullWidth required={f.required} value={formData[f.key]} onChange={ handleChange( f.key ) } />
+                                )
+                            )}
+                            </Box>
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={handleClose}>Annulla</Button>

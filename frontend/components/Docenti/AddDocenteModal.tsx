@@ -1,27 +1,17 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete, CircularProgress } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
-import { useRouter } from "next/navigation";
 import * as countries from "i18n-iso-countries";
 import itLocale from "i18n-iso-countries/langs/it.json";
 import { API_BASE_URL } from "@/lib/config";
-import useSWR, { mutate } from "swr";
+import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 
-type Provincia = {
-    codice: string;
-    nome: string;
-    regione: string;
-    sigla: string;
-};
-
-type Comune = {
-    nome: string;
-};
-
+type Provincia = { codice: string; nome: string; regione: string; sigla: string };
+type Comune = { nome: string };
 
 // Registra la localizzazione italiana per la libreria delle nazioni
 countries.registerLocale(itLocale);
@@ -70,28 +60,6 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
         name
     }));
 
-    useEffect(() => {
-        if (!isItaly) {
-            // Reset dei valori nel form se nazione non è Italia
-            setFormData(prev => ({
-                ...prev,
-                regione: "",
-                provincia: "",
-                comune: ""
-            }));
-        }
-    }, [isItaly]);
-
-    // Reset provincia se cambia regione
-    useEffect(() => {
-        setFormData(prev => ({ ...prev, provincia: "", comune: "" }));
-    }, [formData.regione]);
-
-    // Reset comune se cambia provincia
-    useEffect(() => {
-        setFormData(prev => ({ ...prev, comune: "" }));
-    }, [formData.provincia]);
-
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
         setOpen(false);
@@ -123,28 +91,6 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
             setSubmitting(false);
         }
     };
-
-    // Calcolo codice fiscale
-    /*const calculateCodiceFiscale = (
-        nome: string,
-        cognome: string,
-        sesso: string,
-        luogoDiNascita: string,
-        codiceProvincia: string,
-        giornoDiNascita: string,
-        meseDiNascita: string,
-        annoDiNascita: string,
-        livelloOmocodia: string,
-        comuneSospeso: string,
-        access_token: string
-    ) => async () => {
-        const URL = "http://api.miocodicefiscale.it/calculate?lname={cognome}&fname={nome}&gender={sesso}&city={luogo-di-nascita}&state={codice-provincia}&abolished={comune-soppresso}&day={giorno-di-nascita}&month={mese-di-nascita}&year={anno-di-nascita}&omocodia_level={livello-omocodia}&access_token={tua-chiave-API}";
-        try {
-            const res = await fetch(URL)
-        } catch {
-
-        }
-    }*/
 
     return (
         <>
@@ -211,6 +157,7 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Autocomplete
+                                    key={ formData.nazione }
                                     disabled={!isItaly}
                                     options={regioni}
                                     value={formData.regione || null}
@@ -220,6 +167,7 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Autocomplete
+                                    key={ formData.regione }
                                     disabled={!isItaly || !formData.regione}
                                     options={province}
                                     getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.nome || "")}
@@ -231,6 +179,7 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
                             </Grid>
                             <Grid size={{ xs: 12, sm: 6 }}>
                                 <Autocomplete
+                                    key={ formData.provincia }
                                     options={comuni}
                                     value={comuni.find((c: Comune) => c.nome === formData.comune) || null}
                                     getOptionLabel={(opt) => (typeof opt === 'string' ? opt : opt.nome || "")}

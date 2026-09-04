@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const sedeSchema = z.object({
+  id: z.number(),
+
   nome: z.string().min(1).max(150),
 
   indirizzo: z.string().min(1).max(150),

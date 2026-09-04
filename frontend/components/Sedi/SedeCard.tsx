@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Card, CardContent, Typography, Box, Divider, Button, IconButton } from "@mui/material";
+import { Card, CardContent, Typography, Box, Divider, Button } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
 import { Sede } from "../../validation/types";
@@ -79,6 +79,7 @@ export default function SedeCard({ sede, onSedeUpdated, onDeleteSede }: SedeCard
       {/* Modal di Modifica Sede */}
       {sede && (
         <EditSedeModal
+          key={sede.id}
           open={isEditModalOpen}
           onClose={() => setIsEditModalOpen(false)}
           sede={sede}

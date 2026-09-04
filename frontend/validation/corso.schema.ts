@@ -4,7 +4,7 @@ export const corsoSchema = z.object({
   cliente: z.string().max(150),
   programma_id: z.number(),
   n_ore: z.number(),
-
+  nome : z.string().max(150),
   inizio: z.coerce.date(),
   fine: z.coerce.date(),
   //orari di inizio e fine

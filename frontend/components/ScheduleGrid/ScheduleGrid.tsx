@@ -94,7 +94,7 @@ export default function ScheduleGrid({ commesse = [], docenti = [], corsi = [], 
                         <div
                             key={doc.codice_fiscale}
                             className="text-xs px-2 py-0.5 rounded font-medium border border-black/30 text-black"
-                            style={{ backgroundColor: doc.colore || "#e5e7eb" }}
+                            style={{ backgroundColor: "#e5e7eb" }}
                         >
                             {doc.nome} {doc.cognome}
                         </div>
@@ -142,7 +142,7 @@ export default function ScheduleGrid({ commesse = [], docenti = [], corsi = [], 
                         console.log("Corsi" + corsi.length);
                         // Cerca il corso associato verificando le varie proprietà id possibili
                         const corso = corsi?.find(
-                            (c) => c.id === (commessa as any).corso_id || c.id === (commessa as any).corsoId || c.id === commessa.id
+                            (c) => c.id === commessa.id || c.id === commessa.id || c.id === commessa.id
                         );
 
                         // Recupero Nome e Cliente

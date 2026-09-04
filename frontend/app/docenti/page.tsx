@@ -45,7 +45,7 @@ export default function DocentiPage() {
             }}>
                 <Typography variant="h4" gutterBottom>Docenti</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                    Gestione dell'anagrafica docenti e dei relativi contatti.
+                    {" Gestione dell'anagrafica docenti e dei relativi contatti. "}
                 </Typography>
 
                 <Box sx={{ mb: 4 }}>

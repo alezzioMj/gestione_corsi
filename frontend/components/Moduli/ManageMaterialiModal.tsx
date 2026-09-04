@@ -11,6 +11,7 @@ import AddIcon from "@mui/icons-material/Add";
 import AttachmentIcon from "@mui/icons-material/Attachment";
 import UploadFileIcon from "@mui/icons-material/UploadFile"; // New icon for upload
 import { API_BASE_URL } from "@/lib/config";
+import { ApiErrorData } from "@/validation/types";
 
 // Define a more specific type for Modulo and Materiale if available
 interface Modulo {
@@ -88,10 +89,10 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             });
 
             if (!uploadRes.ok) {
-                const errorData = await uploadRes.json();
+                const errorData : ApiErrorData = await uploadRes.json();
                 const msg = errorData.issues 
-                    ? errorData.issues.map((i: any) => i.message).join(", ")
-                    : (errorData.message || errorData.error || "Errore durante il caricamento.");
+                    ? errorData.issues.map((i) => i.message).join(", ")
+                    : ( errorData.error || "Errore durante il caricamento.");
                 throw new Error(msg);
             }
             const newMateriale = await uploadRes.json(); // Expecting the created Materiale object with an ID
@@ -109,10 +110,10 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                 setFileDescription("");
                 setSnackbar({ open: true, message: "Materiale caricato e associato con successo!", severity: "success" });
             } else {
-                const errorData = await associateRes.json();
+                const errorData : ApiErrorData = await associateRes.json();
                 const msg = errorData.issues 
-                    ? errorData.issues.map((i: any) => i.message).join(", ")
-                    : (errorData.message || errorData.error || "Errore durante l'associazione.");
+                    ? errorData.issues.map((i) => i.message).join(", ")
+                    : (errorData.error || "Errore durante l'associazione.");
                 throw new Error(msg);
             }
         } catch (error: unknown) {

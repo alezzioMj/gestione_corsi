@@ -11,6 +11,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { API_BASE_URL } from "@/lib/config";
+import { ApiErrorData } from "@/validation/types";
 
 interface AddModuloModalProps {
     onModuloAdded?: () => void;
@@ -80,10 +81,10 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                 if (onModuloAdded) onModuloAdded();
                 handleClose();
             } else {
-                const errorData = await res.json();
+                const errorData : ApiErrorData = await res.json();
                 const msg = errorData.issues
-                    ? errorData.issues.map((i: any) => i.message).join(", ")
-                    : (errorData.error || errorData.message || "Impossibile creare il modulo");
+                    ? errorData.issues.map((i) => i.message).join(", ")
+                    : (errorData.error || "Impossibile creare il modulo");
                 throw new Error(msg);
             }
         } catch (error: unknown) {

@@ -1,18 +1,17 @@
 "use client";
 
-import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, CircularProgress, Alert, Container, Snackbar, TextField, Divider } from "@mui/material"; 
-import Link from "next/link";
+import { Box, Typography, Button, Dialog, DialogTitle, DialogContent, DialogActions, IconButton, CircularProgress, Alert, Container, Snackbar, TextField} from "@mui/material"; 
 import React, { useState, useRef } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
-import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from "@mui/icons-material/Add";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import { API_BASE_URL } from "@/lib/config";
 import useSWR from 'swr';
 import DelayedLoading from "@/components/DelayedLoading";
 import { fetcher } from "@/lib/swr-config";
+import { ApiErrorData } from "@/validation/types";
 
 // Definizione di un tipo base per un materiale
 interface Materiale {
@@ -49,10 +48,10 @@ export default function MaterialiPage() {
                 method: "DELETE",
             });
             if (!res.ok) {
-                const errorData = await res.json();
+                const errorData : ApiErrorData = await res.json();
                 const msg = errorData.issues 
-                    ? errorData.issues.map((i: any) => i.message).join(", ")
-                    : (errorData.message || errorData.error || `Errore: ${res.statusText}`);
+                    ? errorData.issues.map((i) => i.message).join(", ")
+                    : (errorData.error || `Errore: ${res.statusText}`);
                 throw new Error(msg);
             }
             mutate();
@@ -86,11 +85,11 @@ export default function MaterialiPage() {
             });
 
             if (!res.ok) {
-                const errorData = await res.json();
+                const errorData : ApiErrorData = await res.json();
                 // Estrae i messaggi dall'array 'issues' se presenti
                 const msg = errorData.issues 
-                    ? errorData.issues.map((i: any) => i.message).join(", ")
-                    : (errorData.error || errorData.message || "Errore nel caricamento");
+                    ? errorData.issues.map((i) => i.message).join(", ")
+                    : (errorData.error || "Errore nel caricamento");
                 throw new Error(msg);
             }
 
@@ -264,7 +263,7 @@ export default function MaterialiPage() {
                 >
                     <DialogTitle>Conferma Eliminazione</DialogTitle>
                     <DialogContent dividers>
-                        Sei sicuro di voler eliminare questo materiale? L'azione è irreversibile.
+                        {"Sei sicuro di voler eliminare questo materiale? L'azione è irreversibile."}
                     </DialogContent>
                     <DialogActions>
                         <Button onClick={() => setDeleteConfirm({ open: false, id: null })}>Annulla</Button>

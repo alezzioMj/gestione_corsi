@@ -155,7 +155,7 @@ export default function StepDocenti({
         <Typography variant="h6" gutterBottom>Orari Standard</Typography>
         <Grid container spacing={2}>
           {fields.map((timeField) => (
-            <Grid item xs={12} sm={3} key={timeField.name}>
+            <Grid key={timeField.name} size={{ xs: 12, sm: 3 }}>
               <Controller
                 name={timeField.name as keyof FormType}
                 control={control}

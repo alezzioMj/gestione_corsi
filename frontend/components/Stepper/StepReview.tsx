@@ -29,7 +29,7 @@ export default function StepReview({ docenti, programmi }: { docenti: DocenteCon
             <Paper variant="outlined" sx={{ p: 3, backgroundColor: 'action.hover' }}>
                 <Grid container spacing={4}>
                     {/* SEZIONE ANAGRAFICA */} 
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, sm: 3 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                             Dati Generali
                             </Typography>
@@ -44,7 +44,7 @@ export default function StepReview({ docenti, programmi }: { docenti: DocenteCon
                     </Grid>
 
                     {/* SEZIONE PIANIFICAZIONE */} 
-                    <Grid item xs={12} md={6}>
+                    <Grid size={{ xs: 12, sm: 3 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Docenti e Orari</Typography>
                         <List dense>
                             <ListItem>
@@ -75,7 +75,7 @@ export default function StepReview({ docenti, programmi }: { docenti: DocenteCon
                     </Grid>
 
                     {data.note && (
-                        <Grid item xs={12}>
+                        <Grid size={{ xs: 12 }}>
                             <Divider sx={{ mb: 1 }} />
                             <Typography variant="caption" color="text.secondary">Note aggiuntive:</Typography>
                             <Typography variant="body2">{data.note}</Typography>

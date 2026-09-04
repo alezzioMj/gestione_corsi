@@ -23,7 +23,7 @@ import dynamic from "next/dynamic";
 
 const StepProgrammazione = dynamic(
   () => import("./StepProgrammazione"), 
-  { ssr: false } // <--- Dice a Next.js di renderizzarlo SOLO sul client nel browser
+  { ssr: false } 
 );
 
 
@@ -33,7 +33,7 @@ export const formSchema = z.object({
     sedi: z.array(z.string()).min(1, "Seleziona almeno una sede"),
     programmi: z.number().min(1, "Seleziona un programma"),
     docenti: z.array(z.string()).min(1, "Seleziona almeno un docente"),
-    oreTotali: z.coerce.number().min(0, "Le ore totali non possono essere negative"), // Changed min to 0, dynamic validation will handle the lower bound
+    oreTotali: z.number().min(0, "Le ore totali non possono essere negative"), // Changed min to 0, dynamic validation will handle the lower bound
     moduliOrdinati: z.array(z.string()).min(1, "L'ordine dei moduli è obbligatorio"),
     dataInizio: z.string().min(1, "Data inizio obbligatoria"),
     dataFine: z.string().min(1, "Data fine obbligatoria"),
@@ -50,7 +50,7 @@ export type FormType = z.infer<typeof formSchema>;
 // Interfacce per i dati arricchiti dal backend
 export interface ModuloRelation {
     modulo_id: number;
-    modulo: { titolo: string; n_ore?: number; competenza?: string };
+    modulo: { titolo: string; n_ore?: number; competenza?: string; multiplo: boolean;};
     n_ripetizioni: number;
 }
 
@@ -227,11 +227,11 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         let fieldsToValidate: (keyof FormType)[] = [];
 
         if (activeStep === 0) {
-            fieldsToValidate = ["nome", "cliente", "sedi", "programmi", "oreTotali", "dataInizio", "dataFine"];
+            fieldsToValidate = ["nome", "cliente", "sedi", "dataInizio", "dataFine"];
         } else if (activeStep === 1) {
             fieldsToValidate = ["docenti", "giorni", "mattina_inizio", "mattina_fine", "pomeriggio_inizio", "pomeriggio_fine"];
         } else if (activeStep === 2) {
-            fieldsToValidate = ["moduliOrdinati"];
+            fieldsToValidate = ["moduliOrdinati", "programmi", "oreTotali"];
         }
 
         const isStepValid = fieldsToValidate.length > 0
