@@ -12,6 +12,8 @@ export const docenteSchema = z.object({
     .min(1, "Il nome è obbligatorio")
     .max(100, "Il nome può avere massimo 100 caratteri"),
 
+  colore: z.string().regex(/^#[0-9A-Fa-f]{6}$/),
+
   cognome: z
     .string()
     .min(1, "Il cognome è obbligatorio")

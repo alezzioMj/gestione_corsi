@@ -13,6 +13,7 @@ model aula {
   capienza Int?
   sede     sede       @relation(fields: [sede_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   sessione sessione[]
+  descrizione String?
   indisponibilita indisponibilita[]
 
   @@unique([nome, sede_id])
@@ -60,11 +61,12 @@ model corso_sede {
 }
 
 model docente {
-  codice_fiscale  String            @id @db.VarChar(16)
-  nome            String            @db.VarChar(100)
-  cognome         String            @db.VarChar(100)
+  codice_fiscale  String           @id @db.VarChar(16)
+  nome            String           @db.VarChar(100)
+  colore          String           @default("#1976d2")
+  cognome         String           @db.VarChar(100)
   datanascita     DateTime         @db.Date
-  nazione         String          @db.VarChar(100)
+  nazione         String           @db.VarChar(100)
   regione         String           @db.VarChar(100)
   provincia       String           @db.VarChar(100)
   comune          String           @db.VarChar(100)

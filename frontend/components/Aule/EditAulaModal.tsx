@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Button,
     Dialog,
@@ -10,50 +10,57 @@ import {
     TextField,
     Box
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import { useRouter } from "next/navigation";
 import { API_BASE_URL } from "@/lib/config";
+import { Aula } from "@/validation/types";
 
-interface AddAulaModalProps {
-    sedeId: number;
-    onAulaAdded : () => void
+interface EditAulaModalProps {
+    open: boolean,
+    onClose: () => void,
+    onSaveSuccess: () => void,
+    aula: Aula
 }
 
-export default function AddAulaModal({ sedeId, onAulaAdded }: AddAulaModalProps) {
-    const [open, setOpen] = useState(false);
+export default function EditAulaModal({ open, onClose, onSaveSuccess, aula }: EditAulaModalProps) {
     const [loading, setLoading] = useState(false);
 
     const [formData, setFormData] = useState({
-        nome: "",
-        capienza: "",
-        descrizione: ""
+        nome: aula.nome,
+        capienza: aula.capienza,
+        descrizione: aula.descrizione
     });
 
-    const handleOpen = () => setOpen(true);
+    useEffect(() => {
+        setFormData({
+            nome: aula.nome,
+            capienza: aula.capienza,
+            descrizione: aula.descrizione
+        });
+    }, [aula]);
+
     const handleClose = () => {
-        setOpen(false);
-        setFormData({ nome: "", capienza: "", descrizione: "" });
+        onClose();
+        setFormData({ nome: aula.nome, capienza: aula.capienza, descrizione: aula.descrizione });
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
-            const res = await fetch(`${API_BASE_URL}/aule`, {
-                method: "POST",
+            const res = await fetch(`${API_BASE_URL}/aule/${aula.id}`, {
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     nome: formData.nome,
                     capienza: Number(formData.capienza),
-                    descrizione: formData.descrizione,
-                    sede_id: sedeId
+                    sede_id: aula.sede_id,
+                    descrizione: formData.descrizione ?? ""
                 }),
             });
 
             if (res.ok) {
-                handleClose();
-                onAulaAdded();
+                onSaveSuccess();
+                onClose(); // Ricarica i dati della pagina (Server Component)
             } else {
                 alert("Errore durante la creazione dell'aula");
             }
@@ -66,13 +73,9 @@ export default function AddAulaModal({ sedeId, onAulaAdded }: AddAulaModalProps)
 
     return (
         <>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpen}>
-                Aggiungi Aula
-            </Button>
-
             <Dialog open={open} onClose={handleClose} fullWidth maxWidth="xs">
                 <form onSubmit={handleSubmit}>
-                    <DialogTitle>Nuova Aula</DialogTitle>
+                    <DialogTitle>Modifica Aula</DialogTitle>
                     <DialogContent>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
                             <TextField

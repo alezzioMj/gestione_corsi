@@ -21,11 +21,44 @@ import { Docente, Programma } from "../../validation/types"
 import { API_BASE_URL } from "@/lib/config";
 import dynamic from "next/dynamic";
 
+export interface ApiErrorBody {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}
+
 const StepProgrammazione = dynamic(
-  () => import("./StepProgrammazione"), 
-  { ssr: false } 
+    () => import("./StepProgrammazione"),
+    { ssr: false }
 );
 
+async function parseErrorResponse(res: Response): Promise<ApiErrorBody> {
+    try {
+        const data = await res.json();
+        return {
+            code: data.code ?? "UNKNOWN_ERROR",
+            message: data.message ?? "Errore sconosciuto",
+            details: data.details,
+        };
+    } catch {
+        return { code: "UNKNOWN_ERROR", message: "Errore sconosciuto" };
+    }
+}
+
+function messaggioErrore(err: ApiErrorBody): string {
+    switch (err.code) {
+        case "NO_TEACHER_FOR_MODULE":
+            return `Nessun docente disponibile per il modulo "${err.details?.moduloTitolo}"`;
+        case "INSUFFICIENT_SLOTS":
+            return `Slot insufficienti: mancano ${err.details?.oreMancanti} ore per completare la schedulazione`;
+        case "AULA_UNAVAILABLE":
+            return "Nessuna aula disponibile per uno degli slot richiesti";
+        case "MISSING_COURSE_DATES":
+            return "Il corso non ha date di inizio/fine impostate";
+        default:
+            return err.message;
+    }
+}
 
 export const formSchema = z.object({
     nome: z.string().min(1, "Il nome del corso è obbligatorio"),
@@ -50,7 +83,7 @@ export type FormType = z.infer<typeof formSchema>;
 // Interfacce per i dati arricchiti dal backend
 export interface ModuloRelation {
     modulo_id: number;
-    modulo: { titolo: string; n_ore?: number; competenza?: string; multiplo: boolean;};
+    modulo: { titolo: string; n_ore?: number; competenza?: string; multiplo: boolean; };
     n_ripetizioni: number;
 }
 
@@ -71,7 +104,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
     programmi: ProgrammaConModuli[],
     docenti: DocenteConModuli[]
 }) {
-    const steps = ["Anagrafica corso", "Docenti", "Programmazione", "Conferma"];
+    const steps = ["Anagrafica corso", "Programmazione", "Docenti", "Conferma"];
 
     const dynamicSchema = React.useMemo(() => {
         return formSchema.superRefine((data, ctx) => {
@@ -157,67 +190,66 @@ export default function MyStepper({ sedi, programmi, docenti }: {
 
         setIsSubmitting(true);
         setSubmitError(null);
+
+        let corsoId: number | null = null;
+
         try {
-            //  Crea il corso principale
+            // 1. Crea il corso
             const corsoResponse = await fetch(`${API_BASE_URL}/corsi`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(corsoData),
             });
-            if (!corsoResponse.ok) {
-                const errorData = await corsoResponse.json();
-                throw new Error(errorData.message || "Errore durante la creazione del corso");
-            }
+            if (!corsoResponse.ok) throw await parseErrorResponse(corsoResponse);
             const newCorso = await corsoResponse.json();
-            const corsoId = newCorso.id;
+            corsoId = newCorso.id;
 
-            //  Associa i docenti al corso
+            // 2. Associa i docenti
             const docentiResponse = await fetch(`${API_BASE_URL}/corsi/${corsoId}/docenti`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ docenti_cfs: data.docenti }),
             });
-            if (!docentiResponse.ok) {
-                const errorData = await docentiResponse.json();
-                throw new Error(errorData.message || "Errore durante l'associazione dei docenti");
-            }
+            if (!docentiResponse.ok) throw await parseErrorResponse(docentiResponse);
 
-            // Associa le sedi al corso
+            // 3. Associa le sedi
             const sediResponse = await fetch(`${API_BASE_URL}/corsi/${corsoId}/sedi`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sedi_names: data.sedi }),
             });
-            if (!sediResponse.ok) {
-                const errorData = await sediResponse.json();
-                throw new Error(errorData.message || "Errore durante l'associazione delle sedi");
-            }
+            if (!sediResponse.ok) throw await parseErrorResponse(sediResponse);
 
-            // Genera le sessioni per il corso
-            // Questa chiamata attiverà il scheduler.service.ts nel backend
-            const generateSessionsResponse = await fetch(`${API_BASE_URL}/corsi/${corsoId}/schedule`, {
+            // 4. Genera le sessioni
+            const scheduleResponse = await fetch(`${API_BASE_URL}/corsi/${corsoId}/schedule`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ 
+                body: JSON.stringify({
                     giorniDisponibili: data.giorni,
-                    ordine: data.moduliOrdinati.map((uniqueKey, index) => ({ 
-                        modulo_id: Number(uniqueKey.split('-')[0]), 
-                        ordine: index + 1 
-                    }))
+                    ordine: data.moduliOrdinati.map((uniqueKey, index) => ({
+                        modulo_id: Number(uniqueKey.split("-")[0]),
+                        ordine: index + 1,
+                    })),
                 }),
             });
-            if (!generateSessionsResponse.ok) {
-                const errorData = await generateSessionsResponse.json();
-                throw new Error(errorData.message || "Errore durante la generazione delle sessioni");
-            }
+            if (!scheduleResponse.ok) throw await parseErrorResponse(scheduleResponse);
 
             alert("Corso creato con successo!");
-            // Reindirizza alla nuova pagina che mostra le sessioni per il corso appena creato
             router.push(`/sessioni?corsoId=${corsoId}`);
+
         } catch (error) {
-            const message = error instanceof Error ? error.message : "Si è verificato un errore sconosciuto.";
-            console.error("Errore nell'invio dei dati:", message);
-            setSubmitError(message);
+            const apiError = error as ApiErrorBody;
+            setSubmitError(messaggioErrore(apiError));
+
+            // Rollback: se il corso è stato creato ma un passo successivo è fallito,
+            // eliminalo per evitare corsi "a metà" senza sessioni
+            if (corsoId) {
+                try {
+                    await fetch(`${API_BASE_URL}/corsi/${corsoId}`, { method: "DELETE" });
+                } catch {
+                    console.error(`ATTENZIONE: rollback fallito, corso ${corsoId} rimasto orfano nel DB`);
+                }
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -229,9 +261,10 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         if (activeStep === 0) {
             fieldsToValidate = ["nome", "cliente", "sedi", "dataInizio", "dataFine"];
         } else if (activeStep === 1) {
-            fieldsToValidate = ["docenti", "giorni", "mattina_inizio", "mattina_fine", "pomeriggio_inizio", "pomeriggio_fine"];
-        } else if (activeStep === 2) {
             fieldsToValidate = ["moduliOrdinati", "programmi", "oreTotali"];
+
+        } else if (activeStep === 2) {
+            fieldsToValidate = ["docenti", "giorni", "mattina_inizio", "mattina_fine", "pomeriggio_inizio", "pomeriggio_fine"];
         }
 
         const isStepValid = fieldsToValidate.length > 0
@@ -268,8 +301,8 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                         sedi={sedi}
                         programmi={programmi}
                     />}
-                    {activeStep === 1 && <StepDocenti docenti={docenti}></StepDocenti>}
-                    {activeStep === 2 && <StepProgrammazione programmi={programmi} />}
+                    {activeStep === 1 && <StepProgrammazione programmi={programmi} />}
+                    {activeStep === 2 && <StepDocenti docenti={docenti}></StepDocenti>}
                     {activeStep === 3 && <StepReview docenti={docenti} programmi={programmi} />}
                 </Box>
 

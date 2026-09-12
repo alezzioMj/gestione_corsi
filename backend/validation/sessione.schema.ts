@@ -1,6 +1,8 @@
 import { z } from "zod";
 
 export const sessioneSchema = z.object({
+  id: z.number().int().positive(),
+  
   corso_id: z.number().int().positive(),
   docente_cf: z.string().length(16),
 

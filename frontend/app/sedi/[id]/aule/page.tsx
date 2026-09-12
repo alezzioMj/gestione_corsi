@@ -1,64 +1,83 @@
-import { Box, Typography, Container, Paper, List, ListItem, ListItemText, Divider, Button } from "@mui/material";
+"use client";
+import { Box, Typography, Container, List, ListItem, ListItemText, Button } from "@mui/material";
 import Link from "next/link";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import React from "react";
 import AddAulaModal from "@/components/Aule/AddAulaModal";
 import { API_BASE_URL } from "@/lib/config";
+import AulaCard from "@/components/Aule/AulaCard";
+import { Aula } from "@/validation/types";
+import { useParams } from "next/navigation";
+import useSWR from "swr";
+import DelayedLoading from "@/components/DelayedLoading";
+import { fetcher } from "@/lib/swr-config";
+import { useConfirm } from "@/components/ConfirmContext";
+import { useSnackbar } from "@/components/SnackbarContext";
 
-interface Aula {
-    id: number;
-    nome: string;
-    capienza?: number;
-}
-
-interface Sede {
-    id: number;
-    nome: string;
-    indirizzo: string;
-    citta: string;
-    provincia: string;
-    aula?: Aula[];
-}
-
-async function getSede(id: string) {
-    // Questo endpoint include già l'elenco delle aule (sede.aula)
-    const res = await fetch(`${API_BASE_URL}/sedi/${id}`, { cache: "no-store" });
-    return res.ok ? res.json() : null;
-}
-
-export default async function AuleSedePage({ params }: { params: Promise<{ id: string }> }) {
-    const resolvedParams = await params;
+export default function AuleSedePage() {
+    const resolvedParams = useParams();
     const sedeId = resolvedParams.id;
 
-    if (!sedeId) {
-        return (
-            <Container sx={{ py: 4 }}>
-                <Typography variant="h6" color="error">ID Sede non fornito nell&apos;URL.</Typography>
-                <Link href="/sedi">Torna alla lista delle Sedi</Link>
-            </Container>
-        );
+    const { data: sede, error, isLoading, mutate } = useSWR(
+        sedeId ? `${API_BASE_URL}/sedi/${sedeId}` : null,
+        fetcher
+    );
+    const { confirm } = useConfirm();
+    const { showMessage } = useSnackbar();
+
+    const handleDeleteAula = async (aulaId: number) => {
+        const ok = await confirm({
+            title: "Elimina aula",
+            message: "Sei sicuro di voler eliminare quest'aula?",
+            cancelText: "Annulla",
+            confirmText: "Elimina",
+            confirmColor: "error",
+        }
+        )
+        if (!ok) return;
+        try {
+            const res = await fetch(`${API_BASE_URL}/aule/${aulaId}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || `Errore durante l'eliminazione dell'aula: ${res.statusText}`);
+            }
+            //Update SWR cache 
+            mutate();
+            showMessage("Aula eliminata con successo!");
+        } catch (error) {
+            if (!(error instanceof Error)) {
+                console.error("Errore sconosciuto nell'eliminazione della sede:", error);
+                return;
+            }
+            showMessage(`Errore: ${error.message}`);
+            console.error("Errore nell'eliminazione dell'aula:", error);
+        }
     }
 
-    const sede: Sede | null = await getSede(sedeId);
-    
-    if (!sede) {
+    if (isLoading) return <DelayedLoading />;
+
+    if (error || !sede) {
         return (
             <Container sx={{ py: 4 }}>
-                <Typography variant="h6" color="error">Sede con ID &quot;{sedeId}&quot; non trovata.</Typography>
+                <Typography variant="h6" color="error">
+                    Sede con ID &quot;{sedeId}&quot; non trovata.
+                </Typography>
                 <Link href="/sedi">Torna alla lista delle Sedi</Link>
             </Container>
         );
     }
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
             <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Link href="/sedi" style={{ textDecoration: 'none' }}>
                     <Button variant="outlined" startIcon={<ArrowBackIcon />}>
                         Torna alle Sedi
                     </Button>
                 </Link>
-                <AddAulaModal sedeId={Number(sedeId)} />
+                <AddAulaModal sedeId={Number(sedeId)} onAulaAdded={() => mutate()} />
             </Box>
 
             <Box sx={{ mb: 4 }}>
@@ -70,27 +89,22 @@ export default async function AuleSedePage({ params }: { params: Promise<{ id: s
                 </Typography>
             </Box>
 
-            <Paper elevation={2}>
-                <List>
-                    {sede.aula && sede.aula.length > 0 ? (
-                        sede.aula.map((a: Aula, index: number) => (
-                            <React.Fragment key={a.id}>
-                                <ListItem>
-                                    <ListItemText 
-                                        primary={a.nome} 
-                                        secondary={`Capienza: ${a.capienza ?? 'N/D'} posti`} 
-                                    />
-                                </ListItem>
-                                {index < (sede.aula?.length ?? 0) - 1 && <Divider />}
-                            </React.Fragment>
-                        ))
-                    ) : (
-                        <ListItem>
-                            <ListItemText primary="Nessuna aula configurata per questa sede." />
-                        </ListItem>
-                    )}
-                </List>
-            </Paper>
+            <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(400px, 1fr))", gap: 2 }}>
+                {sede.aula && sede.aula.length > 0 ? (
+                    sede.aula.map((a: Aula) => (
+                        <AulaCard
+                            key={a.id}
+                            aula={a}
+                            onAulaUpdated={() => { mutate() }}
+                            onDeleteAula={() => { handleDeleteAula(a.id) }}
+                        />
+                    ))
+                ) : (
+                    <Typography color="text.secondary">
+                        Nessuna aula configurata per questa sede.
+                    </Typography>
+                )}
+            </Box>
         </Container>
     );
 }

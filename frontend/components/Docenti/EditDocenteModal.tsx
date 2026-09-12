@@ -1,14 +1,15 @@
 "use client";
 
+import { DOCENTE_COLORS } from "@/lib/constants/docente";
 import React, { useState, useEffect } from "react";
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete } from "@mui/material";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete, Typography, Box } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import { useRouter } from "next/navigation";
 import EditIcon from "@mui/icons-material/Edit";
 import * as countries from "i18n-iso-countries";
 import itLocale from "i18n-iso-countries/langs/it.json";
 import { Docente } from "../../validation/types";
 import { API_BASE_URL } from "@/lib/config";
+import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
 
 type Provincia = {
     id: number;
@@ -30,18 +31,19 @@ interface EditDocenteModalProps {
     onSaveSuccess: () => void;
 }
 
-// Registra la localizzazione italiana per la libreria delle nazioni
 countries.registerLocale(itLocale);
 
 export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess }: EditDocenteModalProps) {
     const [loading, setLoading] = useState(false);
-    
+    const [coloreError, setColoreError] = useState(false);
+
     const [formData, setFormData] = useState({
+        colore: DOCENTE_COLORS[0] as string,
         nome: "",
         cognome: "",
         codice_fiscale: "",
         datanascita: "",
-        nazione: "Italia", // Default Italia
+        nazione: "Italia",
         regione: "",
         provincia: "",
         comune: "",
@@ -51,10 +53,11 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
         cv: "",
         contratto: "",
     });
-    
+
     useEffect(() => {
         if (docente) {
             setFormData({
+                colore: docente.colore || DOCENTE_COLORS[0],
                 nome: docente.nome || "",
                 cognome: docente.cognome || "",
                 codice_fiscale: docente.codice_fiscale || "",
@@ -70,27 +73,25 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
                 contratto: docente.contratto || "",
             });
         } else {
-            // Reset form if no docente is provided (e.g., modal closed and reopened for a new one, though this is an edit modal)
-            setFormData({ nome: "", cognome: "", codice_fiscale: "", datanascita: "", nazione: "Italia", regione: "", provincia: "", comune: "", sesso: "", cellulare: "", mail: "", cv: "", contratto: "" });
+            setFormData({
+                colore: DOCENTE_COLORS[0],
+                nome: "", cognome: "", codice_fiscale: "", datanascita: "", nazione: "Italia",
+                regione: "", provincia: "", comune: "", sesso: "", cellulare: "", mail: "", cv: "", contratto: ""
+            });
         }
     }, [docente]);
 
-    // Stati per le opzioni geografiche
     const [regioni, setRegioni] = useState<string[]>([]);
     const [province, setProvince] = useState<Provincia[]>([]);
     const [comuni, setComuni] = useState<Comune[]>([]);
 
-    // Ottieni la lista delle nazioni in italiano dalla libreria
     const countryOptions = Object.entries(countries.getNames("it")).map(([code, name]) => ({
         code,
         name
     }));
 
-    // This useEffect handles initial loading of geographical data when the modal opens
-    // or when the docente prop changes.
     useEffect(() => {
         if (!open || !docente) {
-            // Reset state when modal is closed or no docente is provided
             setRegioni([]);
             setProvince([]);
             setComuni([]);
@@ -132,7 +133,6 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
 
     const handleClose = () => {
         onClose();
-        // Reset form data is handled by the useEffect when docente becomes null or open becomes false
         setProvince([]);
         setComuni([]);
     };
@@ -168,6 +168,12 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        if (!formData.colore) {
+            setColoreError(true);
+            return;
+        }
+        setColoreError(false);
         setLoading(true);
 
         try {
@@ -177,14 +183,14 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
                 return;
             }
             const res = await fetch(`${API_BASE_URL}/docenti/${docente.codice_fiscale}`, {
-                method: "PUT", // Changed to PUT
+                method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),
             });
 
             if (res.ok) {
-                onSaveSuccess(); // Call the success callback
-                onClose(); // Close the modal
+                onSaveSuccess();
+                onClose();
             } else {
                 const errorData = await res.json();
                 alert(`Errore: ${errorData.error || "Impossibile aggiornare il docente"}`);
@@ -197,154 +203,141 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
         }
     };
 
-    // Calcolo codice fiscale
-    /*const calculateCodiceFiscale = (
-        nome: string,
-        cognome: string,
-        sesso: string,
-        luogoDiNascita: string,
-        codiceProvincia: string,
-        giornoDiNascita: string,
-        meseDiNascita: string,
-        annoDiNascita: string,
-        livelloOmocodia: string,
-        comuneSospeso: string,
-        access_token: string
-    ) => async () => {
-        const URL = "http://api.miocodicefiscale.it/calculate?lname={cognome}&fname={nome}&gender={sesso}&city={luogo-di-nascita}&state={codice-provincia}&abolished={comune-soppresso}&day={giorno-di-nascita}&month={mese-di-nascita}&year={anno-di-nascita}&omocodia_level={livello-omocodia}&access_token={tua-chiave-API}";
-        try {
-            const res = await fetch(URL)
-        } catch {
-
-        }
-    }*/
-
     return (
-        <>            
-            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
-                <form onSubmit={handleSubmit}>
-                    <DialogTitle>Modifica Docente</DialogTitle>
-                    <DialogContent>
-                        <Grid container spacing={2} sx={{ mt: 1 }}>
-                            {/* Dati Anagrafici */}
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField label="Nome" fullWidth required value={formData.nome}
-                                    onChange={(e) => setFormData({ ...formData, nome: e.target.value })} />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField label="Cognome" fullWidth required value={formData.cognome}
-                                    onChange={(e) => setFormData({ ...formData, cognome: e.target.value })} />
-                            </Grid>
-                            <Grid size={12}>
-                                <TextField label="Codice Fiscale" fullWidth required value={formData.codice_fiscale}
-                                    onChange={(e) => setFormData({ ...formData, codice_fiscale: e.target.value.toUpperCase() })} />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField label="Data di Nascita" type="date" fullWidth required
-                                    slotProps={{ inputLabel: { shrink: true } }}
-                                    value={formData.datanascita}
-                                    onChange={(e) => setFormData({ ...formData, datanascita: e.target.value })} />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField select label="Sesso" fullWidth required value={formData.sesso}
-                                    onChange={(e) => setFormData({ ...formData, sesso: e.target.value })}>
-                                    <MenuItem value="M">Maschio</MenuItem>
-                                    <MenuItem value="F">Femmina</MenuItem>
-                                    <MenuItem value="Altro">Altro</MenuItem>
-                                </TextField>
-                            </Grid>
-
-                            {/* Contatti */}
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField label="Email" type="email" fullWidth required value={formData.mail}
-                                    onChange={(e) => setFormData({ ...formData, mail: e.target.value })} />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField label="Cellulare" fullWidth value={formData.cellulare}
-                                    onChange={(e) => setFormData({ ...formData, cellulare: e.target.value })} />
-                            </Grid>
-
-                            {/* Geografia */}
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <Autocomplete
-                                    options={countryOptions}
-                                    getOptionLabel={(opt) => opt.name || ""}
-                                    value={countryOptions.find(c => c.name === formData.nazione) || null}
-                                    renderInput={(params) => <TextField {...params} label="Nazione" required />}
-                                    isOptionEqualToValue={(option, value) => option.name === value.name}
-                                    onChange={(_, val) => {
-                                        const newNazione = val?.name || "";
-                                        setFormData({ ...formData, nazione: newNazione, regione: "", provincia: "", comune: "" });
-                                        handleRegioneChange(null); // Clear and reset for new country
-                                    }}
-                                />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <Autocomplete
-                                    options={regioni}
-                                    value={regioni.find(r => r === formData.regione) || null}
-                                    getOptionLabel={(opt) => opt || ""}
-                                    isOptionEqualToValue={(option, value) => option === value}
-                                    renderInput={(params) => <TextField {...params} label="Regione" required={formData.nazione === "Italia"} />}
-                                    disabled={formData.nazione !== "Italia"}
-                                    onChange={(_, val) => {
-                                        handleRegioneChange(val);
-                                    }}
-                                />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <Autocomplete
-                                    options={province}
-                                    value={province.find(p => p.nome === formData.provincia) || null}
-                                    getOptionLabel={(opt) => opt.nome || ""}
-                                    isOptionEqualToValue={(option, value) => option.nome === value.nome}
-                                    renderInput={(params) => <TextField {...params} label="Provincia" required={formData.nazione === "Italia"} />}
-                                    disabled={!formData.regione || formData.nazione !== "Italia"}
-                                    onChange={(_, val) => handleProvinciaChange(val?.nome || "")}
-                                />
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <Autocomplete
-                                    options={comuni}
-                                    value={comuni.find(c => c.nome === formData.comune) || null}
-                                    getOptionLabel={(opt) => opt.nome || ""}
-                                    isOptionEqualToValue={(option, value) => option.nome === value.nome}
-                                    renderInput={(params) => <TextField {...params} label="Comune" required={formData.nazione === "Italia"} />}
-                                    disabled={!formData.provincia || formData.nazione !== "Italia"}
-                                    onChange={(_, val) => setFormData({ ...formData, comune: val?.nome || "", })}
-                                />
-                            </Grid>
-
-                            {/* Documentazione e Contratto */}
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField
-                                    label="Contratto"
-                                    placeholder="Es: P.IVA, Co.Co.Co"
-                                    fullWidth
-                                    value={formData.contratto}
-                                    onChange={(e) => setFormData({ ...formData, contratto: e.target.value })}
-                                />
-
-                            </Grid>
-                            <Grid size={{ xs: 12, sm: 6 }}>
-                                <TextField
-                                    label="Link CV"
-                                    placeholder="URL o riferimento CV"
-                                    fullWidth
-                                    value={formData.cv}
-                                    onChange={(e) => setFormData({ ...formData, cv: e.target.value })}
-                                />
-                            </Grid>
+        <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+            <form onSubmit={handleSubmit}>
+                <DialogTitle>Modifica Docente</DialogTitle>
+                <DialogContent>
+                    <Grid container spacing={2} sx={{ mt: 1 }}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField label="Nome" fullWidth required value={formData.nome}
+                                onChange={(e) => setFormData({ ...formData, nome: e.target.value })} />
                         </Grid>
-                    </DialogContent>
-                    <DialogActions>
-                        <Button onClick={handleClose}>Annulla</Button>
-                        <Button type="submit" variant="contained" startIcon={<EditIcon />} disabled={loading}>
-                            {loading ? "Salvataggio..." : "Salva Modifiche"}
-                        </Button>
-                    </DialogActions>
-                </form>
-            </Dialog>
-        </>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField label="Cognome" fullWidth required value={formData.cognome}
+                                onChange={(e) => setFormData({ ...formData, cognome: e.target.value })} />
+                        </Grid>
+                        <Grid size={12}>
+                            <TextField label="Codice Fiscale" fullWidth required value={formData.codice_fiscale}
+                                onChange={(e) => setFormData({ ...formData, codice_fiscale: e.target.value.toUpperCase() })} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField label="Data di Nascita" type="date" fullWidth required
+                                slotProps={{ inputLabel: { shrink: true } }}
+                                value={formData.datanascita}
+                                onChange={(e) => setFormData({ ...formData, datanascita: e.target.value })} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField select label="Sesso" fullWidth required value={formData.sesso}
+                                onChange={(e) => setFormData({ ...formData, sesso: e.target.value })}>
+                                <MenuItem value="M">Maschio</MenuItem>
+                                <MenuItem value="F">Femmina</MenuItem>
+                                <MenuItem value="Altro">Altro</MenuItem>
+                            </TextField>
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField label="Email" type="email" fullWidth required value={formData.mail}
+                                onChange={(e) => setFormData({ ...formData, mail: e.target.value })} />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField label="Cellulare" fullWidth value={formData.cellulare}
+                                onChange={(e) => setFormData({ ...formData, cellulare: e.target.value })} />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Autocomplete
+                                options={countryOptions}
+                                getOptionLabel={(opt) => opt.name || ""}
+                                value={countryOptions.find(c => c.name === formData.nazione) || null}
+                                renderInput={(params) => <TextField {...params} label="Nazione" required />}
+                                isOptionEqualToValue={(option, value) => option.name === value.name}
+                                onChange={(_, val) => {
+                                    const newNazione = val?.name || "";
+                                    setFormData({ ...formData, nazione: newNazione, regione: "", provincia: "", comune: "" });
+                                    handleRegioneChange(null);
+                                }}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Autocomplete
+                                options={regioni}
+                                value={regioni.find(r => r === formData.regione) || null}
+                                getOptionLabel={(opt) => opt || ""}
+                                isOptionEqualToValue={(option, value) => option === value}
+                                renderInput={(params) => <TextField {...params} label="Regione" required={formData.nazione === "Italia"} />}
+                                disabled={formData.nazione !== "Italia"}
+                                onChange={(_, val) => {
+                                    handleRegioneChange(val);
+                                }}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Autocomplete
+                                options={province}
+                                value={province.find(p => p.nome === formData.provincia) || null}
+                                getOptionLabel={(opt) => opt.nome || ""}
+                                isOptionEqualToValue={(option, value) => option.nome === value.nome}
+                                renderInput={(params) => <TextField {...params} label="Provincia" required={formData.nazione === "Italia"} />}
+                                disabled={!formData.regione || formData.nazione !== "Italia"}
+                                onChange={(_, val) => handleProvinciaChange(val?.nome || "")}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <Autocomplete
+                                options={comuni}
+                                value={comuni.find(c => c.nome === formData.comune) || null}
+                                getOptionLabel={(opt) => opt.nome || ""}
+                                isOptionEqualToValue={(option, value) => option.nome === value.nome}
+                                renderInput={(params) => <TextField {...params} label="Comune" required={formData.nazione === "Italia"} />}
+                                disabled={!formData.provincia || formData.nazione !== "Italia"}
+                                onChange={(_, val) => setFormData({ ...formData, comune: val?.nome || "" })}
+                            />
+                        </Grid>
+
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                                label="Contratto"
+                                placeholder="Es: P.IVA, Co.Co.Co"
+                                fullWidth
+                                value={formData.contratto}
+                                onChange={(e) => setFormData({ ...formData, contratto: e.target.value })}
+                            />
+                        </Grid>
+                        <Grid size={{ xs: 12, sm: 6 }}>
+                            <TextField
+                                label="Link CV"
+                                placeholder="URL o riferimento CV"
+                                fullWidth
+                                value={formData.cv}
+                                onChange={(e) => setFormData({ ...formData, cv: e.target.value })}
+                            />
+                        </Grid>
+
+                        <Grid size={12}>
+                            <Typography variant="subtitle2" gutterBottom>Colore</Typography>
+                            <ColorSwatchPicker
+                                value={formData.colore}
+                                onChange={(color) => {
+                                    setFormData({ ...formData, colore: color });
+                                    setColoreError(false);
+                                }}
+                            />
+                            {coloreError && (
+                                <Typography color="error" variant="caption">
+                                    Seleziona un colore
+                                </Typography>
+                            )}
+                        </Grid>
+                    </Grid>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose}>Annulla</Button>
+                    <Button type="submit" variant="contained" startIcon={<EditIcon />} disabled={loading}>
+                        {loading ? "Salvataggio..." : "Salva Modifiche"}
+                    </Button>
+                </DialogActions>
+            </form>
+        </Dialog>
     );
 }

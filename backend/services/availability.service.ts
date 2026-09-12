@@ -1,7 +1,5 @@
-import { prisma } from "../prisma";
 import { aula, docente } from "@prisma/client";
-import { calculateHours, addHoursToTime, toMinutes, hasOverlap } from "../utils/time.utils"
-import { validateAulaDisponibile, validateDocenteDisponibile } from "./sessione.service"
+import { calculateHours, toMinutes, hasOverlap } from "../utils/time.utils"
 
 type Slot = {
     data: Date;
@@ -15,6 +13,18 @@ export type Ordine = {
     ordine: number;
 }
 
+export class SchedulingError extends Error {
+    constructor(
+        public code: string,
+        public status: number,
+        message: string,
+        public details?: Record<string, unknown>
+    ) {
+        super(message);
+        this.name = "SchedulingError";
+    }
+}
+
 export const generateSlots = (
     inizio: Date,
     fine: Date,
@@ -22,14 +32,12 @@ export const generateSlots = (
     mattino_fine: string,
     pomeriggio_inizio: string,
     pomeriggio_fine: string,
-    giorniDisponibili: number[],
-    ordine: Ordine[],
-    // oreDaSchedulare: number // <-- PUOI ANCHE TOGLIERLO, non serve più qui
+    giorniDisponibili: number[]
 ): Slot[] => {
     const slots: Slot[] = [];
     const durataMattina = calculateHours(mattino_inizio, mattino_fine);
     const durataPomeriggio = calculateHours(pomeriggio_inizio, pomeriggio_fine);
-    
+
     // Il ciclo genera tutto il calendario potenziale
     while (inizio.getTime() <= fine.getTime()) {
         const day = inizio.getDay();
@@ -52,7 +60,7 @@ export const generateSlots = (
                 durata: durataPomeriggio,
             });
         }
-        
+
         inizio.setDate(inizio.getDate() + 1);
     }
 
@@ -75,11 +83,12 @@ export const findDocente = async (
                 slot.ora_fine,
                 cacheSessioni
             );
-            // Se non lancia errori, il docente è disponibile
             return docente;
         } catch (err: any) {
-            // Se è occupato, il loop continua al prossimo docente
-            // console.log(`Docente ${docente.cognome} occupato: ${err.message}`);
+            if (err instanceof SchedulingError) {
+                continue; // try another one
+            }
+            throw err;
         }
     }
     return null;
@@ -104,7 +113,10 @@ export const findAula = async (
             // Se non lancia errori, l'aula è disponibile
             return aula;
         } catch (err: any) {
-            continue;
+            if (err instanceof SchedulingError) {
+                continue; // try another one
+            }
+            throw err;
         }
     }
     return null;
@@ -132,7 +144,12 @@ export const checkDocenteDisponibileMemoria = (
         return hasOverlap(startA, endA, startB, endB);
     });
 
-    if (overlap) throw new Error("Il docente è già occupato");
+    if (overlap) throw new SchedulingError(
+        "TEACHER_UNAVAILABLE",
+        409,
+        "Il docente è già occupato in questo slot",
+        { docente_cf, data, ora_inizio, ora_fine }
+    );
 };
 
 // VALIDAZIONE AULA 
@@ -157,5 +174,10 @@ export const checkAulaDisponibileMemoria = (
         return hasOverlap(startA, endA, startB, endB);
     });
 
-    if (overlap) throw new Error("L'aula è già occupata");
+    if (overlap) throw new SchedulingError(
+        "AULA_UNAVAILABLE",
+        409,
+        "L'aula è già occupata in questo slot",
+        { aula_id, data, ora_inizio, ora_fine }
+    );
 };

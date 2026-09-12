@@ -7,7 +7,9 @@ import ScheduleGrid from "@/components/ScheduleGrid/ScheduleGrid";
 import { trasformaSessioniInCommesse, RigaCommessa } from "@/lib/formatSessioni";
 import { API_BASE_URL } from "@/lib/config";
 import { Corso, Docente, SessioneWithRelations } from "@/validation/types";
-import DayCellModal from "@/components/ScheduleGrid/DayCellModule";
+import DayCellModal from "@/components/ScheduleGrid/DayCellModal";
+import { CalendarMonthOutlined } from "@mui/icons-material";
+import EmptyState from "@/components/EmptyState";
 
 export default function SessioniPage() {
     const [commesse, setCommesse] = useState<RigaCommessa[]>([]);
@@ -107,9 +109,18 @@ export default function SessioniPage() {
                     <h1 className="text-3xl font-bold text-white">Programmazione Commesse</h1>
                 </div>
 
-                {/* Renderizziamo il componente Griglia passando i dati trasformati */}
-                <ScheduleGrid commesse={commesse} docenti={docenti} corsi={corsi} onCellClick={handleCellClick} />
-            </div>
+                {
+                    !corsi || corsi.length === 0?
+                        <EmptyState
+                            icon={CalendarMonthOutlined}
+                            title={"Nessuna sessione trovata"}
+                            description={"Inizia creando una nuova commessa"}
+                        />
+                        :
+                        <ScheduleGrid commesse={commesse} docenti={docenti} corsi={corsi} onCellClick={handleCellClick} />
+                }
+                 </div>
+            {/* Renderizziamo il componente Griglia passando i dati trasformati */}
         </>
     );
 }

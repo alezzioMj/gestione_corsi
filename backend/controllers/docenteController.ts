@@ -47,6 +47,7 @@ const createDocente = async (req: express.Request, res: express.Response) => {
   try {
     const {
       codice_fiscale,
+      colore,
       nome,
       cognome,
       datanascita,
@@ -64,6 +65,7 @@ const createDocente = async (req: express.Request, res: express.Response) => {
     const docente = await prisma.docente.create({
       data: {
         codice_fiscale,
+        colore,
         nome,
         cognome,
         datanascita,
@@ -95,6 +97,7 @@ const updateDocente = async (req: express.Request, res: express.Response) => {
   try {
     const { codice_fiscale } = req.params as { codice_fiscale: string };
     const {
+      colore,
       nome,
       cognome,
       datanascita,
@@ -112,6 +115,7 @@ const updateDocente = async (req: express.Request, res: express.Response) => {
     const docente = await prisma.docente.update({
       where: { codice_fiscale },
       data: {
+        colore,
         nome,
         cognome,
         datanascita,

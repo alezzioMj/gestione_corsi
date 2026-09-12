@@ -27,15 +27,6 @@ interface DayCellModalProps {
   sessioni: SessioneWithRelations[];
 }
 
-// Formatta un orario (Date) in stringa "HH:mm", o un fallback se assente
-function formatOra(data: Date | string | null | undefined): string {
-  if (!data) return "--:--";
-  return new Date(data).toLocaleTimeString("it-IT", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-}
-
 export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCellModalProps) {
   const dateKey = useMemo(() => {
     const year = giorno.getFullYear();
@@ -71,7 +62,7 @@ export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCel
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>
-        <Stack direction="row" alignItems="center" gap={1.5}>
+        <Stack direction="row" useFlexGap>
           <CalendarTodayIcon color="primary" />
           <Box>
             <Typography variant="h6" sx={{ fontWeight: 700, textTransform: "capitalize", lineHeight: 1.2 }}>
@@ -155,9 +146,9 @@ export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCel
                     </Typography>
                   )}
 
-                  <Stack direction="row" flexWrap="wrap" gap={1.5} sx={{ mt: 0.5 }}>
+                  <Stack direction="row" sx={{ mt: 0.5 }}>
                     {sessione.modulo && (
-                      <Stack direction="row" alignItems="center" gap={0.5}>
+                      <Stack direction="row">
                         <ExtensionOutlined sx={{ fontSize: 16 }} color="action" />
                         <Typography variant="body2" color="text.secondary">
                           {sessione.modulo.titolo || `Modulo #${sessione.modulo_id}`}
@@ -166,7 +157,7 @@ export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCel
                     )}
 
                     {sessione.aula && (
-                      <Stack direction="row" alignItems="center" gap={0.5}>
+                      <Stack direction="row">
                         <MeetingRoomIcon sx={{ fontSize: 16 }} color="action" />
                         <Typography variant="body2" color="text.secondary">
                           {typeof sessione.aula === "object"
@@ -176,7 +167,7 @@ export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCel
                       </Stack>
                     )}
 
-                    <Stack direction="row" alignItems="center" gap={0.5}>
+                    <Stack direction="row" >
                       <PersonIcon sx={{ fontSize: 16 }} color="action" />
                       <Typography variant="body2" color="text.secondary">
                         {sessione.docente

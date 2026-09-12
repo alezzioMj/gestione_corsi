@@ -64,7 +64,7 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
         }
     }, [modulo, open]);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
 
         if (!modulo?.id) {

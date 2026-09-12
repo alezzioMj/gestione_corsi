@@ -14,6 +14,11 @@ import DelayedLoading from "@/components/DelayedLoading";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import AddModuloModal from "@/components/Moduli/AddModuloModal";
+import { useSnackbar } from "@/components/SnackbarContext";
+import { useConfirm } from "@/components/ConfirmContext";
+import { title } from "process";
+import EmptyState from "@/components/EmptyState";
+import { ExtensionOffOutlined } from "@mui/icons-material";
 
 interface Modulo {
     id: number;
@@ -23,10 +28,20 @@ interface Modulo {
 }
 
 export default function ModuliPage() {
+    const { showMessage } = useSnackbar();
+    const { confirm } = useConfirm();
     const { data: moduli, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/moduli`, fetcher);
 
     const handleDeleteModulo = async (moduloId: number) => {
-        if (!window.confirm("Sei sicuro di voler eliminare questo modulo?")) return;
+        const ok = await confirm({
+            title: "Elimina modulo",
+            message: "Sei sicuro di voler eliminare questo modulo?",
+            cancelText: "Annulla",
+            confirmText: "Elimina",
+            confirmColor: "error",
+        }
+        )
+        if (!ok) return;
         try {
             const res = await fetch(`${API_BASE_URL}/moduli/${moduloId}`, {
                 method: "DELETE",
@@ -36,30 +51,33 @@ export default function ModuliPage() {
                 throw new Error(errorData.message || `Errore durante l'eliminazione del modulo: ${res.statusText}`);
             }
             mutate();
-            alert("Modulo eliminato con successo!");
+            showMessage("Modulo eliminato con successo!");
         } catch (error: unknown) {
-            alert(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+            showMessage(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
             console.error("Errore nell'eliminazione del modulo:", error);
         }
     };
 
     return (
-        <Container sx={{ py: 2 }}>
+        <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
             <Box sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'flex-start',
-                gap: 2,
                 mb: 4
             }}>
-                <Typography variant="h4" gutterBottom>Moduli Formativi</Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                    Gestione dei moduli didattici e dei relativi materiali.
-                </Typography>
-                <Box sx={{ mb: 4 }}>
+                <Box sx={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap', // così non si rompe su schermi stretti
+                    gap: 2,
+                }}>
+                    <Typography variant="h4">Moduli</Typography>
                     <AddModuloModal onModuloAdded={() => mutate()} />
                 </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
+                    {" Gestione dei moduli didattici e dei relativi materiali "}
+                </Typography>
             </Box>
+
             {error && (
                 <Alert
                     severity="error"
@@ -76,7 +94,12 @@ export default function ModuliPage() {
             {isLoading ? (
                 <DelayedLoading />
             ) : !moduli || moduli.length === 0 ? (
-                <Typography variant="h6" color="text.secondary">Nessun modulo trovato. Inizia aggiungendo un nuovo modulo!</Typography>
+                <EmptyState
+                    icon={ExtensionOffOutlined}
+                    title={"Nessun modulo trovato"}
+                    description={"Inizia aggiungendo un nuovo modulo"}
+                />
+
             ) : (
                 <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
                     {moduli.map((m: Modulo) => (

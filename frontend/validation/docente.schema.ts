@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { DOCENTE_COLORS } from "@/lib/constants/docente";
 
 export const docenteSchema = z.object({
   codice_fiscale: z
@@ -11,6 +12,8 @@ export const docenteSchema = z.object({
     .string()
     .min(1, "Il nome è obbligatorio")
     .max(100, "Il nome può avere massimo 100 caratteri"),
+
+  colore: z.enum(DOCENTE_COLORS as unknown as [string, ...string[]]),
 
   cognome: z
     .string()

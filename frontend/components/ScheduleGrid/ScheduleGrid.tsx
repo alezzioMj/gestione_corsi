@@ -94,7 +94,7 @@ export default function ScheduleGrid({ commesse = [], docenti = [], corsi = [], 
                         <div
                             key={doc.codice_fiscale}
                             className="text-xs px-2 py-0.5 rounded font-medium border border-black/30 text-black"
-                            style={{ backgroundColor: "#e5e7eb" }}
+                            style={{ backgroundColor: doc.colore || "#e5e7eb" }}
                         >
                             {doc.nome} {doc.cognome}
                         </div>
@@ -179,7 +179,7 @@ export default function ScheduleGrid({ commesse = [], docenti = [], corsi = [], 
                                                     <div
                                                         key={dIdx}
                                                         className="px-2 py-0.5 font-bold text-center uppercase border border-black/20 rounded-sm"
-                                                        style={{ backgroundColor: docentiCommessa.colore || "#f3f4f6" }}
+                                                        style={{ backgroundColor: docente?.colore || "#f3f4f6" }}
                                                     >
                                                         {docente ? `${docente.nome} ${docente.cognome}` : docentiCommessa.nome}
                                                     </div>
@@ -198,7 +198,7 @@ export default function ScheduleGrid({ commesse = [], docenti = [], corsi = [], 
                                 {/* GRIGLIA GIORNI */}
                                 <div className="flex">
                                     {giorniDelMese.map((giorno) => {
-                                        return <DayCell key={ giorno.getDate() } giorno={ giorno } commessa={commessa} onClick={ onCellClick }/>
+                                        return <DayCell key={giorno.getDate()} giorno={giorno} commessa={commessa} onClick={onCellClick} />
                                     })}
                                 </div>
 

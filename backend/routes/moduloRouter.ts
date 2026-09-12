@@ -22,8 +22,8 @@ const upload = multer({ storage: storage });
 
 moduloRouter.get('/', getModuli);
 moduloRouter.get('/:id', getModulo);
-moduloRouter.post('/', validate(moduloSchema), createModulo);
-moduloRouter.put('/:id', validate(moduloSchema), updateModulo);
+moduloRouter.post('/', upload.none(), validate(moduloSchema), createModulo);
+moduloRouter.put('/:id', upload.none(), validate(moduloSchema), updateModulo);
 moduloRouter.delete('/:id', deleteModulo);
 
 //DOCENTI

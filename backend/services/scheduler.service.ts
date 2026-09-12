@@ -1,6 +1,6 @@
 import { prisma } from "../prisma";
 import { sessione, stato_sessione_enum, Prisma } from "@prisma/client";
-import { generateSlots, findDocente, findAula, Ordine } from "./availability.service";
+import { generateSlots, findDocente, findAula, Ordine, SchedulingError } from "./availability.service";
 import { createSessioneMany } from "./sessione.service";
 
 enum LogLevel {
@@ -71,7 +71,6 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
         corso.pomeriggio_inizio!,
         corso.pomeriggio_fine!,
         giorniDisponibili,
-        ordine
     );
 
     // 1. Recupero Moduli del Programma associato al Corso
@@ -85,15 +84,6 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
 
     let slotIndex = 0;
 
-    console.log(`[SCHEDULE] Ricevuti ${ordine?.length ?? 0} elementi nell'array ordine.`);
-    console.log(`[SCHEDULE] Slots totali generati: ${slots.length}`);
-    console.log("=== DIAGNOSTICA SLOT E DATE ===");
-    console.log("Data Inizio Corso:", corso.inizio);
-    console.log("Data Fine Corso:", corso.fine);
-    console.log("Giorni della settimana selezionati:", giorniDisponibili);
-    console.log("Totale SLOT potenziali generati da generateSlots:", slots.length);
-    console.log("Dettaglio Slots generati:", slots.map(s => `${s.data.toISOString().split('T')[0]} ${s.ora_inizio}-${s.ora_fine}`));
-    // 2. LOOP PRINCIPALE SULL'ARRAY 'ordine'
     for (const item of ordine) {
         if (!item) continue;
 
@@ -158,7 +148,12 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
         }
 
         if (oreRimanenti > 0) {
-            logger.warn(`Modulo ${moduloDb.titolo} (ID: ${moduloDb.id}) terminato con ${oreRimanenti} ore residue (slot esauriti).`);
+            throw new SchedulingError(
+                "INSUFFICIENT_SLOTS",
+                409,
+                `Slot esauriti per il modulo ${moduloDb.titolo}: mancano ${oreRimanenti} ore`,
+                { moduloId: moduloDb.id, oreMancanti: oreRimanenti }
+            );
         } else {
             logger.info(`Modulo ${moduloDb.titolo} (ID: ${moduloDb.id}) completato con successo.`);
         }

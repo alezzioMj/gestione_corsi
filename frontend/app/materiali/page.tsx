@@ -143,8 +143,7 @@ export default function MaterialiPage() {
     };
 
     return (
-
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" sx={{ mb: 1 }}>Gestione Materiali</Typography>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>

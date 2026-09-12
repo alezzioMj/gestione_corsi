@@ -34,14 +34,16 @@ const createAula = async (req: express.Request, res: express.Response) => {
     const {
       nome,
       sede_id,
-      capienza
+      capienza,
+      descrizione
     } = req.body;
 
     const aula = await prisma.aula.create({
       data: {
         nome,
         sede_id,
-        capienza
+        capienza,
+        descrizione
       }
     });
 
@@ -64,7 +66,8 @@ const updateAula = async (req: express.Request, res: express.Response) => {
     const {
       nome,
       sede_id,
-      capienza
+      capienza,
+      descrizione
     } = req.body;
 
     const aula = await prisma.aula.update({
@@ -72,7 +75,8 @@ const updateAula = async (req: express.Request, res: express.Response) => {
       data: {
         nome,
         sede_id,
-        capienza
+        capienza,
+        descrizione
       }
     });
 

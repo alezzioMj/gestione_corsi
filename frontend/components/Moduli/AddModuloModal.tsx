@@ -55,12 +55,8 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
         }
     };
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
-        if (!file) {
-            setSnackbar({ open: true, message: "Per favore, seleziona un file.", severity: "error" });
-            return;
-        }
 
         setSubmitting(true);
 
@@ -69,10 +65,14 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
             data.append("titolo", formData.titolo);
             data.append("competenza", formData.competenza);
             data.append("descrizioneMateriale", formData.descrizioneMateriale);
-            data.append("multiplo", String(formData.multiplo)); // <--- Inviato come stringa ("true"/"false")
-            data.append("file", file);
-
-            const res = await fetch(`${API_BASE_URL}/moduli/completo`, {
+            if (formData.multiplo) {
+                data.append("multiplo", "true");
+            }
+            if (file) {
+                data.append("file", file);
+            }
+            const endpoint = file ? `${API_BASE_URL}/moduli/completo` : `${API_BASE_URL}/moduli`
+            const res = await fetch(endpoint, {
                 method: "POST",
                 body: data,
             });
@@ -81,7 +81,7 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                 if (onModuloAdded) onModuloAdded();
                 handleClose();
             } else {
-                const errorData : ApiErrorData = await res.json();
+                const errorData: ApiErrorData = await res.json();
                 const msg = errorData.issues
                     ? errorData.issues.map((i) => i.message).join(", ")
                     : (errorData.error || "Impossibile creare il modulo");
@@ -208,7 +208,7 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                         <Button
                             type="submit"
                             variant="contained"
-                            disabled={submitting || !formData.titolo || !file}
+                            disabled={submitting || !formData.titolo}
                             sx={{ minWidth: '120px' }}
                         >
                             {submitting ? <CircularProgress size={24} color="inherit" /> : "Crea Modulo"}

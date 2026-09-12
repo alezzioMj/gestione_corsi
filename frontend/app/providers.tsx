@@ -6,8 +6,10 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import React, { createContext, useContext, useMemo, useState } from "react";
 import SideDrawer from "@/components/Navigation/Drawer";
+import { SnackbarProvider } from "@/components/SnackbarContext";
+import { ConfirmProvider } from "@/components/ConfirmContext";
 
-const ColorModeContext = createContext({ toggleColorMode: () => {} });
+const ColorModeContext = createContext({ toggleColorMode: () => { } });
 export const useColorMode = () => useContext(ColorModeContext);
 
 export default function Providers({
@@ -36,23 +38,27 @@ export default function Providers({
       <ColorModeContext.Provider value={colorMode}>
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <Box sx={{ display: "flex", minHeight: "100vh" }}>
-            <SideDrawer />
-            <Box
-              component="main"
-              sx={{
-                flexGrow: 1,
-                width: "100%",
-                minWidth: 0,
-                p: 3,
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "stretch",
-              }}
-            >
-              {children}
-            </Box>
-          </Box>
+          <ConfirmProvider>
+            <SnackbarProvider>
+              <Box sx={{ display: "flex", minHeight: "100vh" }}>
+                <SideDrawer />
+                <Box
+                  component="main"
+                  sx={{
+                    flexGrow: 1,
+                    width: "100%",
+                    minWidth: 0,
+                    p: 3,
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "stretch",
+                  }}
+                >
+                  {children}
+                </Box>
+              </Box>
+            </SnackbarProvider>
+          </ConfirmProvider>
         </ThemeProvider>
       </ColorModeContext.Provider>
     </AppRouterCacheProvider>

@@ -105,6 +105,9 @@ const deleteModulo = async (req: express.Request, res: express.Response) => {
     });
     res.status(204).send();
   } catch (err: any) {
+    if (err.code === "P2003") {
+      return res.status(409).json({ error: "Impossibile eliminare: il modulo è collegato a docenti, materiali o programmi esistenti" });
+    }
     console.error("Errore nella cancellazione del modulo:", err);
     res.status(500).json({ error: "Errore cancellazione modulo" });
   }

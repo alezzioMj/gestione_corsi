@@ -1,15 +1,15 @@
 // c:\Users\aless\Desktop\gestione_corsi\backend\src\types.ts
-
-import { Prisma } from "@backend/generated/prisma/client";
 import { corsoSchema } from '../validation/corso.schema';
 import { aulaSchema } from '../validation/aula.schema';
 import { docenteSchema } from '../validation/docente.schema';
 import { sedeSchema } from '../validation/sede.schema';
 import { programmaSchema } from './programma.schema';
 import { z } from 'zod';
+import { moduloSchema } from './modulo.schema';
+import { sessioneSchema } from './sessione.schema';
 
 // Schema per l'INVIO (Input dal form/frontend)
-export type CorsoFormInput = z.infer<typeof corsoSchema>; 
+export type CorsoFormInput = z.infer<typeof corsoSchema>;
 export type AulaFormInput = z.infer<typeof aulaSchema>;
 export type DocenteFormInput = z.infer<typeof docenteSchema>;
 export type SedeFormInput = z.infer<typeof sedeSchema>;
@@ -43,11 +43,11 @@ export const sedeDbSchema = sedeSchema.extend({
 
 // Forma delle risposte di errore dalle API
 export const apiErrorSchema = z.object({
-  error: z.string().optional(),
-  issues: z.array(z.object({
-    message: z.string(),
-    path: z.array(z.string()).optional(),
-  })).optional(),
+    error: z.string().optional(),
+    issues: z.array(z.object({
+        message: z.string(),
+        path: z.array(z.string()).optional(),
+    })).optional(),
 });
 
 export type ApiErrorData = z.infer<typeof apiErrorSchema>;
@@ -59,12 +59,11 @@ export type Aula = z.infer<typeof aulaDbSchema>;
 export type Docente = z.infer<typeof docenteDbSchema>;
 export type Sede = z.infer<typeof sedeDbSchema>;
 
-export type SessioneWithRelations = Prisma.sessioneGetPayload<{
-    include: {
-        corso: true;
-        docente: true;
-        modulo: true;
-        aula: true;
-        sede: true;
-    };
-}>;
+export const SessioneWithRelations = sessioneSchema.extend({
+    corso: corsoDbSchema,
+    docente: docenteDbSchema,
+    modulo: moduloSchema,
+    aula: aulaDbSchema,
+    sede: sedeDbSchema,
+});
+export type SessioneWithRelations = z.infer<typeof SessioneWithRelations>;

@@ -1,5 +1,6 @@
 import express from "express";
 import { schedule } from "../services/scheduler.service";
+import { SchedulingError } from "../services/availability.service";
 
 const scheduleCorsoController = async (
   req: express.Request,
@@ -9,27 +10,20 @@ const scheduleCorsoController = async (
     const corso_id = Number(req.params.id);
     const { giorniDisponibili, moduliOrdinati, ordine: ordineRaw } = req.body;
 
-    // VALIDAZIONE 1:  giorni disponibili devono essere array
     if (!Array.isArray(giorniDisponibili)) {
       return res.status(400).json({
         error: "giorniDisponibili deve essere un array di numeri (0-6)",
       });
     }
-    // Recuperiamo l'array inviato dal frontend (sia che si chiami moduliOrdinati o ordine)
     const listaGrezza = moduliOrdinati || ordineRaw;
 
-    // VALIDAZIONE 2: Verifichiamo che l'elenco dei moduli esista e sia un array
     if (!Array.isArray(listaGrezza)) {
       return res.status(400).json({
         error: "È necessario fornire un array di moduli ordinati",
       });
     }
 
-    // TRASFORMAZIONE PASSO PASSO:
-    // Convertiamo ogni elemento dell'array per farlo capire allo scheduler.
-    // Esempio input: ["1-172423111", "2-172423222", "1-172423333"]
     const ordineNormalizzato = listaGrezza.map((item: any, index: number) => {
-      // Se l'elemento è una stringa con il timestamp (es. "15-1724234567")
       if (typeof item === "string") {
         const moduloId = Number(item.split("-")[0]); // Prende solo il "15" prima del trattino
         return {
@@ -44,7 +38,6 @@ const scheduleCorsoController = async (
       };
     });
 
-    // Passiamo allo scheduler l'array pulito che contiene TUTTE le istanze
     const result = await schedule(corso_id, giorniDisponibili, ordineNormalizzato);
 
     return res.status(200).json({
@@ -52,11 +45,19 @@ const scheduleCorsoController = async (
       sessioni_create: result?.length || 0,
       data: result,
     });
-  } catch (err: any) {
-    console.error("Errore scheduling:", err.message);
+  } catch (err) {
+    if (err instanceof SchedulingError) {
+      return res.status(err.status).json({
+        code: err.code,
+        message: err.message,
+        details: err.details,
+      });
+    }
 
+    console.error("Errore scheduling:", err);
     return res.status(500).json({
-      error: err.message || "Errore scheduling",
+      code: "INTERNAL_ERROR",
+      message: "Errore interno durante la schedulazione",
     });
   }
 };

@@ -20,7 +20,7 @@ import Brightness7Icon from "@mui/icons-material/Brightness7";
 import { useColorMode } from "@/app/providers";
 
 const drawerWidth = 240;
- 
+
 export default function SideDrawer() {
   const theme = useTheme(); // Usa il tema per uno stile coerente
   const pathname = usePathname(); // Ottieni il percorso corrente per lo stile del link attivo
@@ -50,15 +50,16 @@ export default function SideDrawer() {
       }}>
         <Box
           component="img"
-          src="/favicon.svg" // Usa percorso assoluto per asset statici
+          src="/favicon.svg"
           alt="Logo"
           sx={{
             width: 45,
             height: 45,
             mr: 2,
+            borderRadius: 2, // arrotonda il box dell'immagine stessa
+            boxShadow: 4,
           }}
         />
-
         <Typography variant="h6" sx={{
           fontWeight: 'bold',
           lineHeight: 1.2,
@@ -114,7 +115,7 @@ export default function SideDrawer() {
           { text: "Docenti", href: "/docenti" },
           { text: "Programmi", href: "/programmi" },
           { text: "Moduli", href: "/moduli" },
-          { text : "Materiali", href : "/materiali"}
+          { text: "Materiali", href: "/materiali" }
 
         ].map((item) => {
           // Controlla se il pathname inizia con l'href per evidenziare anche le sottosezioni (es. /sedi/123/aule)
