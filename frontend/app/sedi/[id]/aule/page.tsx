@@ -6,7 +6,7 @@ import React from "react";
 import AddAulaModal from "@/components/Aule/AddAulaModal";
 import { API_BASE_URL } from "@/lib/config";
 import AulaCard from "@/components/Aule/AulaCard";
-import { Aula } from "@/validation/types";
+import { Aula } from "@shared/validation/types";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
 import DelayedLoading from "@/components/DelayedLoading";

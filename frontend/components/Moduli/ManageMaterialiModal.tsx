@@ -11,7 +11,7 @@ import AddIcon from "@mui/icons-material/Add";
 import AttachmentIcon from "@mui/icons-material/Attachment";
 import UploadFileIcon from "@mui/icons-material/UploadFile"; // New icon for upload
 import { API_BASE_URL } from "@/lib/config";
-import { ApiErrorData } from "@/validation/types";
+import { ApiErrorData } from "@shared/validation/types";
 
 // Define a more specific type for Modulo and Materiale if available
 interface Modulo {

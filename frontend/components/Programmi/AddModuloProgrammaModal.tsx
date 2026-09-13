@@ -20,7 +20,7 @@ import Grid from "@mui/material/Grid";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useRouter } from "next/navigation";
-import { Programma } from "../../validation/types";
+import { Programma } from "@shared/validation/types";
 import {
     DndContext,
     closestCenter,

@@ -1,7 +1,7 @@
 import express from "express";
 const indisponibilitaRouter = express.Router();
 import { validate} from "../middlewares/validate";
-import { indisponibilitaSchema } from "../validation/indisponibilita.schema";
+import { indisponibilitaSchema } from "@shared/validation/indisponibilita.schema";
 import { getIndisponibilita , getIndisponibilitaById, createIndisponibilita, updateIndisponibilita, deleteIndisponibilita } from '../controllers/indisponibilitaController';
 
 indisponibilitaRouter .get('/', getIndisponibilita);

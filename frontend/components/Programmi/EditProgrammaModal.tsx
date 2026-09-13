@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import { API_BASE_URL } from "@/lib/config";
-import { Programma } from "@/validation/types";
+import { Programma } from "@shared/validation/types";
 
 interface EditProgrammaModalProps {
     open: boolean;

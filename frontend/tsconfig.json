@@ -20,6 +20,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
+      "@shared/*": ["../shared/*"],
       "@backend/*" : ["../backend/*"]
     }
   },
@@ -30,6 +31,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-  ],
+, "lib/corsi"  ],
   "exclude": ["node_modules"]
 }

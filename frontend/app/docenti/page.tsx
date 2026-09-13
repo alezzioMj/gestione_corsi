@@ -2,7 +2,7 @@
 
 import DocenteCard from "@/components/Docenti/DocenteCard";
 import { Box, Typography, Container, Alert, Button, Paper } from "@mui/material";
-import { Docente } from "../../validation/types";
+import { Docente } from "@shared/validation/types";
 import AddDocenteModal from "@/components/Docenti/AddDocenteModal";
 import { API_BASE_URL } from "@/lib/config";
 import DelayedLoading from "@/components/DelayedLoading";

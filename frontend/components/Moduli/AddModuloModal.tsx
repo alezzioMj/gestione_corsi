@@ -11,7 +11,7 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import { API_BASE_URL } from "@/lib/config";
-import { ApiErrorData } from "@/validation/types";
+import { ApiErrorData } from "@shared/validation/types";
 
 interface AddModuloModalProps {
     onModuloAdded?: () => void;

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Box, FormControl, MenuItem, InputLabel, OutlinedInput, Select, TextField, FormHelperText } from "@mui/material";
-import { Sede } from "../../validation/types";
+import { Sede } from "@shared/validation/types";
 import { FormType } from "./MyStepper"; // Import FormType and ProgrammaConModuli
 import { useFormContext, Controller } from "react-hook-form";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";

@@ -2,7 +2,7 @@ import express from "express";
 const corsiRouter = express.Router();
 
 import { validate } from "../middlewares/validate";
-import { corsoSchema } from "../validation/corso.schema";
+import { corsoSchema } from "@shared/validation/corso.schema";
 
 import {
   getCorsi,

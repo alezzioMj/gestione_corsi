@@ -4,7 +4,7 @@ import { useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import EditAulaModal from "./EditAulaModal";
-import { Aula } from "@/validation/types";
+import { Aula } from "@shared/validation/types";
 
 interface AulaCardProps {
     aula : Aula,

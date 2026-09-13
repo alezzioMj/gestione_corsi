@@ -11,7 +11,7 @@ import { API_BASE_URL } from "@/lib/config";
 import useSWR from 'swr';
 import DelayedLoading from "@/components/DelayedLoading";
 import { fetcher } from "@/lib/swr-config";
-import { ApiErrorData } from "@/validation/types";
+import { ApiErrorData } from "@shared/validation/types";
 
 // Definizione di un tipo base per un materiale
 interface Materiale {

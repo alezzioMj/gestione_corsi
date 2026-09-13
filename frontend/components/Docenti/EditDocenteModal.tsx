@@ -1,13 +1,13 @@
 "use client";
 
-import { DOCENTE_COLORS } from "@/lib/constants/docente";
+import { DOCENTE_COLORS } from "@shared/constants/docente";
 import React, { useState, useEffect } from "react";
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete, Typography, Box } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import EditIcon from "@mui/icons-material/Edit";
 import * as countries from "i18n-iso-countries";
 import itLocale from "i18n-iso-countries/langs/it.json";
-import { Docente } from "../../validation/types";
+import { Docente } from "@shared/validation/types";
 import { API_BASE_URL } from "@/lib/config";
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
 

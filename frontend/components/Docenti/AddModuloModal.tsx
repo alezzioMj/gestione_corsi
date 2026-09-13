@@ -17,7 +17,7 @@ import {
 import Grid from "@mui/material/Grid";
 import SearchIcon from "@mui/icons-material/Search";
 import { useRouter } from "next/navigation";
-import { Docente } from "../../validation/types";
+import { Docente } from "@shared/validation/types";
 import { API_BASE_URL } from "@/lib/config";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";

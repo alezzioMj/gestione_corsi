@@ -11,7 +11,7 @@ import {
     Box
 } from "@mui/material";
 import { API_BASE_URL } from "@/lib/config";
-import { Aula } from "@/validation/types";
+import { Aula } from "@shared/validation/types";
 
 interface EditAulaModalProps {
     open: boolean,

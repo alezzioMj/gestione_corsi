@@ -1,7 +1,7 @@
 "use client";
 import SedeCard from "@/components/Sedi/SedeCard";
 import { Box, Typography, Container, Alert, Button, Paper } from "@mui/material";
-import { Sede } from "../../validation/types";
+import { Sede } from "@shared/validation/types";
 import AddSedeModal from "@/components/Sedi/AddSedeModal"
 import { API_BASE_URL } from "@/lib/config";
 import DelayedLoading from "@/components/DelayedLoading";

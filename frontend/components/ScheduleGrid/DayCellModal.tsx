@@ -18,7 +18,7 @@ import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import { ExtensionOutlined } from "@mui/icons-material";
 
-import { SessioneWithRelations } from "@/validation/types";
+import { SessioneWithRelations } from "@shared/validation/types";
 
 interface DayCellModalProps {
   open: boolean;

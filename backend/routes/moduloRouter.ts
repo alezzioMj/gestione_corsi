@@ -1,7 +1,7 @@
 import express from "express";
 const moduloRouter = express.Router();
 import { validate } from "../middlewares/validate";
-import { moduloSchema } from "../validation/modulo.schema";
+import { moduloSchema } from "@shared/validation/modulo.schema";
 import multer from "multer";
 import {
     getModuli,

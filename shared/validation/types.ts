@@ -67,3 +67,9 @@ export const SessioneWithRelations = sessioneSchema.extend({
     sede: sedeDbSchema,
 });
 export type SessioneWithRelations = z.infer<typeof SessioneWithRelations>;
+
+export interface ApiErrorBody {
+  code: string;
+  message: string;
+  details?: Record<string, unknown>;
+}

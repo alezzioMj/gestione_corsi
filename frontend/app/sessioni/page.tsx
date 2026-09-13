@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-// Importiamo il nuovo componente griglia
-import ScheduleGrid from "@/components/ScheduleGrid/ScheduleGrid";
-// Importiamo la funzione helper dal Passo 1
-import { trasformaSessioniInCommesse, RigaCommessa } from "@/lib/formatSessioni";
-import { API_BASE_URL } from "@/lib/config";
-import { Corso, Docente, SessioneWithRelations } from "@/validation/types";
-import DayCellModal from "@/components/ScheduleGrid/DayCellModal";
+import React,{ useEffect, useState } from "react";
 import { CalendarMonthOutlined } from "@mui/icons-material";
+
+import { API_BASE_URL } from "@/lib/config";
+import { Corso, Docente, SessioneWithRelations } from "@shared/validation/types";
+import { trasformaSessioniInCommesse, RigaCommessa } from "@/lib/formatSessioni";
+
+import ScheduleGrid from "@/components/ScheduleGrid/ScheduleGrid";
+import DayCellModal from "@/components/ScheduleGrid/DayCellModal";
 import EmptyState from "@/components/EmptyState";
 
 export default function SessioniPage() {
@@ -35,8 +35,6 @@ export default function SessioniPage() {
         async function fetchData() {
             try {
                 setLoading(true);
-
-                // Chiamate in parallelo al backend per sessioni e docenti
                 const [resSessioni, resDocenti, resCorsi] = await Promise.all([
                     fetch(`${API_BASE_URL}/sessioni/full`),
                     fetch(`${API_BASE_URL}/docenti`),
@@ -57,10 +55,8 @@ export default function SessioniPage() {
                 const dataDocenti: Docente[] = await resDocenti.json();
                 const dataCorsi: Corso[] = await resCorsi.json();
 
-                // Trasformiamo le sessioni in commesse
                 const commesseFormattate = trasformaSessioniInCommesse(dataSessioni);
 
-                // Salviamo gli stati
                 setCommesse(commesseFormattate);
                 setSessioni(dataSessioni);
                 setDocenti(dataDocenti);
@@ -100,7 +96,7 @@ export default function SessioniPage() {
                 <DayCellModal
                     open={isModalOpen}
                     onClose={handleCloseModal}
-                    giorno={new Date(selectedCellData.dateKey)} // O selectedCellData.dateKey se vuole la stringa
+                    giorno={new Date(selectedCellData.dateKey)}
                     sessioni={sessioni}
                 />
             )}
@@ -120,7 +116,6 @@ export default function SessioniPage() {
                         <ScheduleGrid commesse={commesse} docenti={docenti} corsi={corsi} onCellClick={handleCellClick} />
                 }
                  </div>
-            {/* Renderizziamo il componente Griglia passando i dati trasformati */}
         </>
     );
 }

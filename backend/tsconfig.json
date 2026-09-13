@@ -1,13 +1,20 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
-   "compilerOptions": {
+  "compilerOptions": {
     "target": "ESNext",
-    "module": "CommonJS",                    // Fondamentale per ESM
-    "esModuleInterop": true,                  // Risolve l'errore del named export
-    "allowSyntheticDefaultImports": true,     // Permette import express from 'express'
+    "module": "CommonJS", // Fondamentale per ESM
+    "esModuleInterop": true, // Risolve l'errore del named export
+    "allowSyntheticDefaultImports": true, // Permette import express from 'express'
     "outDir": "./dist",
     "rootDir": ".",
     "strict": true,
-    "skipLibCheck": true
-  }
+    "skipLibCheck": true,
+    "paths": {
+      "@shared/*": ["../shared/*"]
+    }
+  },
+  "ts-node": {
+      "require": ["tsconfig-paths/register"]
+ 
+  },
 }

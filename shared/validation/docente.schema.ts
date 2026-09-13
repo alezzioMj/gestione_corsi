@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { DOCENTE_COLORS } from "@/lib/constants/docente";
+import { DOCENTE_COLORS } from "../constants/docente";
 
 export const docenteSchema = z.object({
   codice_fiscale: z

@@ -9,7 +9,7 @@ import itLocale from "i18n-iso-countries/langs/it.json";
 import { API_BASE_URL } from "@/lib/config";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
-import { DOCENTE_COLORS } from "@/lib/constants/docente";
+import { DOCENTE_COLORS } from "@shared/constants/docente";
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
 
 type Provincia = { codice: string; nome: string; regione: string; sigla: string };

@@ -1,12 +1,16 @@
+import path from "path";
+
 /** @type {import('next').NextConfig} */
 
 const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-
+  experimental: {
+    externalDir: true,
+  },
   turbopack: {
-    root: __dirname,
+    root: path.join(__dirname, ".."),
   },
 };
 

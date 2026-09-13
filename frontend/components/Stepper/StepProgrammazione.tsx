@@ -105,7 +105,6 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
     const selectedProgramId = watch("programmi");
     const moduliOrdinati: string[] = watch("moduliOrdinati") || [];
 
-
     React.useEffect(() => {
         const program = programmi.find(p => p.id === selectedProgramId);
         const currentOreTotali = getValues("oreTotali");
