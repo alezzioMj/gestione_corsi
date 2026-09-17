@@ -4,11 +4,13 @@ import React, { useState } from "react";
 import { Card, CardContent, Typography, Box, Divider, Button } from "@mui/material";
 import LocationOnIcon from "@mui/icons-material/LocationOn";
 import PhoneIcon from "@mui/icons-material/Phone";
-import { Sede } from "@shared/validation/types";
 import Link from "next/link";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditSedeModal from "./EditSedeModal"; // Importa il modal di modifica
+
+import { Sede } from "@shared/validation/types";
+
+import EditSedeModal from "./EditSedeModal";
 
 interface SedeCardProps {
   sede: Sede;

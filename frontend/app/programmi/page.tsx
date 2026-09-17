@@ -1,5 +1,6 @@
 "use client";
 
+import useSWR from "swr";
 import {
     Box,
     Typography,
@@ -8,20 +9,22 @@ import {
     Paper,
     Alert,
 } from "@mui/material";
-import ProgrammaCard from "@/components/Programmi/ProgrammaCard";
-import { ProgrammaConModuli } from "@/components/Stepper/MyStepper";
-import { API_BASE_URL } from "@/lib/config";
-import DelayedLoading from "@/components/DelayedLoading";
-import useSWR from "swr";
-import { fetcher } from "@/lib/swr-config";
+import { FolderOffOutlined } from "@mui/icons-material";
+
 import AddProgrammaModal from "@/components/Programmi/AddProgrammaModal";
 import EmptyState from "@/components/EmptyState";
-import { Folder, FolderOffOutlined } from "@mui/icons-material";
+import ProgrammaCard from "@/components/Programmi/ProgrammaCard";
+import DelayedLoading from "@/components/DelayedLoading";
 import { useConfirm } from "@/components/ConfirmContext";
 import { useSnackbar } from "@/components/SnackbarContext";
 
+import { ProgrammaConModuli } from "@/validation/corso-form.schema";
+import { fetcher } from "@/lib/swr-config";
+import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
+
 export default function ProgrammiPage() {
-    const { data: programmi, isLoading, error, mutate } = useSWR(`${API_BASE_URL}/programmi`, fetcher);
+    const { data: programmi, isLoading, error, mutate } = useSWR(API_ENDPOINTS.programmi, fetcher);
     const { confirm } = useConfirm();
     const { showMessage } = useSnackbar();
 
@@ -60,7 +63,7 @@ export default function ProgrammiPage() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
-                    flexWrap: 'wrap', // così non si rompe su schermi stretti
+                    flexWrap: 'wrap',
                     gap: 2,
                 }}>
                     <Typography variant="h4">Programmi</Typography>
@@ -77,7 +80,7 @@ export default function ProgrammiPage() {
             )}
             {isLoading ? (
                 <DelayedLoading />
-            ) : programmi.length === 0 ? (
+            ) : (!programmi || programmi.length === 0) ? (
                 <EmptyState
                     icon={FolderOffOutlined}
                     title={"Nessun programma trovato"}

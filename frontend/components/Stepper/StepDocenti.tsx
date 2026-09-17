@@ -1,6 +1,5 @@
 "use client";
 
-import * as React from "react";
 import {
   Box,
   FormControl,
@@ -18,28 +17,19 @@ import {
   Grid,
 } from "@mui/material";
 import { useFormContext, Controller } from "react-hook-form";
-import { FormType, DocenteConModuli } from "./MyStepper";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 
-const GIORNI_SETTIMANA = [
-  { label: "Dom", value: 0 },
-  { label: "Lun", value: 1 },
-  { label: "Mar", value: 2 },
-  { label: "Mer", value: 3 },
-  { label: "Gio", value: 4 },
-  { label: "Ven", value: 5 },
-  { label: "Sab", value: 6 },
-];
+import { FormType, DocenteConModuli } from "@/validation/corso-form.schema";
+import GIORNI_SETTIMANA from "@/lib/docenti/docenti";
 
 export default function StepDocenti({
   docenti,
 }: {
   docenti: DocenteConModuli[];
 }) {
-  // Estratto 'setValue' da useFormContext
   const {
     control,
     setValue,
@@ -162,8 +152,8 @@ export default function StepDocenti({
                 render={({ field }) => (
                   <TimePicker
                     label={timeField.label}
-                    value={field.value ? dayjs(field.value, "HH:mm") : null}
-                    disabled={timeField.isReadOnly} // Disabilita l'interazione per i campi di fine
+                    value={field.value ? dayjs(Array.isArray(field.value) ? field.value[0] : field.value , "HH:mm") : null}
+                    disabled={timeField.isReadOnly}
                     onChange={(newValue) => handleTimeChange(timeField.name, newValue)}
                     slotProps={{
                       textField: {

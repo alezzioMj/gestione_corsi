@@ -1,15 +1,17 @@
 "use client";
 
-import { DOCENTE_COLORS } from "@shared/constants/docente";
 import React, { useState, useEffect } from "react";
-import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete, Typography, Box } from "@mui/material";
+import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import EditIcon from "@mui/icons-material/Edit";
 import * as countries from "i18n-iso-countries";
 import itLocale from "i18n-iso-countries/langs/it.json";
+
 import { Docente } from "@shared/validation/types";
-import { API_BASE_URL } from "@/lib/config";
+import { DOCENTE_COLORS } from "@shared/constants/docente";
+
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
+import { API_ENDPOINTS } from "@/lib/api";
 
 type Provincia = {
     id: number;
@@ -38,48 +40,21 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
     const [coloreError, setColoreError] = useState(false);
 
     const [formData, setFormData] = useState({
-        colore: DOCENTE_COLORS[0] as string,
-        nome: "",
-        cognome: "",
-        codice_fiscale: "",
-        datanascita: "",
-        nazione: "Italia",
-        regione: "",
-        provincia: "",
-        comune: "",
-        sesso: "",
-        cellulare: "",
-        mail: "",
-        cv: "",
-        contratto: "",
+        colore: docente?.colore || DOCENTE_COLORS[0],
+        nome: docente?.nome || "",
+        cognome: docente?.cognome || "",
+        codice_fiscale: docente?.codice_fiscale || "",
+        datanascita: docente?.datanascita ? new Date(docente?.datanascita).toISOString().split('T')[0] : "",
+        nazione: docente?.nazione || "Italia",
+        regione: docente?.regione || "",
+        provincia: docente?.provincia || "",
+        comune: docente?.comune || "",
+        sesso: docente?.sesso || "",
+        cellulare: docente?.cellulare || "",
+        mail: docente?.mail || "",
+        cv: docente?.cv || "",
+        contratto: docente?.contratto || "",
     });
-
-    useEffect(() => {
-        if (docente) {
-            setFormData({
-                colore: docente.colore || DOCENTE_COLORS[0],
-                nome: docente.nome || "",
-                cognome: docente.cognome || "",
-                codice_fiscale: docente.codice_fiscale || "",
-                datanascita: docente.datanascita ? new Date(docente.datanascita).toISOString().split('T')[0] : "",
-                nazione: docente.nazione || "Italia",
-                regione: docente.regione || "",
-                provincia: docente.provincia || "",
-                comune: docente.comune || "",
-                sesso: docente.sesso || "",
-                cellulare: docente.cellulare || "",
-                mail: docente.mail || "",
-                cv: docente.cv || "",
-                contratto: docente.contratto || "",
-            });
-        } else {
-            setFormData({
-                colore: DOCENTE_COLORS[0],
-                nome: "", cognome: "", codice_fiscale: "", datanascita: "", nazione: "Italia",
-                regione: "", provincia: "", comune: "", sesso: "", cellulare: "", mail: "", cv: "", contratto: ""
-            });
-        }
-    }, [docente]);
 
     const [regioni, setRegioni] = useState<string[]>([]);
     const [province, setProvince] = useState<Provincia[]>([]);
@@ -91,12 +66,7 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
     }));
 
     useEffect(() => {
-        if (!open || !docente) {
-            setRegioni([]);
-            setProvince([]);
-            setComuni([]);
-            return;
-        }
+        if (!open || !docente) return;
 
         const isItaly = formData.nazione === "Italia" || formData.nazione === "IT";
 
@@ -182,7 +152,7 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
                 setLoading(false);
                 return;
             }
-            const res = await fetch(`${API_BASE_URL}/docenti/${docente.codice_fiscale}`, {
+            const res = await fetch(`${API_ENDPOINTS.docenti}${docente.codice_fiscale}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

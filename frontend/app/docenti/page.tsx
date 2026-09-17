@@ -4,18 +4,18 @@ import DocenteCard from "@/components/Docenti/DocenteCard";
 import { Box, Typography, Container, Alert, Button, Paper } from "@mui/material";
 import { Docente } from "@shared/validation/types";
 import AddDocenteModal from "@/components/Docenti/AddDocenteModal";
-import { API_BASE_URL } from "@/lib/config";
 import DelayedLoading from "@/components/DelayedLoading";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { useConfirm } from "@/components/ConfirmContext";
 import { useSnackbar } from "@/components/SnackbarContext";
 import EmptyState from "@/components/EmptyState";
-import { title } from "process";
 import { PersonOffOutlined } from "@mui/icons-material";
+import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function DocentiPage() {
-    const { data: docenti, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/docenti`, fetcher);
+    const { data: docenti, error, isLoading, mutate } = useSWR(API_ENDPOINTS.docenti, fetcher);
     const { confirm } = useConfirm();
     const { showMessage } = useSnackbar();
 

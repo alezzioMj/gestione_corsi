@@ -10,8 +10,8 @@ import {
 
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { API_BASE_URL } from "@/lib/config";
 import { ApiErrorData } from "@shared/validation/types";
+import { API_ENDPOINTS } from "@/lib/api";
 
 interface AddModuloModalProps {
     onModuloAdded?: () => void;
@@ -71,7 +71,7 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
             if (file) {
                 data.append("file", file);
             }
-            const endpoint = file ? `${API_BASE_URL}/moduli/completo` : `${API_BASE_URL}/moduli`
+            const endpoint = file ? `${API_ENDPOINTS.moduli}/completo` : API_ENDPOINTS.moduli;
             const res = await fetch(endpoint, {
                 method: "POST",
                 body: data,

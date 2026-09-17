@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
 import { Box, Typography, Grid, List, ListItem, ListItemText, Divider, Paper } from "@mui/material";
 import { useFormContext } from "react-hook-form";
-import { FormType, DocenteConModuli, ProgrammaConModuli } from "./MyStepper";
+
+import { FormType, DocenteConModuli, ProgrammaConModuli } from "@/validation/corso-form.schema";
 
 const giorniLabels: Record<number, string> = {
     1: "Lunedì", 2: "Martedì", 3: "Mercoledì", 4: "Giovedì", 5: "Venerdì", 6: "Sabato", 7: "Domenica"

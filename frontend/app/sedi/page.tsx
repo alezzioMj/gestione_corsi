@@ -2,8 +2,7 @@
 import SedeCard from "@/components/Sedi/SedeCard";
 import { Box, Typography, Container, Alert, Button, Paper } from "@mui/material";
 import { Sede } from "@shared/validation/types";
-import AddSedeModal from "@/components/Sedi/AddSedeModal"
-import { API_BASE_URL } from "@/lib/config";
+import AddSedeModal from "@/components/Sedi/AddSedeModal";
 import DelayedLoading from "@/components/DelayedLoading";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
@@ -11,10 +10,11 @@ import EmptyState from "@/components/EmptyState";
 import { LocationOffOutlined } from "@mui/icons-material";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
+import { API_ENDPOINTS } from "@/lib/api";
 
 export default function SediPage() {
     //SWR hook for fetching /Sedi
-    const { data: sedi, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/sedi`, fetcher);
+    const { data: sedi, error, isLoading, mutate } = useSWR(API_ENDPOINTS.sedi, fetcher);
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
 
@@ -30,7 +30,7 @@ export default function SediPage() {
         )
         if (!ok) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/sedi/${sedeId}`, {
+            const res = await fetch(`${API_ENDPOINTS.sedi}${sedeId}`, {
                 method: "DELETE",
             });
             if (!res.ok) {

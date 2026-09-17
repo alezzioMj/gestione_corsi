@@ -6,11 +6,13 @@ import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
 import * as countries from "i18n-iso-countries";
 import itLocale from "i18n-iso-countries/langs/it.json";
-import { API_BASE_URL } from "@/lib/config";
+
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { DOCENTE_COLORS } from "@shared/constants/docente";
+
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
+import { API_ENDPOINTS } from "@/lib/api";
 
 type Provincia = { codice: string; nome: string; regione: string; sigla: string };
 type Comune = { nome: string };
@@ -85,7 +87,7 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
         setSubmitting(true);
 
         try {
-            const res = await fetch(`${API_BASE_URL}/docenti`, {
+            const res = await fetch(API_ENDPOINTS.docenti, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

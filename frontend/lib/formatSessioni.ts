@@ -1,3 +1,5 @@
+import { Corso, Docente, SessioneWithRelations } from "@shared/validation/types";
+
 export interface DocenteLegenda {
     cf: string;
     nome: string;
@@ -26,10 +28,9 @@ export interface RigaCommessa {
 }
 
 export function trasformaSessioniInCommesse(
-    sessioniFromDb: any[],
-    corsiAnagrafica: any[] = [],
-    moduliAnagrafica: any[] = [],
-    docentiAnagrafica: any[] = []
+    sessioniFromDb: SessioneWithRelations[],
+    corsiAnagrafica: Corso[] = [],
+    docentiAnagrafica: Docente[] = []
 ): RigaCommessa[] {
     const commesseMap: Record<number, RigaCommessa> = {};
 
@@ -40,12 +41,12 @@ export function trasformaSessioniInCommesse(
         // 1. RECUPERO DATI REALI DEL CORSO
         const corsoReale = corsiAnagrafica.find(c => c.id === corsoId);
         const nomeCorso = corsoReale?.nome || sess.corso?.nome || `Commessa #${corsoId}`;
-        const oreRichieste = corsoReale?.ore_richieste || corsoReale?.n_ore || sess.corso?.n_ore || 0;
-        const oreTotali = corsoReale?.ore_totali || corsoReale?.n_ore || sess.corso?.n_ore || 0;
+        const oreRichieste =  corsoReale?.n_ore || sess.corso?.n_ore || 0;
+        const oreTotali =  corsoReale?.n_ore || sess.corso?.n_ore || 0;
         const aulaNome = `AULA ${sess.aula_id || 1}`;
 
         // 2. RECUPERO DOCENTE REALE E COLORE
-        const docenteReale = docentiAnagrafica.find(d => d.cf === sess.docente_cf);
+        const docenteReale = docentiAnagrafica.find(d => d.codice_fiscale === sess.docente_cf);
         const nomeDocente = docenteReale 
             ? `${docenteReale.nome} ${docenteReale.cognome}` 
             : (sess.docente?.nome ? `${sess.docente.nome} ${sess.docente.cognome}` : sess.docente_cf || "N/D");
@@ -75,9 +76,7 @@ export function trasformaSessioniInCommesse(
             };
         }
 
-        // 4. RECUPERO MODULO REALE (Iniziale)
-        const moduloReale = moduliAnagrafica.find(m => m.id === sess.modulo_id);
-        const iniziale = moduloReale?.nome ? moduloReale.nome.charAt(0).toUpperCase() : "M";
+        const iniziale = docenteReale?.nome ? docenteReale?.nome.charAt(0) : "U";
 
         // Aggiunge il docente alla legenda della commessa se non già presente
         if (sess.docente_cf && !commesseMap[corsoId].docenti.some(d => d.cf === sess.docente_cf)) {
@@ -94,11 +93,9 @@ export function trasformaSessioniInCommesse(
             docenteNome: nomeDocente
         };
 
-        // 5. ASSEGNAZIONE SLOT ORARI (Sempre 4 ore per blocco)
         const oraInizio = parseInt(sess.ora_inizio?.split(":")[0] || "8", 10);
         const isMattina = oraInizio < 13;
 
-        // Riempie esattamente tutti e 4 gli slot della mezza giornata corrispondente
         for (let i = 0; i < 4; i++) {
             if (isMattina) {
                 commesseMap[corsoId].sessioniMap[dataStr].mattina[i] = slotInfo;

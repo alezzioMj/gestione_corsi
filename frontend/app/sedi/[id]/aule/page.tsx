@@ -1,10 +1,9 @@
 "use client";
-import { Box, Typography, Container, List, ListItem, ListItemText, Button } from "@mui/material";
+import { Box, Typography, Container, Button } from "@mui/material";
 import Link from "next/link";
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import React from "react";
 import AddAulaModal from "@/components/Aule/AddAulaModal";
-import { API_BASE_URL } from "@/lib/config";
 import AulaCard from "@/components/Aule/AulaCard";
 import { Aula } from "@shared/validation/types";
 import { useParams } from "next/navigation";
@@ -13,13 +12,14 @@ import DelayedLoading from "@/components/DelayedLoading";
 import { fetcher } from "@/lib/swr-config";
 import { useConfirm } from "@/components/ConfirmContext";
 import { useSnackbar } from "@/components/SnackbarContext";
+import { API_ENDPOINTS } from "@/lib/api";
 
 export default function AuleSedePage() {
     const resolvedParams = useParams();
     const sedeId = resolvedParams.id;
 
     const { data: sede, error, isLoading, mutate } = useSWR(
-        sedeId ? `${API_BASE_URL}/sedi/${sedeId}` : null,
+        sedeId ? `${API_ENDPOINTS.sedi}${sedeId}` : null,
         fetcher
     );
     const { confirm } = useConfirm();
@@ -36,7 +36,7 @@ export default function AuleSedePage() {
         )
         if (!ok) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/aule/${aulaId}`, {
+            const res = await fetch(`${API_ENDPOINTS.aule}${aulaId}`, {
                 method: "DELETE",
             });
             if (!res.ok) {

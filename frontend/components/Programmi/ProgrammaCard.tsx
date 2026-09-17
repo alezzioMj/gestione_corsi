@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import { Card, CardContent, Typography, Box, Divider, Chip, Button } from "@mui/material";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { ProgrammaConModuli } from "../Stepper/MyStepper";
+import { ProgrammaConModuli } from "@/validation/corso-form.schema";
 import AddModuloProgrammaModal from "./AddModuloProgrammaModal";
 import EditProgrammaModal from "./EditProgrammaModal"; // Importa il modal di modifica
 import EditIcon from "@mui/icons-material/Edit";

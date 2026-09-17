@@ -3,8 +3,10 @@ import { Box, Button, Card, CardContent, Divider, Typography } from "@mui/materi
 import { useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import EditAulaModal from "./EditAulaModal";
+
 import { Aula } from "@shared/validation/types";
+
+import EditAulaModal from "./EditAulaModal";
 
 interface AulaCardProps {
     aula : Aula,

@@ -11,8 +11,9 @@ import {
     Box
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
-import { API_BASE_URL } from "@/lib/config";
+
 import { Programma } from "@shared/validation/types";
+import { API_ENDPOINTS } from "@/lib/api";
 
 interface EditProgrammaModalProps {
     open: boolean;
@@ -32,7 +33,7 @@ export default function EditProgrammaModal({ open, onClose, programma, onSaveSuc
         e.preventDefault();
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/programmi/${programma.id}`, {
+            const res = await fetch(`${API_ENDPOINTS.programmi}/${programma.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

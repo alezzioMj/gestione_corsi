@@ -13,5 +13,7 @@ export const moduloSchema = z.object({
 
   multiplo : z.boolean,
 
+  descrizione: z.string().optional(),
+
   created_by: z.string().max(100).optional(),
 });

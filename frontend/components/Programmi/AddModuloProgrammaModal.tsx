@@ -20,7 +20,6 @@ import Grid from "@mui/material/Grid";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import DeleteIcon from "@mui/icons-material/Delete";
 import { useRouter } from "next/navigation";
-import { Programma } from "@shared/validation/types";
 import {
     DndContext,
     closestCenter,
@@ -38,18 +37,15 @@ import {
     useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { API_BASE_URL } from "@/lib/config";
 
-interface Modulo {
-    id: number;
-    titolo: string;
-}
+import { Programma } from "@shared/validation/types";
+import { Modulo } from "@shared/validation/types";
+import { API_ENDPOINTS } from "@/lib/api";
 
 interface AddModuloProgrammaModalProps {
     programma: Programma;
 }
 
-// Componente per il singolo elemento della lista trascinabile
 function SortableModuloItem({ modulo, onRemove }: { modulo: Modulo; onRemove: () => void }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
         id: modulo.id,
@@ -113,17 +109,14 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
     const fetchData = async () => {
         setLoading(true);
         try {
-            const resModuli = await fetch(`${API_BASE_URL}/moduli`);
+            const resModuli = await fetch(API_ENDPOINTS.moduli);
             const allModuli: Modulo[] = await resModuli.json();
             setModuli(allModuli);
 
-            const resAssociazioni = await fetch(`${API_BASE_URL}/programmi/${programma.id}/moduli`, { cache: 'no-store' });
+            const resAssociazioni = await fetch(`${API_ENDPOINTS.programmi}${programma.id}/moduli`, { cache: 'no-store' });
             if (resAssociazioni.ok) {
                 const data = await resAssociazioni.json();
-                // Estraiamo gli ID mantenendo l'ordine restituito dal server (ordinato per colonna 'ordine')
-                const currentIds = Array.isArray(data)
-                    ? data.map((m: any) => m.modulo_id || m.id)
-                    : (data.programma_modulo?.sort((a: any, b: any) => a.ordine - b.ordine).map((m: any) => m.modulo_id) || []);
+                const currentIds = data.map((m: Modulo) => m.id )
                 setSelectedIds(currentIds);
             }
         } catch (error) {
@@ -162,7 +155,7 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
     const handleSave = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/programmi/${programma.id}/moduli_bulk`, {
+            const res = await fetch(`${API_ENDPOINTS.programmi}${programma.id}/moduli_bulk`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ moduli_ids: selectedIds }),

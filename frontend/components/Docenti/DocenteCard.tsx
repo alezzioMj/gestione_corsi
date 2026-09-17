@@ -73,6 +73,7 @@ export default function DocenteCard({ docente, onDocenteUpdated, onDeleteDocente
 
       {docente && ( // Renderizza il modale solo se il docente è presente
         <EditDocenteModal
+          key={docente.codice_fiscale}
           open={isEditModalOpen}
           onClose={handleCloseEditModal}
           docente={docente}

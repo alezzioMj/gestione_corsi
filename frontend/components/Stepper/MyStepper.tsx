@@ -56,7 +56,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                 docente?.docente_modulo?.forEach(dm => coveredModuleIds.add(dm.modulo_id));
             });
 
-            // FFiltra moduli senza docente associato
+            // FFiltra moduli senza docente
             const missingModuleIds = requiredModuleIds.filter(id => !coveredModuleIds.has(id));
 
             if (missingModuleIds.length > 0) {
@@ -189,7 +189,6 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                 <Box sx={{ mt: 3 }}>
                     {activeStep === 0 && <StepForm
                         sedi={sedi}
-                        programmi={programmi}
                     />}
                     {activeStep === 1 && <StepProgrammazione programmi={programmi} />}
                     {activeStep === 2 && <StepDocenti docenti={docenti}></StepDocenti>}

@@ -9,28 +9,22 @@ import {
     Alert,
 } from "@mui/material";
 import ModuloCard from "@/components/Moduli/ModuloCard";
-import { API_BASE_URL } from "@/lib/config";
 import DelayedLoading from "@/components/DelayedLoading";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import AddModuloModal from "@/components/Moduli/AddModuloModal";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
-import { title } from "process";
 import EmptyState from "@/components/EmptyState";
 import { ExtensionOffOutlined } from "@mui/icons-material";
-
-interface Modulo {
-    id: number;
-    titolo: string;
-    ore: number;
-    descrizione: string;
-}
+import { Modulo } from "@shared/validation/types";
+import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function ModuliPage() {
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
-    const { data: moduli, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/moduli`, fetcher);
+    const { data: moduli, error, isLoading, mutate } = useSWR(API_ENDPOINTS.moduli, fetcher);
 
     const handleDeleteModulo = async (moduloId: number) => {
         const ok = await confirm({

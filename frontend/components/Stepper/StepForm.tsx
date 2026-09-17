@@ -2,13 +2,14 @@
 
 import * as React from "react";
 import { Box, FormControl, MenuItem, InputLabel, OutlinedInput, Select, TextField, FormHelperText } from "@mui/material";
-import { Sede } from "@shared/validation/types";
-import { FormType } from "./MyStepper"; // Import FormType and ProgrammaConModuli
 import { useFormContext, Controller } from "react-hook-form";
 import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
+
+import { Sede } from "@shared/validation/types";
+import { FormType } from "@/validation/corso-form.schema";
 
 export default function StepForm({
     sedi,

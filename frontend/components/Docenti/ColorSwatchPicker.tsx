@@ -2,6 +2,7 @@
 "use client";
 
 import { Box } from "@mui/material";
+
 import { DOCENTE_COLORS } from "@shared/constants/docente";
 
 interface ColorSwatchPickerProps {

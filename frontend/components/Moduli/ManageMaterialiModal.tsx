@@ -9,16 +9,11 @@ import {
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import AttachmentIcon from "@mui/icons-material/Attachment";
-import UploadFileIcon from "@mui/icons-material/UploadFile"; // New icon for upload
-import { API_BASE_URL } from "@/lib/config";
-import { ApiErrorData } from "@shared/validation/types";
+import UploadFileIcon from "@mui/icons-material/UploadFile";
 
-// Define a more specific type for Modulo and Materiale if available
-interface Modulo {
-    id: number;
-    titolo: string;
-    // ... other properties
-}
+import { ApiErrorData } from "@shared/validation/types";
+import { Modulo } from "@shared/validation/types";
+import { API_ENDPOINTS } from "@/lib/api";
 
 interface Materiale {
     id: number; // Added id for the material
@@ -49,8 +44,7 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
     const fetchData = async () => {
         setLoading(true);
         try {
-            // 1. Materiali già associati al modulo
-            const resAssoc = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/materiali`);
+            const resAssoc = await fetch(`${API_ENDPOINTS.moduli}${modulo.id}/materiali`);
             if (resAssoc.ok) {
                 const data: ModuloMaterialeAssociation[] = await resAssoc.json();
                 setMaterialiAssociati(data);
@@ -83,7 +77,7 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             }
 
             // Assuming a new endpoint for file upload and material creation
-            const uploadRes = await fetch(`${API_BASE_URL}/materiali`, {
+            const uploadRes = await fetch(API_ENDPOINTS.materiali, {
                 method: "POST",
                 body: uploadFormData,
             });
@@ -98,7 +92,7 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             const newMateriale = await uploadRes.json(); // Expecting the created Materiale object with an ID
 
             // Step 2: Associate the newly created Materiale with the current Modulo
-            const associateRes = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/materiali`, {
+            const associateRes = await fetch(`${API_ENDPOINTS.moduli}${modulo.id}/materiali`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ materiale_id: newMateriale.id }),
@@ -131,7 +125,7 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
     const handleRemove = async (materiale_id: number) => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/materiali/${materiale_id}`, {
+            const res = await fetch(`${API_ENDPOINTS.moduli}/${modulo.id}/materiali/${materiale_id}`, {
                 method: "DELETE",
             });
             if (res.ok) {

@@ -1,23 +1,38 @@
 "use client";
 
-import React,{ useEffect, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { CalendarMonthOutlined } from "@mui/icons-material";
+import { Button } from "@mui/material";
 
-import { API_BASE_URL } from "@/lib/config";
-import { Corso, Docente, SessioneWithRelations } from "@shared/validation/types";
-import { trasformaSessioniInCommesse, RigaCommessa } from "@/lib/formatSessioni";
+import { RigaCommessa, trasformaSessioniInCommesse } from "@/lib/formatSessioni";
 
 import ScheduleGrid from "@/components/ScheduleGrid/ScheduleGrid";
 import DayCellModal from "@/components/ScheduleGrid/DayCellModal";
 import EmptyState from "@/components/EmptyState";
+import { Alert } from "@mui/material";
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr-config";
+import { API_ENDPOINTS } from "@/lib/api";
+import DelayedLoading from "@/components/DelayedLoading";
 
 export default function SessioniPage() {
-    const [commesse, setCommesse] = useState<RigaCommessa[]>([]);
-    const [sessioni, setSessioni] = useState<SessioneWithRelations[]>([]);
-    const [docenti, setDocenti] = useState<Docente[]>([]);
-    const [corsi, setCorsi] = useState<Corso[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState<string | null>(null);
+    const { data: sessioniData, isLoading: sessioniLoading, error: sessioniError, mutate: sessioniMutate } = useSWR(API_ENDPOINTS.sessioniFull, fetcher);
+    const { data: docentiData, isLoading: docentiLoading, error: docentiError, mutate: docentiMutate } = useSWR(API_ENDPOINTS.docenti, fetcher);
+    const { data: corsiData, isLoading: corsiLoading, error: corsiError, mutate: corsiMutate } = useSWR(API_ENDPOINTS.corsi, fetcher);
+
+
+    const isLoading = corsiLoading || sessioniLoading || docentiLoading;
+    const error = corsiError || sessioniError || docentiError;
+
+    const commesse = useMemo<RigaCommessa[]>(() => {
+        if (error || !sessioniData || !corsiData || !docentiData) {
+            return [];
+        }
+        return trasformaSessioniInCommesse(sessioniData, corsiData, docentiData)
+    },
+        [sessioniData, docentiData, corsiData, error]
+    );
+
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedCellData, setSelectedCellData] = useState<{ dateKey: string; commessaId?: number } | null>(null);
 
@@ -31,63 +46,10 @@ export default function SessioniPage() {
         setSelectedCellData(null);
     };
 
-    useEffect(() => {
-        async function fetchData() {
-            try {
-                setLoading(true);
-                const [resSessioni, resDocenti, resCorsi] = await Promise.all([
-                    fetch(`${API_BASE_URL}/sessioni/full`),
-                    fetch(`${API_BASE_URL}/docenti`),
-                    fetch(`${API_BASE_URL}/corsi`)
-                ]);
-
-                if (!resSessioni.ok) {
-                    throw new Error("Errore durante il recupero delle sessioni");
-                }
-                if (!resDocenti.ok) {
-                    throw new Error("Errore durante il recupero dei docenti");
-                }
-                if (!resCorsi.ok) {
-                    throw new Error("Errore durante il recupero dei corsi");
-                }
-
-                const dataSessioni = await resSessioni.json();
-                const dataDocenti: Docente[] = await resDocenti.json();
-                const dataCorsi: Corso[] = await resCorsi.json();
-
-                const commesseFormattate = trasformaSessioniInCommesse(dataSessioni);
-
-                setCommesse(commesseFormattate);
-                setSessioni(dataSessioni);
-                setDocenti(dataDocenti);
-                setCorsi(dataCorsi);
-            } catch (err) {
-                const msg = err instanceof Error ? err.message : "Errore sconosciuto";
-                setError(msg);
-                console.error("Errore fetch dati:", err);
-            } finally {
-                setLoading(false);
-            }
-        }
-
-        fetchData();
-    }, []);
-
-    if (loading) {
-        return (
-            <div className="p-8 text-white flex items-center justify-center">
-                <div className="text-lg">Caricamento programmazione in corso...</div>
-            </div>
-        );
-    }
-
-    if (error) {
-        return (
-            <div className="p-8 text-red-400">
-                <div className="text-lg font-bold">Si è verificato un errore:</div>
-                <div>{error}</div>
-            </div>
-        );
+    const retry = () => {
+        corsiMutate();
+        docentiMutate();
+        sessioniMutate();
     }
 
     return (
@@ -97,7 +59,7 @@ export default function SessioniPage() {
                     open={isModalOpen}
                     onClose={handleCloseModal}
                     giorno={new Date(selectedCellData.dateKey)}
-                    sessioni={sessioni}
+                    sessioni={sessioniData}
                 />
             )}
             <div className="p-6 space-y-6">
@@ -105,17 +67,24 @@ export default function SessioniPage() {
                     <h1 className="text-3xl font-bold text-white">Programmazione Commesse</h1>
                 </div>
 
-                {
-                    !corsi || corsi.length === 0?
-                        <EmptyState
-                            icon={CalendarMonthOutlined}
-                            title={"Nessuna sessione trovata"}
-                            description={"Inizia creando una nuova commessa"}
-                        />
-                        :
-                        <ScheduleGrid commesse={commesse} docenti={docenti} corsi={corsi} onCellClick={handleCellClick} />
+                {error && (
+                    <Alert severity="error" sx={{ mb: 4 }} action={<Button color="inherit" size="small" onClick={retry}>Riprova</Button>}>
+                        {error.message}
+                    </Alert>
+                )}
+
+                {isLoading ? (
+                    <DelayedLoading />
+                ) : !corsiData || corsiData.length === 0 ?
+                    <EmptyState
+                        icon={CalendarMonthOutlined}
+                        title={"Nessuna sessione trovata"}
+                        description={"Inizia creando una nuova commessa"}
+                    />
+                    :
+                    <ScheduleGrid commesse={commesse} docenti={docentiData} corsi={corsiData} onCellClick={handleCellClick} />
                 }
-                 </div>
+            </div>
         </>
     );
 }

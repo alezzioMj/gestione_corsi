@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
     Button,
     Dialog,
@@ -10,8 +10,8 @@ import {
     TextField,
     Box
 } from "@mui/material";
-import { API_BASE_URL } from "@/lib/config";
 import { Aula } from "@shared/validation/types";
+import { API_ENDPOINTS } from "@/lib/api";
 
 interface EditAulaModalProps {
     open: boolean,
@@ -29,14 +29,6 @@ export default function EditAulaModal({ open, onClose, onSaveSuccess, aula }: Ed
         descrizione: aula.descrizione
     });
 
-    useEffect(() => {
-        setFormData({
-            nome: aula.nome,
-            capienza: aula.capienza,
-            descrizione: aula.descrizione
-        });
-    }, [aula]);
-
     const handleClose = () => {
         onClose();
         setFormData({ nome: aula.nome, capienza: aula.capienza, descrizione: aula.descrizione });
@@ -47,7 +39,7 @@ export default function EditAulaModal({ open, onClose, onSaveSuccess, aula }: Ed
         setLoading(true);
 
         try {
-            const res = await fetch(`${API_BASE_URL}/aule/${aula.id}`, {
+            const res = await fetch(`${API_ENDPOINTS.aule}${aula.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
@@ -90,7 +82,7 @@ export default function EditAulaModal({ open, onClose, onSaveSuccess, aula }: Ed
                                 type="number"
                                 fullWidth
                                 value={formData.capienza}
-                                onChange={(e) => setFormData({ ...formData, capienza: e.target.value })}
+                                onChange={(e) => setFormData({ ...formData, capienza: e.target.value === "" ? 0 : Number(e.target.value) })}
                             />
                             <TextField
                                 label="Descrizione"

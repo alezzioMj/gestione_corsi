@@ -7,7 +7,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import EditIcon from '@mui/icons-material/Edit';
-import { API_BASE_URL } from "@/lib/config";
 import useSWR from 'swr';
 import DelayedLoading from "@/components/DelayedLoading";
 import { fetcher } from "@/lib/swr-config";
@@ -16,6 +15,7 @@ import { WorkOffOutlined } from "@mui/icons-material";
 import AddIcon from '@mui/icons-material/Add'
 import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
+import { API_ENDPOINTS } from "@/lib/api";
 
 // Definizione di un tipo base per un corso
 interface Corso {
@@ -31,7 +31,7 @@ interface Corso {
 
 export default function CommessePage() {
 
-    const { data: corsi, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/corsi`, fetcher);
+    const { data: corsi, error, isLoading, mutate } = useSWR(API_ENDPOINTS.corsi, fetcher);
     const [openInfoModal, setOpenInfoModal] = useState(false);
     const [selectedCorsoInfo, setSelectedCorsoInfo] = useState<Corso | null>(null);
     const [isLoadingInfo, setIsLoadingInfo] = useState(false);
@@ -50,7 +50,7 @@ export default function CommessePage() {
         )
         if (!ok) return;
         try {
-            const res = await fetch(`${API_BASE_URL}/corsi/${corsoId}`, {
+            const res = await fetch(`${API_ENDPOINTS.corsi}${corsoId}`, {
                 method: "DELETE",
             });
             if (!res.ok) {
@@ -76,7 +76,7 @@ export default function CommessePage() {
             return; // Oppure metti un return di default a seconda di dove ti trovi
         }
         try {
-            const res = await fetcher(`${API_BASE_URL}/corsi/${corsoId}`); // Fetch dettagli specifici            
+            const res = await fetcher(`${API_ENDPOINTS.corsi}${corsoId}`); // Fetch dettagli specifici            
             setSelectedCorsoInfo(res);
         } catch (error: unknown) {
             console.error("Errore nel recupero info corso:", error);

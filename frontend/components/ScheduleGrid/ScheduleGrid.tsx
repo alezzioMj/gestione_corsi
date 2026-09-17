@@ -1,9 +1,11 @@
 "use client";
 
 import React, { useState, useMemo, useSyncExternalStore } from "react";
+
 import { RigaCommessa } from "@/lib/formatSessioni";
 import { Docente } from "@shared/validation/types";
 import { Corso } from "@shared/validation/types";
+
 import DayCell from "./DayCell";
 
 const MESI = [

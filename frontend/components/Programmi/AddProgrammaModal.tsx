@@ -21,9 +21,6 @@ import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import { API_BASE_URL } from "@/lib/config";
-import useSWR from "swr";
-import { fetcher } from "@/lib/swr-config";
 import {
     DndContext,
     closestCenter,
@@ -41,6 +38,10 @@ import {
     useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+
+import useSWR from "swr";
+import { fetcher } from "@/lib/swr-config";
+import { API_ENDPOINTS } from "@/lib/api";
 
 interface ModuloForProgram {
     id: number;
@@ -192,7 +193,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
                 moduli_ids: selectedModuleIds,
             };
 
-            const res = await fetch(`${API_BASE_URL}/programmi/completo`, {
+            const res = await fetch(`${API_ENDPOINTS.programmi}completo`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
@@ -249,16 +250,16 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
                             <Typography variant="subtitle2" color="primary">Riepilogo Ore</Typography>
                             <Grid container spacing={2}>
                                 <Grid size={{ xs: 12, md: 6 }}>
-                                    <TextField label="Durata Totale (ore)" fullWidth value={durata_totale} InputProps={{ readOnly: true }} />
+                                    <TextField label="Durata Totale (ore)" fullWidth value={durata_totale} aria-readonly />
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 6 }}>
-                                    <TextField label="Ore Pratiche" fullWidth value={ore_pratiche} InputProps={{ readOnly: true }} />
+                                    <TextField label="Ore Pratiche" fullWidth value={ore_pratiche} aria-readonly />
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 6 }}>
-                                    <TextField label="Ore Teoriche" fullWidth value={ore_teoriche} InputProps={{ readOnly: true }} />
+                                    <TextField label="Ore Teoriche" fullWidth value={ore_teoriche} aria-readonly />
                                 </Grid>
                                 <Grid size={{ xs: 12, md: 6 }}>
-                                    <TextField label="Ore Trasversali" fullWidth value={ore_trasversali} InputProps={{ readOnly: true }} />
+                                    <TextField label="Ore Trasversali" fullWidth value={ore_trasversali} aria-readonly />
                                 </Grid>
                             </Grid>
 

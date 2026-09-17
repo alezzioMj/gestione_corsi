@@ -2,19 +2,14 @@
 
 import React, { useState } from "react";
 import { Card, CardContent, Typography, Box, Divider, Button, Chip } from "@mui/material";
-import ManageMaterialiModal from "./ManageMaterialiModal";
-import EditModuloModal from "./EditModuloModal";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Stack from "@mui/material/Stack";
 
-type Modulo = {
-    id: number;
-    titolo: string;
-    competenza: "Teorica" | "Trasversale" | "Pratica";
-    descrizione?: string;
-    multiplo?: boolean; // <--- Aggiunto il campo al tipo
-}
+import { Modulo } from "@shared/validation/types";
+
+import ManageMaterialiModal from "./ManageMaterialiModal";
+import EditModuloModal from "./EditModuloModal";
 
 interface ModuloCardProps {
     modulo: Modulo;
@@ -81,6 +76,7 @@ export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: 
             {
                 modulo && (
                     <EditModuloModal
+                        key={modulo.id}
                         open={isEditModalOpen}
                         onClose={() => setIsEditModalOpen(false)}
                         modulo={modulo}

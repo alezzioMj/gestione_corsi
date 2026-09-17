@@ -41,6 +41,13 @@ export const sedeDbSchema = sedeSchema.extend({
     createdAt: z.date().optional(),
 });
 
+export const moduloDbSchema = moduloSchema.extend(
+    {
+        id: z.number(),
+        createdAt: z.date().optional()
+    }
+)
+
 // Forma delle risposte di errore dalle API
 export const apiErrorSchema = z.object({
     error: z.string().optional(),
@@ -58,6 +65,7 @@ export type Programma = z.infer<typeof programmaDbSchema>;
 export type Aula = z.infer<typeof aulaDbSchema>;
 export type Docente = z.infer<typeof docenteDbSchema>;
 export type Sede = z.infer<typeof sedeDbSchema>;
+export type Modulo = z.infer<typeof moduloDbSchema>;
 
 export const SessioneWithRelations = sessioneSchema.extend({
     corso: corsoDbSchema,

@@ -7,11 +7,12 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
 import AddIcon from "@mui/icons-material/Add";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import { API_BASE_URL } from "@/lib/config";
 import useSWR from 'swr';
 import DelayedLoading from "@/components/DelayedLoading";
 import { fetcher } from "@/lib/swr-config";
 import { ApiErrorData } from "@shared/validation/types";
+import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 // Definizione di un tipo base per un materiale
 interface Materiale {
@@ -24,7 +25,7 @@ interface Materiale {
 
 export default function MaterialiPage() {
 
-    const { data: materiali, error, isLoading, mutate } = useSWR(`${API_BASE_URL}/materiali`, fetcher);
+    const { data: materiali, error, isLoading, mutate } = useSWR(API_ENDPOINTS.materiali, fetcher);
     const [openInfoModal, setOpenInfoModal] = useState(false);
     const [selectedMaterialeInfo, setSelectedMaterialeInfo] = useState<Materiale | null>(null);
     const [isLoadingInfo, setIsLoadingInfo] = useState(false);
@@ -122,7 +123,7 @@ export default function MaterialiPage() {
             return;
         }
         try {
-            const res = await fetcher(`${API_BASE_URL}/materiali/${id}`); 
+            const res = await fetcher(`${API_ENDPOINTS.materiali}${id}`); 
             setSelectedMaterialeInfo(res);
         } catch (error: unknown) {
             console.error("Errore nel recupero info materiale:", error);
