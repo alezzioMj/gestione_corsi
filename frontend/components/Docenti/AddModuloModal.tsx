@@ -22,6 +22,7 @@ import { Docente } from "@shared/validation/types";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 interface Modulo {
     id: number;
@@ -113,7 +114,7 @@ function ModuliChecklist({
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await fetch(`${API_ENDPOINTS.docenti}${docente.codice_fiscale}/moduli_bulk`, {
+      const res = await fetch(`${API_BASE_URL}/docenti/${docente.codice_fiscale}/moduli_bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ moduli_ids: selectedIds }),

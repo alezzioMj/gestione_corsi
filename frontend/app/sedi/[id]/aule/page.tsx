@@ -13,6 +13,7 @@ import { fetcher } from "@/lib/swr-config";
 import { useConfirm } from "@/components/ConfirmContext";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function AuleSedePage() {
     const resolvedParams = useParams();
@@ -36,7 +37,7 @@ export default function AuleSedePage() {
         )
         if (!ok) return;
         try {
-            const res = await fetch(`${API_ENDPOINTS.aule}${aulaId}`, {
+            const res = await fetch(`${API_BASE_URL}/aule/${aulaId}`, {
                 method: "DELETE",
             });
             if (!res.ok) {

@@ -12,6 +12,7 @@ import {
 } from "@mui/material";
 import { Aula } from "@shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 interface EditAulaModalProps {
     open: boolean,
@@ -39,7 +40,7 @@ export default function EditAulaModal({ open, onClose, onSaveSuccess, aula }: Ed
         setLoading(true);
 
         try {
-            const res = await fetch(`${API_ENDPOINTS.aule}${aula.id}`, {
+            const res = await fetch(`${API_BASE_URL}/aule/${aula.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

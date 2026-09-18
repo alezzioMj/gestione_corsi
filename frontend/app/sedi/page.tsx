@@ -11,6 +11,7 @@ import { LocationOffOutlined } from "@mui/icons-material";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
 import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 export default function SediPage() {
     //SWR hook for fetching /Sedi
@@ -30,7 +31,7 @@ export default function SediPage() {
         )
         if (!ok) return;
         try {
-            const res = await fetch(`${API_ENDPOINTS.sedi}${sedeId}`, {
+            const res = await fetch(`${API_BASE_URL}/sedi/${sedeId}`, {
                 method: "DELETE",
             });
             if (!res.ok) {

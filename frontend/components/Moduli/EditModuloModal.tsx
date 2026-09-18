@@ -19,6 +19,7 @@ import EditIcon from "@mui/icons-material/Edit";
 
 import { ApiErrorData, Modulo } from "@shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 interface EditModuloModalProps {
     open: boolean;
@@ -64,7 +65,7 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
 
         setLoading(true);
         try {
-            const res = await fetch(`${API_ENDPOINTS.moduli}${modulo.id}`, {
+            const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({

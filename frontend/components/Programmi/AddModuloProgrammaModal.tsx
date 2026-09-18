@@ -41,6 +41,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { Programma } from "@shared/validation/types";
 import { Modulo } from "@shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 interface AddModuloProgrammaModalProps {
     programma: Programma;
@@ -113,7 +114,7 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
             const allModuli: Modulo[] = await resModuli.json();
             setModuli(allModuli);
 
-            const resAssociazioni = await fetch(`${API_ENDPOINTS.programmi}${programma.id}/moduli`, { cache: 'no-store' });
+            const resAssociazioni = await fetch(`${API_BASE_URL}/programmi/${programma.id}/moduli`, { cache: 'no-store' });
             if (resAssociazioni.ok) {
                 const data = await resAssociazioni.json();
                 const currentIds = data.map((m: Modulo) => m.id )
@@ -155,7 +156,7 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
     const handleSave = async () => {
         setLoading(true);
         try {
-            const res = await fetch(`${API_ENDPOINTS.programmi}${programma.id}/moduli_bulk`, {
+            const res = await fetch(`${API_BASE_URL}/programmi/${programma.id}/moduli_bulk`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ moduli_ids: selectedIds }),

@@ -11,7 +11,7 @@ import { Docente } from "@shared/validation/types";
 import { DOCENTE_COLORS } from "@shared/constants/docente";
 
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
-import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 type Provincia = {
     id: number;
@@ -152,7 +152,7 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
                 setLoading(false);
                 return;
             }
-            const res = await fetch(`${API_ENDPOINTS.docenti}${docente.codice_fiscale}`, {
+            const res = await fetch(`${API_BASE_URL}/docenti/${docente.codice_fiscale}`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(formData),

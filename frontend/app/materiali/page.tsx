@@ -24,7 +24,6 @@ interface Materiale {
 }
 
 export default function MaterialiPage() {
-
     const { data: materiali, error, isLoading, mutate } = useSWR(API_ENDPOINTS.materiali, fetcher);
     const [openInfoModal, setOpenInfoModal] = useState(false);
     const [selectedMaterialeInfo, setSelectedMaterialeInfo] = useState<Materiale | null>(null);

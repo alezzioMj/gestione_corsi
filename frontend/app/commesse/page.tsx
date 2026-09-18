@@ -16,6 +16,7 @@ import AddIcon from '@mui/icons-material/Add'
 import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
 import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 // Definizione di un tipo base per un corso
 interface Corso {
@@ -50,7 +51,7 @@ export default function CommessePage() {
         )
         if (!ok) return;
         try {
-            const res = await fetch(`${API_ENDPOINTS.corsi}${corsoId}`, {
+            const res = await fetch(`${API_BASE_URL}/corsi/${corsoId}`, {
                 method: "DELETE",
             });
             if (!res.ok) {

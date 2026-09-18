@@ -42,6 +42,7 @@ import { CSS } from "@dnd-kit/utilities";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
+import { API_BASE_URL } from "@/lib/config";
 
 interface ModuloForProgram {
     id: number;
@@ -193,7 +194,7 @@ export default function AddProgrammaModal({ onProgrammaAdded }: AddProgrammaModa
                 moduli_ids: selectedModuleIds,
             };
 
-            const res = await fetch(`${API_ENDPOINTS.programmi}completo`, {
+            const res = await fetch(`${API_BASE_URL}/programmi/completo`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload),
