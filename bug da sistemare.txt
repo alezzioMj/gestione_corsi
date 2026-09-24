@@ -1,0 +1,20 @@
+bug da sistemare
+
+- assenza descrizione in moduli
+- visualizzazione colonne su schermi grandi
+
+- sedi non eliminabili se contengono aule (scelta da tenere? nel caso aggiungere massaggio)
+- alert rimasti
+- controllare associazioni moduli
+
+gestione ore a solo un docente
+lettera docente su schedulazione
+gestione SWR (ManageMaterialiModal.tsx, fetch in sessioni)
+Gestione errori in EditProgramModal
+Se un docente in mattina è in una sede non può essere il pomeriggio in un altra sede
+
+gestione fetch senza URL base
+Sistemare 
+
+?Fare component unificato per CRUD?
+

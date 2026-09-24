@@ -170,6 +170,43 @@ const getDocenti = async (req: express.Request, res: express.Response) => {
   }
 }
 
+const getDocentiByModulo = async (req: express.Request, res: express.Response) => {
+  try {
+    const corso_id = Number(req.params.id);
+    const modulo_id = Number(req.params.modulo_id);
+
+    const docente_modulo = await prisma.docente_modulo.findMany({
+      where: { modulo_id: modulo_id },
+      include: {
+        docente: true
+      }
+    })
+
+    const corso_docenti = await prisma.corso_docente.findMany({
+      where: { corso_id: corso_id },
+      include: {
+        docente: true
+      }
+    })
+
+    const docenti = corso_docenti.filter((dc) =>
+      docente_modulo.some((dm) => dm.docente_cf === dc.docente_cf)
+    );
+    if (docenti.length === 0) {
+      return res.status(404).send("Nessuna docente è abilitato per questo modulo");
+    }
+    res.json(docenti)
+
+  } catch (err: any) {
+    console.error({
+      message: "Errore nella ricerca dei moduli per questo docente",
+      error: err,
+    });
+    res.status(500).json({ error: "Errore ricerca moduli" });
+  }
+}
+
+
 const addDocenteToCorso = async (req: express.Request, res: express.Response) => {
   try {
     const corso_id = Number(req.params.id);
@@ -282,7 +319,7 @@ const deleteSessioni = async (req: express.Request, res: express.Response) => {
       where: { corso_id },
     });
     res.status(204).send();
-  }catch{
+  } catch {
     res.status(500).json({ error: "Errore cancellazione sessioni" });
   }
 }
@@ -315,6 +352,7 @@ export {
   updateCorso,
   deleteCorso,
   getDocenti,
+  getDocentiByModulo,
   addDocenteToCorso,
   deleteDocenteFromCorso,
   getSediByCorso,

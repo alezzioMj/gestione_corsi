@@ -17,6 +17,20 @@ export const fetcher = async (resource: string, init?: RequestInit) => {
   return res.json();
 };
 
+export async function postFetcher(url: string, { arg }: { arg: object }) {
+    const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(arg),
+    });
+
+    if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.error || res.statusText);
+    }
+    return res.json().catch(() => null);
+}
+
 export const swrOptions = {
   fetcher,
   revalidateOnFocus: true, // Ricarica i dati quando torni sulla scheda del browser

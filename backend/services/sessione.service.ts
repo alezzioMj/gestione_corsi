@@ -224,15 +224,9 @@ export const createSessioneService = async (data: any) => {
     } = data;
     validateOrari(ora_inizio, ora_fine);
 
-    // Usa `prisma.$transaction` per raggruppare tutte le operazioni atomiche
     return await prisma.$transaction(async (tx) => {
-        // Validazione corso ↔ sede
         await validateSedeCorso(corso_id, sede_id);
-
-        // Validazione aula ↔ sede
         await validateAulaSede(aula_id, sede_id);
-
-        // Verifica disponibilità del docente
         await validateDocenteDisponibile(
             docente_cf,
             giorno,

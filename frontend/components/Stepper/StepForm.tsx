@@ -20,7 +20,7 @@ export default function StepForm({
     const { control, formState: { errors } } = useFormContext<FormType>();
     
     return (
-        <LocalizationProvider dateAdapter={AdapterDayjs}>
+        <LocalizationProvider dateAdapter={AdapterDayjs} adapterLocale="it">
         <Box sx={{ p: 2 }}>
             <Controller
                 name="nome" // Nome allineato al backend

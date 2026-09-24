@@ -134,7 +134,7 @@ export default function CommessePage() {
 
             {isLoading ? ( // Use SWR's isLoading
                 <DelayedLoading />
-            ) : corsi && corsi.length === 0 ? ( // Check su esitenza scorsi
+            ) : corsi && corsi.length === 0 ? ( // Check su esitenza corsi
                 <EmptyState
                     icon={WorkOffOutlined}
                     title={"Nessuna commessa trovata"}

@@ -7,6 +7,7 @@ import { Docente } from "@shared/validation/types";
 import { Corso } from "@shared/validation/types";
 
 import DayCell from "./DayCell";
+import SessioneModal from "../Sessioni/AddSessioneModal";
 
 const MESI = [
     "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
@@ -88,6 +89,7 @@ export default function ScheduleGrid({ commesse = [], docenti = [], corsi = [], 
         <div className="w-full space-y-4 font-sans">
             {/* BARRA TEMPORALE */}
             <TimeBar handleDate={setCurrentDate} anno={anno} mese={mese} />
+            <SessioneModal />
             {/* LEGENDA DOCENTI */}
             {docenti && docenti.length > 0 && (
                 <div className="p-3 bg-gray-900 rounded border border-gray-800 flex flex-wrap items-center gap-2">

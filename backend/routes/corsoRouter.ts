@@ -19,6 +19,7 @@ import {
   deleteSessioni
 } from "../controllers/corsoController";
 import { scheduleCorsoController } from "../controllers/scheduleCorsoController";
+import { getDocentiByModulo } from "../controllers/corsoController";
 
 corsiRouter.get("/", getCorsi);
 corsiRouter.get("/:id", getCorso);
@@ -29,6 +30,7 @@ corsiRouter.delete("/:id", deleteCorso);
 
 // DOCENTI
 corsiRouter.get("/:id/docenti", getDocenti);
+corsiRouter.get("/:id/docenti/:modulo_id", getDocentiByModulo);
 corsiRouter.post("/:id/docenti", addDocenteToCorso);
 corsiRouter.delete("/:id/docenti/:docente_cf", deleteDocenteFromCorso);
 

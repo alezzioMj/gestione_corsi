@@ -180,6 +180,9 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
         // 4. SALVATAGGIO MASSIVO E RETURN
         if (sessioniBulk.length > 0) {
             logger.info(`Salvataggio massivo di ${sessioniBulk.length} sessioni...`);
+            await tx.sessione.createMany({
+                data: sessioniBulk
+            });
         }
 
         const sessioniCreate = await tx.sessione.findMany({

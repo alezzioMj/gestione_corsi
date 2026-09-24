@@ -17,4 +17,7 @@
       "require": ["tsconfig-paths/register"]
  
   },
+  "references": [
+    { "path": "../shared" }
+  ]
 }
