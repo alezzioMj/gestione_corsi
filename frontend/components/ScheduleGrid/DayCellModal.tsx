@@ -11,6 +11,7 @@ import {
   Typography,
   Stack,
 } from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete"
 
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import PersonIcon from "@mui/icons-material/Person";
@@ -25,9 +26,10 @@ interface DayCellModalProps {
   onClose: () => void;
   giorno: Date;
   sessioni: SessioneWithRelations[];
+  onDeleteSessione : ( sessioneId : number ) => void;
 }
 
-export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCellModalProps) {
+export default function DayCellModal({ open, onClose, giorno, sessioni, onDeleteSessione }: DayCellModalProps) {
   const dateKey = useMemo(() => {
     const year = giorno.getFullYear();
     const month = String(giorno.getMonth() + 1).padStart(2, "0");
@@ -111,7 +113,6 @@ export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCel
                   "&:hover": { bgcolor: "action.hover" },
                 }}
               >
-                {/* Colonna orario: elemento più caratteristico, in evidenza a sinistra */}
                 <Box
                   sx={{
                     display: "flex",
@@ -135,7 +136,6 @@ export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCel
                   </Typography>
                 </Box>
 
-                {/* Contenuto: corso come titolo, resto come riga di dettagli compatta */}
                 <Box sx={{ flex: 1, minWidth: 0 }}>
                   <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
                     {sessione.corso?.nome ?? `Corso #${sessione.corso_id}`}
@@ -176,6 +176,9 @@ export default function DayCellModal({ open, onClose, giorno, sessioni }: DayCel
                       </Typography>
                     </Stack>
                   </Stack>
+                  <Button variant="outlined" color="error" size="small" startIcon={<DeleteIcon />} onClick={() => onDeleteSessione(sessione.id)}>
+                    Elimina
+                  </Button>
                 </Box>
               </Box>
             ))}

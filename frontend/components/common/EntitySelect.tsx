@@ -22,6 +22,7 @@ export default function EntitySelect<T, I extends string | number>({
             options={options}
             disabled={disabled}
             getOptionLabel={getOptionLabel}
+            getOptionKey={(option) => getOptionId(option)}
             isOptionEqualToValue={(option, val) => getOptionId(option) === getOptionId(val)}
             value={options.find((o) => getOptionId(o) === value) ?? null}
             onChange={(_, val) => onChange(val ? getOptionId(val) : null)}

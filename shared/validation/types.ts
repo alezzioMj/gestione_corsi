@@ -48,6 +48,10 @@ export const moduloDbSchema = moduloSchema.extend(
     }
 )
 
+export const sessioneDbSchema = sessioneSchema.extend({
+    id: z.number().int().positive()
+}
+)
 // Forma delle risposte di errore dalle API
 export const apiErrorSchema = z.object({
     error: z.string().optional(),
@@ -67,7 +71,7 @@ export type Docente = z.infer<typeof docenteDbSchema>;
 export type Sede = z.infer<typeof sedeDbSchema>;
 export type Modulo = z.infer<typeof moduloDbSchema>;
 
-export const SessioneWithRelations = sessioneSchema.extend({
+export const SessioneWithRelations = sessioneDbSchema.extend({
     corso: corsoDbSchema,
     docente: docenteDbSchema,
     modulo: moduloSchema,
@@ -77,7 +81,7 @@ export const SessioneWithRelations = sessioneSchema.extend({
 export type SessioneWithRelations = z.infer<typeof SessioneWithRelations>;
 
 export interface ApiErrorBody {
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
 }

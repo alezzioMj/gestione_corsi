@@ -20,6 +20,8 @@ import { Aula } from "@shared/validation/types";
 import { useAuleBySede } from "@/hooks/useAuleBySede";
 import { useModuliByCorso } from "@/hooks/useModuliByCorso";
 import { ModuloRelation } from "@/validation/corso-form.schema";
+import { API_BASE_URL } from "@/lib/config";
+import { useCreateEntity } from "@/hooks/useCreateEntity";
 
 type SessioneForm = {
     data: string | null,
@@ -45,14 +47,18 @@ const EMPTY: SessioneForm = {
     note: null
 }
 
-export default function AddSessioneModal() {
+interface AddSessioneModalProps {
+    onSessioneAdded?: () => void;
+}
+
+export default function AddSessioneModal({onSessioneAdded}: AddSessioneModalProps) {
     const { open, openModal, closeModal, formData, setField } = useModalForm(EMPTY)
     const { corsi, isLoading: corsiIsLoading, error: corsiError } = useCorsi(open);
     const { docenti, isLoading: docenteIsLoading, error: docenteError } = useDocentiByCorso(open, formData.corso_id, formData.modulo_id);
     const { sedi, isLoading: sediIsLoading, error: sediError } = useSediByCorso(open, formData.corso_id);
     const { aule, isLoading: auleIsLoading, error: auleError } = useAuleBySede(open, formData.sede_id);
     const corso = corsi.find((c) => c.id === formData.corso_id);
-    const { moduli, isLoading: moduliIsLoading, error: moduliError} = useModuliByCorso(open, corso?.programma_id); 
+    const { moduli, isLoading: moduliIsLoading, error: moduliError } = useModuliByCorso(open, corso?.programma_id);
     const { showMessage } = useSnackbar();
 
     const error = corsiError || moduliError || sediError || docenteError || auleError;
@@ -61,10 +67,16 @@ export default function AddSessioneModal() {
             showMessage("Errore nel recupero dei dati", "error");
         }
     }, [error, showMessage]);
+    const payload = { ...formData, priorita : 1 }
+    const { submitting, create } = useCreateEntity(`${API_BASE_URL}/sessioni`);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // TODO
+        const ok = await create(payload);
+        if (ok) {
+            closeModal();
+            onSessioneAdded?.(); // se hai una callback per aggiornare la lista
+        }
     };
 
     return (
