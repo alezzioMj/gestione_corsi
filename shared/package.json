@@ -6,5 +6,11 @@
   "exports": {
     ".": "./dist/index.js",
     "./*": "./dist/*.js"
+  },
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "zod": "^4.6.2"
   }
 }
