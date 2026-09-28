@@ -8,6 +8,6 @@
     "target": "es2020",
     "strict": true
   },
-  "include": ["index.ts", "validation/**/*", "types/**/*"],
+  "include": ["**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
