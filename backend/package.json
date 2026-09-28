@@ -5,7 +5,7 @@
   "main": "index.ts",
   "scripts": {
     "dev": "nodemon --exec tsx index.ts",
-    "build": "tsc",
+    "build": "prisma generate && tsc -b",
     "start": "node dist/index.js"
   },
   "keywords": [],
@@ -18,7 +18,8 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "multer": "^2.1.1",
-    "@progetto/shared": "*"
+    "@progetto/shared": "*",
+    "zod": "^4.6.2"
   },
   "devDependencies": {
     "@types/cors": "^2.8.19",
