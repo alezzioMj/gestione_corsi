@@ -18,7 +18,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "multer": "^2.1.1",
-    "@progetto/shared": "*",
+    "@shared": "*",
     "zod": "^4.6.2"
   },
   "devDependencies": {
