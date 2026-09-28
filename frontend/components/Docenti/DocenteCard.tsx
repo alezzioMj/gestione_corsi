@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Card, CardContent, Typography, Box, Divider, Avatar, Button } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import BadgeIcon from "@mui/icons-material/Badge";
-import { Docente } from "@shared/validation/types";
+import { Docente } from "@progetto/shared/validation/types";
 import AddModuloModal from "./AddModuloModal";
 import EditDocenteModal from "./EditDocenteModal"; // Importa il componente EditDocenteModal
 import EditIcon from "@mui/icons-material/Edit"; // Importa l'icona di modifica

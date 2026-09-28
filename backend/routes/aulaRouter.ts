@@ -1,7 +1,7 @@
 import express from "express";
 const aulaRouter= express.Router();
 import { validate } from "../middlewares/validate";
-import { aulaSchema } from "@shared/validation/aula.schema";
+import { aulaSchema } from "@progetto/shared/validation/aula.schema";
 import { getAula , getAule, createAula, updateAula, deleteAula } from '../controllers/aulaController';
 
 

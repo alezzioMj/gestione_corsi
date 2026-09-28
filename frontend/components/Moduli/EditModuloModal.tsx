@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 
-import { ApiErrorData, Modulo } from "@shared/validation/types";
+import { ApiErrorData, Modulo } from "@progetto/shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 

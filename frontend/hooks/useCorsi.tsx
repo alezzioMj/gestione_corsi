@@ -1,7 +1,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
-import { Corso } from "@shared/validation/types";
+import { Corso } from "@progetto/shared/validation/types";
 
 export function useCorsi(enabled: boolean = true) {
     const { data: corsi = [], isLoading, error } = useSWR<Corso[]>(

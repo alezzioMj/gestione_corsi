@@ -9,7 +9,7 @@ import itLocale from "i18n-iso-countries/langs/it.json";
 
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
-import { DOCENTE_COLORS } from "@shared/constants/docente";
+import { DOCENTE_COLORS } from "@progetto/shared/constants/docente";
 
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
 import { API_ENDPOINTS } from "@/lib/api";

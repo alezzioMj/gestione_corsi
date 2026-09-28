@@ -13,7 +13,7 @@ import {
 import EditIcon from "@mui/icons-material/Edit";
 
 import { API_BASE_URL } from "@/lib/config";
-import { Sede } from "@shared/validation/types";
+import { Sede } from "@progetto/shared/validation/types";
 
 interface EditSedeModalProps {
     open: boolean;

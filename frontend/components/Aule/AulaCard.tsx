@@ -4,7 +4,7 @@ import { useState } from "react";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import { Aula } from "@shared/validation/types";
+import { Aula } from "@progetto/shared/validation/types";
 
 import EditAulaModal from "./EditAulaModal";
 

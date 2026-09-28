@@ -11,8 +11,8 @@ import AddIcon from "@mui/icons-material/Add";
 import AttachmentIcon from "@mui/icons-material/Attachment";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
-import { ApiErrorData } from "@shared/validation/types";
-import { Modulo } from "@shared/validation/types";
+import { ApiErrorData } from "@progetto/shared/validation/types";
+import { Modulo } from "@progetto/shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 

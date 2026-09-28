@@ -1,7 +1,7 @@
 import express from "express";
 const docenteRouter = express.Router();
 import { validate } from "../middlewares/validate";
-import { docenteSchema } from "@shared/validation/docente.schema";
+import { docenteSchema } from "@progetto/shared/validation/docente.schema";
 import { getDocenti , getDocente, createDocente, updateDocente, deleteDocente, getCorsiByDocente, getModuliByDocente, addModuloToDocente, addModuliToDocenteBulk, deleteModuloFromDocente } from '../controllers/docenteController';
 
 docenteRouter.get('/', getDocenti);

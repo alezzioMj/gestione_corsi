@@ -10,7 +10,7 @@ import {
 
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { ApiErrorData } from "@shared/validation/types";
+import { ApiErrorData } from "@progetto/shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
 
 interface AddModuloModalProps {

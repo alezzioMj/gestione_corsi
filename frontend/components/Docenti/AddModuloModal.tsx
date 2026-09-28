@@ -18,7 +18,7 @@ import Grid from "@mui/material/Grid";
 import SearchIcon from "@mui/icons-material/Search";
 import { useRouter } from "next/navigation";
 
-import { Docente } from "@shared/validation/types";
+import { Docente } from "@progetto/shared/validation/types";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";

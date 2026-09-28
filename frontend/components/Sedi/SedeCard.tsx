@@ -8,7 +8,7 @@ import Link from "next/link";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
-import { Sede } from "@shared/validation/types";
+import { Sede } from "@progetto/shared/validation/types";
 
 import EditSedeModal from "./EditSedeModal";
 

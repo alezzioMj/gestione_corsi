@@ -1,7 +1,7 @@
 "use client";
 import SedeCard from "@/components/Sedi/SedeCard";
 import { Box, Typography, Container, Alert, Button, Paper } from "@mui/material";
-import { Sede } from "@shared/validation/types";
+import { Sede } from "@progetto/shared/validation/types";
 import AddSedeModal from "@/components/Sedi/AddSedeModal";
 import DelayedLoading from "@/components/DelayedLoading";
 import useSWR from "swr";

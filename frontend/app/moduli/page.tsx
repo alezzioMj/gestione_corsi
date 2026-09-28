@@ -17,7 +17,7 @@ import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
 import EmptyState from "@/components/EmptyState";
 import { ExtensionOffOutlined } from "@mui/icons-material";
-import { Modulo } from "@shared/validation/types";
+import { Modulo } from "@progetto/shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 

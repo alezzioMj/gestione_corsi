@@ -3,7 +3,7 @@ const materialeRouter = express.Router();
 import { validate } from "../middlewares/validate";
 import multer from 'multer'; // Importa multer
 import path from 'path'; // Importa path per la gestione dei nomi dei file
-import { materialeSchema } from "@shared/validation/materiale.schema";
+import { materialeSchema } from "@progetto/shared/validation/materiale.schema";
 import {
     getMateriali,
     getMateriale,

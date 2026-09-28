@@ -1,4 +1,4 @@
-import { ApiErrorBody } from "@shared/validation/types";
+import { ApiErrorBody } from "@progetto/shared/validation/types";
 
 export function messaggioErrore(err: ApiErrorBody): string {
     switch (err.code) {

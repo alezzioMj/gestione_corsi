@@ -1,5 +1,5 @@
 import { CorsoData, creaCorso, associaDocenti, associaSedi, generaSessioni, eliminaCorso } from "./corsi";
-import { ApiErrorBody } from "@shared/validation/types";
+import { ApiErrorBody } from "@progetto/shared/validation/types";
 
 export interface CreaCorsoCompletoInput {
     corsoData: CorsoData;

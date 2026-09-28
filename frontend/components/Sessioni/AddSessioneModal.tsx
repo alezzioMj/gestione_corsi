@@ -16,7 +16,7 @@ import { useEffect } from "react";
 import { useDocentiByCorso } from "@/hooks/useDocentiByCorso";
 import { useSediByCorso } from "@/hooks/useSediByCorso";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import { Aula } from "@shared/validation/types";
+import { Aula } from "@progetto/shared/validation/types";
 import { useAuleBySede } from "@/hooks/useAuleBySede";
 import { useModuliByCorso } from "@/hooks/useModuliByCorso";
 import { ModuloRelation } from "@/validation/corso-form.schema";

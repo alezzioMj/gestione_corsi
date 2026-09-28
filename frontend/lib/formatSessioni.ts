@@ -1,4 +1,4 @@
-import { Corso, Docente, SessioneWithRelations } from "@shared/validation/types";
+import { Corso, Docente, SessioneWithRelations } from "@progetto/shared/validation/types";
 
 export interface DocenteLegenda {
     cf: string;

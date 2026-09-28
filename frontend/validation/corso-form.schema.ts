@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { Docente, Programma } from "@shared/validation/types";
+import { Docente, Programma } from "@progetto/shared/validation/types";
 
 export const formSchema = z.object({
     nome: z.string().min(1, "Il nome del corso è obbligatorio"),

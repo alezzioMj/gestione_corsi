@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@shared/*": ["../shared/*"],
+      "@progetto/shared/*": ["../shared/*"],
       "@backend/*" : ["../backend/*"]
     }
   },

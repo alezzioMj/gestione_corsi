@@ -5,7 +5,7 @@ import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import React from "react";
 import AddAulaModal from "@/components/Aule/AddAulaModal";
 import AulaCard from "@/components/Aule/AulaCard";
-import { Aula } from "@shared/validation/types";
+import { Aula } from "@progetto/shared/validation/types";
 import { useParams } from "next/navigation";
 import useSWR from "swr";
 import DelayedLoading from "@/components/DelayedLoading";

@@ -3,7 +3,7 @@
 
 import { Box } from "@mui/material";
 
-import { DOCENTE_COLORS } from "@shared/constants/docente";
+import { DOCENTE_COLORS } from "@progetto/shared/constants/docente";
 
 interface ColorSwatchPickerProps {
   value: string;

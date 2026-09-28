@@ -10,7 +10,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import useSWR from 'swr';
 import DelayedLoading from "@/components/DelayedLoading";
 import { fetcher } from "@/lib/swr-config";
-import { ApiErrorData } from "@shared/validation/types";
+import { ApiErrorData } from "@progetto/shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 

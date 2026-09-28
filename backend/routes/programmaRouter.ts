@@ -1,7 +1,7 @@
 import express from "express";
 const programmaRouter= express.Router();
 import { validate} from "../middlewares/validate";
-import { programmaSchema } from "@shared/validation/programma.schema";
+import { programmaSchema } from "@progetto/shared/validation/programma.schema";
 import {
   getProgrammi,
   getProgramma,

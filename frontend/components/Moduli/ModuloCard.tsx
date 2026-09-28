@@ -6,7 +6,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Stack from "@mui/material/Stack";
 
-import { Modulo } from "@shared/validation/types";
+import { Modulo } from "@progetto/shared/validation/types";
 
 import ManageMaterialiModal from "./ManageMaterialiModal";
 import EditModuloModal from "./EditModuloModal";

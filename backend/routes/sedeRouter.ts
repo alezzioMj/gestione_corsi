@@ -1,7 +1,7 @@
 import express from "express";
 const sediRouter = express.Router();
 import { validate} from "../middlewares/validate";
-import { sedeSchema } from "@shared/validation/sede.schema";
+import { sedeSchema } from "@progetto/shared/validation/sede.schema";
 import { getSedi , getSede, createSede, updateSede, deleteSede, getCorsiBySede } from '../controllers/sedeController';
 
 sediRouter.get('/', getSedi);

@@ -1,5 +1,5 @@
 import { API_BASE_URL } from "@/lib/config";
-import { ApiErrorBody } from "@shared/validation/types";
+import { ApiErrorBody } from "@progetto/shared/validation/types";
 
 async function parseErrorResponse(res: Response): Promise<ApiErrorBody> {
     try {

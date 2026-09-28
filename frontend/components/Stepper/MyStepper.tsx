@@ -14,7 +14,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
-import { SedeFormInput } from "@shared/validation/sede.schema";
+import { SedeFormInput } from "@progetto/shared/validation/sede.schema";
 import { creaCorsoCompleto } from "@/lib/corsi/createCorsoRollback";
 import { messaggioErrore } from "@/lib/errors/errorMessage";
 import {
@@ -28,7 +28,7 @@ import StepDocenti from "./StepDocenti";
 import StepReview from "./StepReview";
 import StepForm from "./StepForm";
 import { useSnackbar } from "../SnackbarContext";
-import { ApiErrorBody } from "@shared/validation/types";
+import { ApiErrorBody } from "@progetto/shared/validation/types";
 
 const StepProgrammazione = dynamic(
     () => import("./StepProgrammazione"),
