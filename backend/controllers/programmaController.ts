@@ -92,21 +92,13 @@ const updateProgramma = async (req: express.Request, res: express.Response) => {
     const {
       titolo,
       descrizione,
-      durata_totale,
-      ore_pratiche,
-      ore_teoriche,
-      ore_trasversali
     } = req.body;
 
     const programma = await prisma.programma.update({
       where: { id },
       data: {
         titolo,
-        descrizione,
-        durata_totale,
-        ore_pratiche,
-        ore_teoriche,
-        ore_trasversali
+        descrizione
       }
     });
 

@@ -1,5 +1,4 @@
 "use client";
-"use client";
 
 import * as React from "react";
 import {
@@ -8,7 +7,6 @@ import {
     StepLabel,
     Button,
     Box,
-    Typography,
 } from "@mui/material";
 import { z } from "zod";
 import { useForm, FormProvider } from "react-hook-form";
@@ -19,7 +17,6 @@ import dynamic from "next/dynamic";
 import { SedeFormInput } from "@shared/validation/sede.schema";
 import { creaCorsoCompleto } from "@/lib/corsi/createCorsoRollback";
 import { messaggioErrore } from "@/lib/errors/errorMessage";
-import { ApiErrorBody } from "@shared/validation/types"
 import {
     formSchema,
     FormType,
@@ -30,6 +27,8 @@ import {
 import StepDocenti from "./StepDocenti";
 import StepReview from "./StepReview";
 import StepForm from "./StepForm";
+import { useSnackbar } from "../SnackbarContext";
+import { ApiErrorBody } from "@shared/validation/types";
 
 const StepProgrammazione = dynamic(
     () => import("./StepProgrammazione"),
@@ -43,6 +42,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
 }) {
     const steps = ["Anagrafica corso", "Programmazione", "Docenti", "Conferma"];
 
+    const { showMessage } = useSnackbar();
     const dynamicSchema = React.useMemo(() => {
         return formSchema.superRefine((data, ctx) => {
             const selectedProgram = programmi.find(p => p.id === data.programmi);
@@ -105,12 +105,10 @@ export default function MyStepper({ sedi, programmi, docenti }: {
     });
     const [activeStep, setActiveStep] = React.useState(0);
     const [isSubmitting, setIsSubmitting] = React.useState(false);
-    const [submitError, setSubmitError] = React.useState<string | null>(null);
     const router = useRouter();
 
     const onSubmit = async (data: FormType) => {
         setIsSubmitting(true);
-        setSubmitError(null);
 
         try {
             const corsoId = await creaCorsoCompleto({
@@ -136,10 +134,11 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                 })),
             });
 
-            alert("Corso creato con successo!");
+            showMessage("Corso creato con successo!", "success");
             router.push(`/sessioni?corsoId=${corsoId}`);
         } catch (error) {
-            setSubmitError(messaggioErrore(error as ApiErrorBody));
+            const errorMessage = messaggioErrore(error as ApiErrorBody);
+            showMessage(errorMessage, "error");
         } finally {
             setIsSubmitting(false);
         }
@@ -205,11 +204,6 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                         {activeStep === steps.length - 1 ? (isSubmitting ? "Invio..." : "Fine") : "Avanti"}
                     </Button>
                 </Box>
-                {submitError && (
-                    <Typography color="error" sx={{ mt: 2 }}>
-                        {submitError}
-                    </Typography>
-                )}
             </Box >
         </FormProvider>
     );

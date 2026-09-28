@@ -158,11 +158,6 @@ export default function CommessePage() {
                                         Visualizza Sessioni
                                     </Button>
                                 </Link>
-                                <Link href={`/commesse/edit/${corso.id}`} passHref>
-                                    <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }} startIcon={<EditIcon />}>
-                                        Modifica
-                                    </Button>
-                                </Link>
                                 <Button variant="outlined" color="error" size="small" sx={{ mt: 1 }} onClick={() => handleDelete(corso.id)} startIcon={<DeleteIcon />}>
                                     Elimina
                                 </Button>

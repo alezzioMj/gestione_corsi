@@ -18,7 +18,7 @@ import {
 programmaRouter.get('/', getProgrammi);
 programmaRouter.get('/:id', getProgramma);
 programmaRouter.post('/', validate(programmaSchema), createProgramma);
-programmaRouter.put('/:id', validate(programmaSchema), updateProgramma);
+programmaRouter.put('/:id', validate(programmaSchema.partial()), updateProgramma);
 programmaRouter.delete('/:id', deleteProgramma);
 
 //MODULI

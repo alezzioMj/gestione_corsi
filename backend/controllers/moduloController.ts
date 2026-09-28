@@ -17,6 +17,7 @@ const getModuli = async (req: express.Request, res: express.Response) => {
       titolo: m.titolo,
       n_ore: m.n_ore !== null ? m.n_ore : 4,
       competenza: m.competenza,
+      descrizione: m.descrizione,
       multiplo: m.multiplo === true ? true : false
     }));
     
@@ -43,6 +44,7 @@ const getModulo = async (req: express.Request, res: express.Response) => {
       titolo: modulo.titolo,
       n_ore: modulo.n_ore !== null ? modulo.n_ore : 4,
       competenza: modulo.competenza,
+      descrizione: modulo.descrizione,
       multiplo: modulo.multiplo === true ? true : false
     });
   } catch (error) {
@@ -53,13 +55,14 @@ const getModulo = async (req: express.Request, res: express.Response) => {
 
 const createModulo = async (req: express.Request, res: express.Response) => {
   try {
-    const { titolo, n_ore, competenza, multiplo, created_by } = req.body;
+    const { titolo, n_ore, competenza, descrizione, multiplo, created_by } = req.body;
 
     const modulo = await prisma.modulo.create({
       data: {
         titolo,
         n_ore: n_ore ? Number(n_ore) : 4,
         competenza,
+        descrizione,
         multiplo: Boolean(multiplo === true || multiplo === "true"),
         created_by
       }
@@ -78,7 +81,7 @@ const createModulo = async (req: express.Request, res: express.Response) => {
 const updateModulo = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);
-    const { titolo, n_ore, competenza, multiplo } = req.body;
+    const { titolo, n_ore, competenza, multiplo, descrizione } = req.body;
 
     const modulo = await prisma.modulo.update({
       where: { id },
@@ -86,6 +89,7 @@ const updateModulo = async (req: express.Request, res: express.Response) => {
         titolo,
         n_ore: n_ore ? Number(n_ore) : 4,
         competenza,
+        descrizione,
         multiplo: Boolean(multiplo === true || multiplo === "true")
       }
     });

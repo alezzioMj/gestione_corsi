@@ -23,7 +23,7 @@ export default function SessioniPage() {
     const { data: sessioniData, isLoading: sessioniLoading, error: sessioniError, mutate: sessioniMutate } = useSWR(API_ENDPOINTS.sessioniFull, fetcher);
     const { data: docentiData, isLoading: docentiLoading, error: docentiError, mutate: docentiMutate } = useSWR(API_ENDPOINTS.docenti, fetcher);
     const { data: corsiData, isLoading: corsiLoading, error: corsiError, mutate: corsiMutate } = useSWR(API_ENDPOINTS.corsi, fetcher);
-    const {message, showMessage} = useSnackbar();
+    const { showMessage} = useSnackbar();
     const {confirm} = useConfirm();
 
     const isLoading = corsiLoading || sessioniLoading || docentiLoading;

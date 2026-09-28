@@ -11,7 +11,7 @@ export const moduloSchema = z.object({
     "Trasversale"
   ]),
 
-  multiplo : z.boolean,
+  multiplo : z.boolean(),
 
   descrizione: z.string().optional(),
 

@@ -110,7 +110,7 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
     const fetchData = async () => {
         setLoading(true);
         try {
-            const resModuli = await fetch(API_ENDPOINTS.moduli);
+            const resModuli = await fetch(`${API_BASE_URL}/moduli`);
             const allModuli: Modulo[] = await resModuli.json();
             setModuli(allModuli);
 

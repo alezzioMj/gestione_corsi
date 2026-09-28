@@ -126,6 +126,7 @@ model modulo {
   titolo           String             @db.VarChar(150)
   n_ore            Int?               @default(4)
   competenza       competenza_enum
+  descrizione      String?          
   multiplo         Boolean?           @default(false)
   created_at       DateTime          @default(now()) @db.Timestamp(6)
   created_by       String?            @db.VarChar(100)

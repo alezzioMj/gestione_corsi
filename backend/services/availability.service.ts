@@ -1,6 +1,7 @@
 import { aula, docente } from "@prisma/client";
 import { calculateHours, toMinutes, hasOverlap } from "../utils/time.utils"
-
+import { SessioneWithRelations } from "@shared/validation/types"
+import { sedeSchema } from "@shared/validation/sede.schema";
 type Slot = {
     data: Date;
     ora_inizio: string;
@@ -71,6 +72,7 @@ export const generateSlots = (
 export const findDocente = async (
     listaDocenti: docente[],
     slot: { data: Date; ora_inizio: string; ora_fine: string },
+    sede_id : number,
     cacheSessioni: any[] // Le sessioni caricate all'inizio + quelle create al volo
 ) => {
     for (const docente of listaDocenti) {
@@ -81,6 +83,7 @@ export const findDocente = async (
                 slot.data,
                 slot.ora_inizio,
                 slot.ora_fine,
+                sede_id,
                 cacheSessioni
             );
             return docente;
@@ -128,7 +131,8 @@ export const checkDocenteDisponibileMemoria = (
     data: Date,
     ora_inizio: string,
     ora_fine: string,
-    sessioniEsistenti: any[]
+    sede_id : number,
+    sessioniEsistenti: SessioneWithRelations[]
 ) => {
     const giorno = data.getTime();
     const startA = toMinutes(ora_inizio);
@@ -136,6 +140,10 @@ export const checkDocenteDisponibileMemoria = (
 
     const overlap = sessioniEsistenti.some((s) => {
         if (s.docente_cf !== docente_cf || new Date(s.data).getTime() !== giorno) {
+            return false;
+        }
+
+        if(s.sede_id != sede_id){
             return false;
         }
 

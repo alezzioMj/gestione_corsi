@@ -28,11 +28,11 @@ export default function StepReview({ docenti, programmi }: { docenti: DocenteCon
             <Typography variant="h6" gutterBottom color="primary">Riepilogo Configurazione Corso</Typography>
             <Paper variant="outlined" sx={{ p: 3, backgroundColor: 'action.hover' }}>
                 <Grid container spacing={4}>
-                    {/* SEZIONE ANAGRAFICA */} 
+                    {/* SEZIONE ANAGRAFICA */}
                     <Grid size={{ xs: 12, sm: 3 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>
                             Dati Generali
-                            </Typography>
+                        </Typography>
                         <List dense>
                             <ListItem><ListItemText primary="Nome Commessa" secondary={data.nome} /></ListItem>
                             <ListItem><ListItemText primary="Cliente" secondary={data.cliente} /></ListItem>
@@ -43,32 +43,37 @@ export default function StepReview({ docenti, programmi }: { docenti: DocenteCon
                         </List>
                     </Grid>
 
-                    {/* SEZIONE PIANIFICAZIONE */} 
+                    {/* SEZIONE PIANIFICAZIONE */}
                     <Grid size={{ xs: 12, sm: 3 }}>
                         <Typography variant="subtitle1" sx={{ fontWeight: "bold" }}>Docenti e Orari</Typography>
                         <List dense>
                             <ListItem>
-                                <ListItemText 
-                                    primary="Docenti Assegnati" 
-                                    secondary={data.docenti.map(getDocenteNome).join(", ")} 
+                                <ListItemText
+                                    primary="Docenti Assegnati"
+                                    secondary={data.docenti.map(getDocenteNome).join(", ")}
                                 />
                             </ListItem>
                             <ListItem>
-                                <ListItemText 
-                                    primary="Giorni di Lezione" 
-                                    secondary={data.giorni.sort().map(g => giorniLabels[g]).join(", ")} 
+                                <ListItemText
+                                    primary="Giorni di Lezione"
+                                    secondary={
+                                        data.giorni
+                                            .filter(Boolean)
+                                            .map(g => giorniLabels[g])
+                                            .filter(Boolean)
+                                            .join(", ")
+                                    } />
+                            </ListItem>
+                            <ListItem>
+                                <ListItemText
+                                    primary="Orario Mattina"
+                                    secondary={`${data.mattina_inizio} - ${data.mattina_fine}`}
                                 />
                             </ListItem>
                             <ListItem>
-                                <ListItemText 
-                                    primary="Orario Mattina" 
-                                    secondary={`${data.mattina_inizio} - ${data.mattina_fine}`} 
-                                />
-                            </ListItem>
-                            <ListItem>
-                                <ListItemText 
-                                    primary="Orario Pomeriggio" 
-                                    secondary={`${data.pomeriggio_inizio} - ${data.pomeriggio_fine}`} 
+                                <ListItemText
+                                    primary="Orario Pomeriggio"
+                                    secondary={`${data.pomeriggio_inizio} - ${data.pomeriggio_fine}`}
                                 />
                             </ListItem>
                         </List>

@@ -129,10 +129,15 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
                 const currentSlot = slots[slotIndex];
 
                 try {
-                    const docente = await findDocente(docentiModulo, currentSlot, cacheSessioni);
                     const aula = await findAula(listaAule, currentSlot, cacheSessioni);
+                    if (!aula) {
+                        slotIndex++;
+                        continue;
+                    }
 
-                    if (!docente || !aula) {
+                    const docente = await findDocente(docentiModulo, currentSlot, aula.sede_id, cacheSessioni);
+
+                    if (!docente) {
                         logger.warn(`[SKIP] Slot ${currentSlot.data.toLocaleDateString()} ${currentSlot.ora_inizio}: Docente: ${!!docente}, Aula: ${!!aula}`);
                         slotIndex++;
                         continue;

@@ -1,6 +1,5 @@
 import MyStepper from "@/components/Stepper/MyStepper";
 import { Box, Typography, Container, Paper } from "@mui/material";
-import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 
 async function getSedi() {
@@ -40,7 +39,7 @@ export default async function CreaCommessaPage() {
     ]);
 
     return (
-        <Container maxWidth="lg" sx={{ py: 4 }}>
+        <Container maxWidth="xl" sx={{ py: 4 }}>
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom>
                     Crea Nuova Commessa

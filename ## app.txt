@@ -1,0 +1,53 @@
+## app
+Contains all the routes, components and logic for your application
+
+## app/lib
+Contains all functions and components that can be reused and data fetching functions 
+
+## app/ui 
+Contains all the components for the application such as table cards and forms.
+
+## public
+Contains all static assets for the app like image 
+
+## Config files
+
+## For building user interfaces 
+The industry standard is to start with placeholder.
+
+## CSS modules
+With CSS modules you can import CSS classes without conflict problems
+
+## Partial rendering
+Preserve client-side React state in the layout when transitioning between pages
+
+## RootLayout 
+Is required in every Next.js app. Any UI added here will be shared across all the pages.
+You can use the root layout to modify the html and body tags and add metadata.
+
+## Link component
+Link component permits the client-side navigation. 
+Instead of reloading the entire page, it updates just the content, without reloading anything.
+
+## Server Component
+Components that renders in a separate environment (server).
+-They can renders once in a build -> Prerendering
+-They can renders for each request -> Dynamic Rendering
+
+Next address the trade-off server rendering (the delay due to the client waiting for the server response) by prefetching and client-side rendering.
+d
+## Prefetching 
+Is the process of loading routes in background before the user navigates in.
+
+-Static Route: The full route is prefetched
+-Dynamic route: Prefetching is skipper totally or partially.
+
+## Streaming
+
+With streaming, the server sends pieces of the page as they become ready,
+instead of waiting for the entire page to finish rendering.
+
+Next.js implements this automatically with `loading.tsx`: behind the scenes,
+it wraps the page content in a `<Suspense>` boundary, using `loading.tsx`
+as the fallback UI (e.g. a spinner). The fallback is shown immediately,
+and gets swapped for the real content once it's ready.
