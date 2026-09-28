@@ -4,12 +4,20 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "build:shared": "npm run build -w shared",
+    "build:backend": "npm run build:shared && npm run build -w backend",
+    "build:frontend": "npm run build:shared && npm run build -w frontend"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/alezzioMJ/gestione_corsi.git"
   },
+  "private": true,
+  "workspaces": [
+    "shared",
+    "backend",
+    "frontend"
+  ],
   "keywords": [],
   "author": "",
   "license": "ISC",

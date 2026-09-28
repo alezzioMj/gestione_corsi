@@ -1,8 +1,13 @@
-// shared/tsconfig.json
 {
   "compilerOptions": {
     "composite": true,
     "declaration": true,
-    "outDir": "./dist"
-  }
+    "outDir": "./dist",
+    "rootDir": ".",
+    "module": "commonjs",
+    "target": "es2020",
+    "strict": true
+  },
+  "include": ["index.ts", "validation/**/*", "types/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
