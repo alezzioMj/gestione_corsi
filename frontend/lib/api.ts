@@ -6,12 +6,12 @@ export const api = axios.create({
 });
 
 export const API_ENDPOINTS = {
-  sessioniFull: `/sessioni/full/`,
-  docenti: `/docenti/`,
-  corsi: `/corsi/`,
-  programmi: `/programmi/`,
-  sedi : `/sedi/`,
-  materiali : `/materiali/`,
-  moduli : `/moduli/`,
-  aule : `/aula/`
+  sessioniFull: `${API_BASE_URL}/sessioni/full/`,
+  docenti: `${API_BASE_URL}/docenti/`,
+  corsi: `${API_BASE_URL}/corsi/`,
+  programmi: `${API_BASE_URL}/programmi/`,
+  sedi : `${API_BASE_URL}/sedi/`,
+  materiali : `${API_BASE_URL}/materiali/`,
+  moduli : `${API_BASE_URL}/moduli/`,
+  aule : `${API_BASE_URL}/aula/`
 } as const;
