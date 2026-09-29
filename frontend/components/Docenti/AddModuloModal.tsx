@@ -2,40 +2,40 @@
 
 import React, { useState } from "react";
 import {
-    Button,
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    DialogActions,
-    CircularProgress,
-    Checkbox,
-    FormControlLabel,
-    Box,
-    TextField,
-    InputAdornment,
+  Button,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  CircularProgress,
+  Checkbox,
+  FormControlLabel,
+  Box,
+  TextField,
+  InputAdornment,
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import SearchIcon from "@mui/icons-material/Search";
 import { useRouter } from "next/navigation";
 
 import { Docente } from "@progetto/shared/validation/types";
-import useSWR from "swr";
+import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 
 interface Modulo {
-    id: number;
-    titolo: string;
+  id: number;
+  titolo: string;
 }
 
 interface ModuloDocente {
-    modulo_id: number;
-    docente_cf: string;
+  modulo_id: number;
+  docente_cf: string;
 }
 
 interface AddModuloModalProps {
-    docente: Docente;
+  docente: Docente;
 }
 
 export default function AddModuloModal({ docente }: AddModuloModalProps) {
@@ -103,6 +103,7 @@ function ModuliChecklist({
   setSaving: (v: boolean) => void;
 }) {
   const [selectedIds, setSelectedIds] = useState(initialSelectedIds); // ora è stato vero, editabile
+  const { mutate } = useSWRConfig();
   const router = useRouter();
 
   const handleToggle = (id: number) => () => {
@@ -121,7 +122,7 @@ function ModuliChecklist({
       });
 
       if (res.ok) {
-        router.refresh();
+        await mutate(`${API_ENDPOINTS.docenti}${docente.codice_fiscale}/moduli`);
         onClose();
       } else {
         alert("Errore durante il salvataggio delle competenze");
