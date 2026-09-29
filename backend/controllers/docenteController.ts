@@ -195,11 +195,6 @@ const getModuliByDocente = async (req: express.Request, res: express.Response) =
       }
     })
 
-    if (moduli.length === 0) {
-      return res.status(404).send("Nessuna modulo abilitato per questo docente");
-    }
-    res.json(moduli)
-
   } catch (err: any) {
     console.error({
       message: "Errore nella ricerca dei moduli per questo docente",
