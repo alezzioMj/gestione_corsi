@@ -194,6 +194,8 @@ const getModuliByDocente = async (req: express.Request, res: express.Response) =
         modulo: true
       }
     })
+    
+    res.json(moduli)
 
   } catch (err: any) {
     console.error({
