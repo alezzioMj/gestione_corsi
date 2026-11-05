@@ -69,6 +69,23 @@ const getMateriale = async (req: express.Request, res: express.Response) => {
   }
 };
 
+const getMaterialiMetadata = async (req: express.Request, res: express.Response) => {
+  try {
+    const materiali = await prisma.materiale.findMany({     // se usi il cestino; altrimenti toglilo
+      orderBy: { createdAt: "desc" },
+    });
+
+    if (materiali.length === 0) {
+      return res.json([]);
+    }
+    
+    return res.json(materiali);
+  } catch (err) {
+    console.error("getMateriali:", err);
+    return res.status(500).json({ error: "Errore nel recupero dei materiali" });
+  }
+}
+
 const createMateriale = async (
   req: express.Request,
   res: express.Response
@@ -230,6 +247,7 @@ const getModuliByMateriale = async (req: express.Request, res: express.Response)
 export {
   getMateriali,
   getMateriale,
+  getMaterialiMetadata,
   createMateriale,
   updateMateriale,
   deleteMateriale,

@@ -7,6 +7,7 @@ import { materialeSchema } from "@progetto/shared/validation/materiale.schema";
 import {
     getMateriali,
     getMateriale,
+    getMaterialiMetadata,
     createMateriale,
     updateMateriale,
     deleteMateriale,
@@ -16,6 +17,7 @@ const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
 materialeRouter.get('/', getMateriali);
+materialeRouter.get('/metadata', getMaterialiMetadata);
 materialeRouter.get('/:id', getMateriale);
 materialeRouter.post("/", upload.single("file"), createMateriale);
 materialeRouter.put('/:id', upload.single('file'), validate(materialeSchema), updateMateriale);
