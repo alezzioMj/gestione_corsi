@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const corsiRouter = express_1.default.Router();
 const validate_1 = require("../middlewares/validate");
-const corso_schema_1 = require("@shared/validation/corso.schema");
+const corso_schema_1 = require("@progetto/shared/validation/corso.schema");
 const corsoController_1 = require("../controllers/corsoController");
 const scheduleCorsoController_1 = require("../controllers/scheduleCorsoController");
 const corsoController_2 = require("../controllers/corsoController");

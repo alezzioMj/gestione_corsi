@@ -8,13 +8,13 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 
-import { Sede } from "@progetto/shared/validation/types";
+import { SedeFormInput } from "@progetto/shared/validation/types";
 import { FormType } from "@/validation/corso-form.schema";
 
 export default function StepForm({
     sedi,
 }: {
-    sedi: Sede[];
+    sedi: SedeFormInput[];
     }) {
     
     const { control, formState: { errors } } = useFormContext<FormType>();

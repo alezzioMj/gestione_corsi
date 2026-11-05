@@ -5,7 +5,7 @@ import { Box, Typography, Paper, Button, FormControl, InputLabel, Select, MenuIt
 import { AddCircleOutlineOutlined, RemoveCircleOutlineOutlined } from "@mui/icons-material";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { Controller, useFormContext } from "react-hook-form";
-import { FormType, ProgrammaConModuli } from "./MyStepper";
+import { FormType, ProgrammaConModuli } from "../../validation/corso-form.schema";
 import {
     DndContext,
     closestCenter,

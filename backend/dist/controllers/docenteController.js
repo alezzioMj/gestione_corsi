@@ -161,9 +161,6 @@ const getModuliByDocente = async (req, res) => {
                 modulo: true
             }
         });
-        if (moduli.length === 0) {
-            return res.status(404).send("Nessuna modulo abilitato per questo docente");
-        }
         res.json(moduli);
     }
     catch (err) {

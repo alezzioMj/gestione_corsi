@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const indisponibilitaRouter = express_1.default.Router();
 const validate_1 = require("../middlewares/validate");
-const indisponibilita_schema_1 = require("@shared/validation/indisponibilita.schema");
+const indisponibilita_schema_1 = require("@progetto/shared/validation/indisponibilita.schema");
 const indisponibilitaController_1 = require("../controllers/indisponibilitaController");
 indisponibilitaRouter.get('/', indisponibilitaController_1.getIndisponibilita);
 indisponibilitaRouter.get('/:id', indisponibilitaController_1.getIndisponibilitaById);

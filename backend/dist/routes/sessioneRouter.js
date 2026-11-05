@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const sessioneRouter = express_1.default.Router();
 const validate_1 = require("../middlewares/validate");
-const sessione_schema_1 = require("@shared/validation/sessione.schema");
+const sessione_schema_1 = require("@progetto/shared/validation/sessione.schema");
 const sessioneController_1 = require("../controllers/sessioneController");
 sessioneRouter.get('/', sessioneController_1.getSessioni);
 sessioneRouter.get("/full", sessioneController_1.getSessioniFull);

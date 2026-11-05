@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const programmaRouter = express_1.default.Router();
 const validate_1 = require("../middlewares/validate");
-const programma_schema_1 = require("@shared/validation/programma.schema");
+const programma_schema_1 = require("@progetto/shared/validation/programma.schema");
 const programmaController_1 = require("../controllers/programmaController");
 programmaRouter.get('/', programmaController_1.getProgrammi);
 programmaRouter.get('/:id', programmaController_1.getProgramma);

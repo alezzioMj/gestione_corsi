@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const sediRouter = express_1.default.Router();
 const validate_1 = require("../middlewares/validate");
-const sede_schema_1 = require("@shared/validation/sede.schema");
+const sede_schema_1 = require("@progetto/shared/validation/sede.schema");
 const sedeController_1 = require("../controllers/sedeController");
 sediRouter.get('/', sedeController_1.getSedi);
 sediRouter.get('/:id', sedeController_1.getSede);

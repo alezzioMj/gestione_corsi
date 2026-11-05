@@ -143,10 +143,6 @@ export const checkDocenteDisponibileMemoria = (
             return false;
         }
 
-        if(s.sede_id != sede_id){
-            return false;
-        }
-
         const startB = toMinutes(s.ora_inizio);
         const endB = toMinutes(s.ora_fine);
         return hasOverlap(startA, endA, startB, endB);

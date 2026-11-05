@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const aulaRouter = express_1.default.Router();
 const validate_1 = require("../middlewares/validate");
-const aula_schema_1 = require("@shared/validation/aula.schema");
+const aula_schema_1 = require("@progetto/shared/validation/aula.schema");
 const aulaController_1 = require("../controllers/aulaController");
 aulaRouter.get('/', aulaController_1.getAule);
 aulaRouter.get('/:id', aulaController_1.getAula);

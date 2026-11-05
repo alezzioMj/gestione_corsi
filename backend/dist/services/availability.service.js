@@ -91,9 +91,6 @@ const checkDocenteDisponibileMemoria = (docente_cf, data, ora_inizio, ora_fine, 
         if (s.docente_cf !== docente_cf || new Date(s.data).getTime() !== giorno) {
             return false;
         }
-        if (s.sede_id != sede_id) {
-            return false;
-        }
         const startB = (0, time_utils_1.toMinutes)(s.ora_inizio);
         const endB = (0, time_utils_1.toMinutes)(s.ora_fine);
         return (0, time_utils_1.hasOverlap)(startA, endA, startB, endB);

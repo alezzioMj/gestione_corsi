@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const docenteRouter = express_1.default.Router();
 const validate_1 = require("../middlewares/validate");
-const docente_schema_1 = require("@shared/validation/docente.schema");
+const docente_schema_1 = require("@progetto/shared/validation/docente.schema");
 const docenteController_1 = require("../controllers/docenteController");
 docenteRouter.get('/', docenteController_1.getDocenti);
 docenteRouter.get('/:codice_fiscale', docenteController_1.getDocente);

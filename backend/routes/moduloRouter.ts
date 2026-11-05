@@ -19,7 +19,6 @@ import {
 const storage = multer.memoryStorage(); // <--- IMPORTANTE: salva in RAM temporaneamente
 const upload = multer({ storage: storage });
 
-
 moduloRouter.get('/', getModuli);
 moduloRouter.get('/:id', getModulo);
 moduloRouter.post('/', upload.none(), validate(moduloSchema), createModulo);

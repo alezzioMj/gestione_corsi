@@ -6,7 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const moduloRouter = express_1.default.Router();
 const validate_1 = require("../middlewares/validate");
-const modulo_schema_1 = require("@shared/validation/modulo.schema");
+const modulo_schema_1 = require("@progetto/shared/validation/modulo.schema");
 const multer_1 = __importDefault(require("multer"));
 const moduloController_1 = require("../controllers/moduloController");
 const storage = multer_1.default.memoryStorage(); // <--- IMPORTANTE: salva in RAM temporaneamente

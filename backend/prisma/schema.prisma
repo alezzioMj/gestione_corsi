@@ -110,14 +110,29 @@ model indisponibilita {
   aula       aula?      @relation(fields: [aula_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+enum CategoriaMateriale {
+  SLIDE
+  DISPENSA
+  VIDEO
+  ESERCIZI
+  ALTRO
+}
+
 model materiale {
-  id               Int                @id @default(autoincrement())
-  url              String             @db.VarChar(255)
-  file_name        String            @db.VarChar(255)
-  tipo             String            @db.VarChar(50)
-  descrizione      String?
-  created_at       DateTime          @default(now()) @db.Timestamp(6)
-  created_by       String?            @db.VarChar(100)
+  id           Int             @id @default(autoincrement())
+  titolo       String
+  descrizione  String?
+  categoria    CategoriaMateriale @default(ALTRO)
+
+  // dati del file
+  storageKey   String             @unique
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  checksum     String?
+
+  uploadedById String?
+  createdAt    DateTime           @default(now())
   modulo_materiale modulo_materiale[]
 }
 
