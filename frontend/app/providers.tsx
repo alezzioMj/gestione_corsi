@@ -29,9 +29,12 @@ export default function Providers({
   );
 
   const theme = useMemo(
-    () => createTheme({ palette: { mode } }),
-    [mode]
-  );
+  () => createTheme({
+    cssVariables: true,
+    palette: { mode }
+  }),
+  [mode]
+);
 
   return (
     <AppRouterCacheProvider>
