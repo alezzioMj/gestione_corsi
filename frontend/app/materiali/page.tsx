@@ -10,10 +10,44 @@ import { Container, Box, Typography, Alert, Button } from "@mui/material";
 import { Materiale } from "@progetto/shared/validation/types";
 import useSWR from "swr";
 import MaterialeCard from "@/components/Materiali/MaterialeCard";
+import { API_BASE_URL } from "@/lib/config";
+import { useConfirm } from "@/components/ConfirmContext";
+import { useSnackbar } from "@/components/SnackbarContext";
 
 export default function Materiali() {
     const { data: materiali, isLoading, error, mutate } =
         useSWR<Materiale[]>(API_ENDPOINTS.materiali, fetcher);
+
+    const { confirm } = useConfirm();
+    const { showMessage } = useSnackbar();
+
+    async function onDelete(materiale_id: string) {
+        const ok = await confirm({
+            title: "Elimina materiale",
+            message: "Sei sicuro di eliminre questo materiale?",
+            confirmColor: "error",
+        });
+
+        if (ok) {
+            try {
+                const res = await fetch(`${API_BASE_URL}/materiali/${materiale_id}`,
+                    {
+                        method: "DELETE"
+                    }
+                );
+                if (!res.ok) {
+                    const errorData = await res.json();
+                    throw new Error(errorData.message || `Errore durante l'eliminazione del materiale: ${res.statusText}`);
+                }
+                mutate();
+                showMessage("Materiale eliminato con successo!");
+            }
+            catch(error : unknown){
+                showMessage(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
+                console.error("Errore nell'eliminazione del materiale:", error);
+            }
+        }
+    }
 
     if (isLoading) return <DelayedLoading />;
 
@@ -68,7 +102,7 @@ export default function Materiali() {
                     }}
                 >
                     {materiali?.map((m) => (
-                        <MaterialeCard materiale={m} key={m.url} />
+                        <MaterialeCard materiale={m} onDelete={onDelete} key={m.id} />
                     ))}
                 </Box>
             )}

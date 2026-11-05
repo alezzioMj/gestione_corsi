@@ -15,13 +15,14 @@ import { Materiale } from "@progetto/shared/validation/types";
 
 interface MaterialeCardProps {
   materiale: Materiale;
+  onDelete: (materiale_id: string) => void;
 }
 
 const IMAGE_EXT = ["png", "jpg", "jpeg", "gif", "webp"];
 const VIDEO_EXT = ["mp4", "webm", "mov"];
 const AUDIO_EXT = ["mp3", "wav", "ogg", "m4a"];
 
-export default function MaterialeCard({ materiale }: MaterialeCardProps) {
+export default function MaterialeCard({ materiale, onDelete }: MaterialeCardProps) {
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const fileName = materiale.originalName ?? "";
@@ -37,12 +38,12 @@ export default function MaterialeCard({ materiale }: MaterialeCardProps) {
   const Icon = isPdf
     ? PictureAsPdfIcon
     : isImage
-    ? ImageIcon
-    : isVideo
-    ? VideocamIcon
-    : isAudio
-    ? AudiotrackIcon
-    : InsertDriveFileIcon;
+      ? ImageIcon
+      : isVideo
+        ? VideocamIcon
+        : isAudio
+          ? AudiotrackIcon
+          : InsertDriveFileIcon;
 
   // Clic sulla card: anteprima se disponibile, altrimenti apre il file.
   const handleClick = () => {
@@ -115,16 +116,33 @@ export default function MaterialeCard({ materiale }: MaterialeCardProps) {
             <Box component="video" src={materiale.url} controls sx={{ width: "100%", maxHeight: "70vh" }} />
           )}
           {isAudio && <Box component="audio" src={materiale.url} controls sx={{ width: "100%" }} />}
-
-          <Button
-            href={materiale.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            size="small"
-            sx={{ mt: 1.5 }}
+          <Box
+            sx={{
+              mt: 2,
+              display: "flex",
+              justifyContent: "flex-end",
+              gap: 2
+            }}
           >
-            Apri in una nuova scheda
-          </Button>
+            <Button
+              href={materiale.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              size="small"
+            >
+              Apri in una nuova scheda
+            </Button>
+            <Button
+              variant="outlined"
+              color="error"
+              onClick={() => {
+                onDelete(materiale.id)
+                setPreviewOpen(false);
+              }}
+            >
+              Elimina
+            </Button>
+          </Box>
         </DialogContent>
       </Dialog>
     </>
