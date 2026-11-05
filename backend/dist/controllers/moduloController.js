@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.uploadCompleteModulo = exports.getProgrammiByModulo = exports.deleteMaterialeFromModulo = exports.addMaterialeToModulo = exports.getMaterialeByModulo = exports.getDocentiByModulo = exports.deleteModulo = exports.updateModulo = exports.createModulo = exports.getModulo = exports.getModuli = exports.supabase = void 0;
+exports.getProgrammiByModulo = exports.deleteMaterialeFromModulo = exports.addMaterialeToModulo = exports.getMaterialeByModulo = exports.getDocentiByModulo = exports.deleteModulo = exports.updateModulo = exports.createModulo = exports.getModulo = exports.getModuli = exports.supabase = void 0;
 require("dotenv/config");
 const prisma_1 = require("../prisma");
 const supabase_js_1 = require("@supabase/supabase-js");
@@ -197,51 +197,3 @@ const getProgrammiByModulo = async (req, res) => {
     }
 };
 exports.getProgrammiByModulo = getProgrammiByModulo;
-const uploadCompleteModulo = async (req, res) => {
-    try {
-        if (!req.file)
-            return res.status(400).send("File mancante.");
-        const { titolo, n_ore, competenza, multiplo, descrizioneMateriale } = req.body;
-        const file = req.file;
-        const fileName = `${Date.now()}-${file.originalname}`;
-        const { error: uploadError } = await exports.supabase.storage
-            .from('Materiali')
-            .upload(fileName, file.buffer, { contentType: file.mimetype });
-        if (uploadError)
-            throw uploadError;
-        const { data: publicUrlData } = exports.supabase.storage
-            .from('Materiali')
-            .getPublicUrl(fileName);
-        const result = await prisma_1.prisma.$transaction(async (tx) => {
-            const nuovoModulo = await tx.modulo.create({
-                data: {
-                    titolo,
-                    n_ore: n_ore ? Number(n_ore) : 4,
-                    competenza,
-                    multiplo: Boolean(multiplo === true || multiplo === "true")
-                }
-            });
-            const nuovoMateriale = await tx.materiale.create({
-                data: {
-                    url: publicUrlData.publicUrl,
-                    file_name: file.originalname,
-                    tipo: file.mimetype,
-                    descrizione: descrizioneMateriale || `Materiale per ${titolo}`
-                }
-            });
-            await tx.modulo_materiale.create({
-                data: {
-                    modulo_id: nuovoModulo.id,
-                    materiale_id: nuovoMateriale.id
-                }
-            });
-            return nuovoModulo;
-        });
-        res.status(201).json(result);
-    }
-    catch (err) {
-        console.error("Errore upload completo modulo:", err);
-        res.status(500).json({ error: "Errore durante la creazione completa" });
-    }
-};
-exports.uploadCompleteModulo = uploadCompleteModulo;
