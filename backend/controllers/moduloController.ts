@@ -235,12 +235,24 @@ const uploadMaterialeToModulo = async (
 
 
     const result = await prisma.$transaction(async (tx) => {
+      const arrayBuffer = new Uint8Array(file.buffer).buffer;
+
+      const hashBuffer = await crypto.subtle.digest(
+        "SHA-256",
+        arrayBuffer
+      );
+
+      const checksum = Array.from(new Uint8Array(hashBuffer))
+        .map(b => b.toString(16).padStart(2, "0"))
+        .join("");
+
       const materiale = await tx.materiale.create({
         data: {
           titolo: titolo,
           originalName: file.originalname,
           categoria: categoria,
           mimeType: file.mimetype,
+          checksum: checksum,
           sizeBytes: file.size,
           storageKey: storageKey,
           descrizione:
