@@ -52,8 +52,6 @@ export default function AddMaterialeModal({ onMaterialeAdded }: AddMaterialeProp
         setDragging(false);
     };
 
-    // Validazione comune a selezione e drag and drop
-    // (l'attributo "accept" non viene applicato al trascinamento).
     const selectFile = (candidate: File | undefined) => {
         if (!candidate) return;
 

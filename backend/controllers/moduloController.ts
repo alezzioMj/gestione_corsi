@@ -10,7 +10,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 const getModuli = async (req: express.Request, res: express.Response) => {
   try {
     const moduli = await prisma.modulo.findMany();
-    
+
     // Mappatura esplicita per garantire che i campi siano sempre presenti
     const result = moduli.map((m: any) => ({
       id: m.id,
@@ -20,7 +20,7 @@ const getModuli = async (req: express.Request, res: express.Response) => {
       descrizione: m.descrizione,
       multiplo: m.multiplo === true ? true : false
     }));
-    
+
     res.json(result);
   } catch (error) {
     console.error("Errore nel recupero dei moduli:", error);
@@ -160,9 +160,14 @@ const addMaterialeToModulo = async (req: express.Request, res: express.Response)
     });
 
     res.status(201).json(relazione);
-  } catch (err: any) {
-    console.error("Errore assegnazione materiale al modulo:", err);
-    res.status(500).json({ error: "Errore assegnazione materiale" });
+
+  } catch (error: any) {
+    console.error("ERRORE ASSOCIAZIONE:", error);
+
+    return res.status(500).json({
+      error: "Errore durante l'associazione",
+      details: error instanceof Error ? error.message : String(error),
+    });
   }
 };
 
@@ -200,61 +205,94 @@ const getProgrammiByModulo = async (req: express.Request, res: express.Response)
     res.status(500).json({ error: "Errore ricerca programmi" });
   }
 };
-/*
-const uploadCompleteModulo = async (req: express.Request, res: express.Response) => {
+
+const uploadMaterialeToModulo = async (
+  req: express.Request,
+  res: express.Response
+) => {
+  let storageKey: string = "";
+  let materialeId: number | null = null;
+
   try {
-    if (!req.file) return res.status(400).send("File mancante.");
-
-    const { titolo, n_ore, competenza, multiplo, descrizioneMateriale } = req.body;
     const file = req.file;
+    const { titolo } = req.body;
+    const { categoria } = req.body;
+    const { descrizione } = req.body;
 
-    const fileName = `${Date.now()}-${file.originalname}`;
+    if (!file) {
+      return res.status(400).json({ error: "File mancante" });
+    }
+
+    storageKey = `materiali/${new Date().getFullYear()}/${crypto.randomUUID()}`;
+
     const { error: uploadError } = await supabase.storage
-      .from('Materiali')
-      .upload(fileName, file.buffer, { contentType: file.mimetype });
+      .from("Materiali")
+      .upload(storageKey, file.buffer, {
+        contentType: file.mimetype
+      });
 
     if (uploadError) throw uploadError;
 
-    const { data: publicUrlData } = supabase.storage
-      .from('Materiali')
-      .getPublicUrl(fileName);
 
     const result = await prisma.$transaction(async (tx) => {
-      const nuovoModulo = await tx.modulo.create({
+      const materiale = await tx.materiale.create({
         data: {
-          titolo,
-          n_ore: n_ore ? Number(n_ore) : 4,
-          competenza,
-          multiplo: Boolean(multiplo === true || multiplo === "true")
+          titolo: titolo,
+          originalName: file.originalname,
+          categoria: categoria,
+          mimeType: file.mimetype,
+          sizeBytes: file.size,
+          storageKey: storageKey,
+          descrizione:
+            typeof descrizione === "string"
+              ? descrizione
+              : undefined,
         }
       });
 
-      const nuovoMateriale = await tx.materiale.create({
+      materialeId = materiale.id;
+
+      const relazione = await tx.modulo_materiale.create({
         data: {
-          url: publicUrlData.publicUrl,
-          file_name: file.originalname,
-          tipo: file.mimetype,
-          descrizione: descrizioneMateriale || `Materiale per ${titolo}`
+          modulo_id: Number(req.params.id),
+          materiale_id: materiale.id
         }
       });
 
-      await tx.modulo_materiale.create({
-        data: {
-          modulo_id: nuovoModulo.id,
-          materiale_id: nuovoMateriale.id
-        }
-      });
-
-      return nuovoModulo;
+      return { materiale, relazione };
     });
 
-    res.status(201).json(result);
-  } catch (err: any) {
-    console.error("Errore upload completo modulo:", err);
-    res.status(500).json({ error: "Errore durante la creazione completa" });
+    return res.status(201).json(result);
+
+  } catch (error) {
+    console.error("Errore:", error);
+
+    if (materialeId !== null) {
+      try {
+        await prisma.materiale.delete({
+          where: { id: materialeId }
+        });
+      } catch (compensationError) {
+        console.error("Errore eliminazione materiale:", compensationError);
+      }
+    }
+
+    if (storageKey !== null) {
+      try {
+        await supabase.storage
+          .from("Materiali")
+          .remove([storageKey]);
+      } catch (compensationError) {
+        console.error("Errore eliminazione file:", compensationError);
+      }
+    }
+
+    return res.status(500).json({
+      error: "Operazione fallita"
+    });
   }
 };
-*/
+
 export {
   getModuli,
   getModulo,
@@ -266,4 +304,5 @@ export {
   addMaterialeToModulo,
   deleteMaterialeFromModulo,
   getProgrammiByModulo,
+  uploadMaterialeToModulo
 };

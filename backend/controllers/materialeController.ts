@@ -29,14 +29,12 @@ const getMateriali = async (req: express.Request, res: express.Response) => {
       return res.json([]);
     }
 
-    // una sola chiamata per tutti i file
     const { data, error } = await supabase.storage
       .from("Materiali")
       .createSignedUrls(materiali.map((m) => m.storageKey), 3600);
 
     if (error) console.error("createSignedUrls fallito:", error.message);
 
-    // associa per path, non per posizione
     const urlPerPath = new Map(
       (data ?? []).map((d) => [d.path, d.signedUrl ?? ""])
     );
@@ -52,6 +50,7 @@ const getMateriali = async (req: express.Request, res: express.Response) => {
     return res.status(500).json({ error: "Errore nel recupero dei materiali" });
   }
 }
+
 const getMateriale = async (req: express.Request, res: express.Response) => {
   const id = Number(req.params.id);
 
@@ -96,13 +95,24 @@ const createMateriale = async (
 
     if (uploadError) throw uploadError;
     uploaded = true;
+    const arrayBuffer = new Uint8Array(file.buffer).buffer;
+
+    const hashBuffer = await crypto.subtle.digest(
+      "SHA-256",
+      arrayBuffer
+    );
+
+    const checksum = Array.from(new Uint8Array(hashBuffer))
+      .map(b => b.toString(16).padStart(2, "0"))
+      .join("");
 
     const materiale = await prisma.materiale.create({
       data: {
-        titolo : titolo,
-        originalName : file.originalname,
+        titolo: titolo,
+        originalName: file.originalname,
         categoria: categoria,
         mimeType: file.mimetype,
+        checksum: checksum,
         sizeBytes: file.size,
         storageKey: storageKey,
         descrizione:
@@ -223,5 +233,5 @@ export {
   createMateriale,
   updateMateriale,
   deleteMateriale,
-  getModuliByMateriale // Export the new function
+  getModuliByMateriale
 };

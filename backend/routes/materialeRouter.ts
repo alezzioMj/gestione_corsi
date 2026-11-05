@@ -10,7 +10,7 @@ import {
     createMateriale,
     updateMateriale,
     deleteMateriale,
-    getModuliByMateriale
+    getModuliByMateriale,
 } from '../controllers/materialeController';
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });

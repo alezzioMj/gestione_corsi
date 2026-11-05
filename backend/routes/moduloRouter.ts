@@ -14,7 +14,7 @@ import {
     addMaterialeToModulo,
     deleteMaterialeFromModulo,
     getProgrammiByModulo,
-    //uploadCompleteModulo
+    uploadMaterialeToModulo
 } from '../controllers/moduloController';
 const storage = multer.memoryStorage(); // <--- IMPORTANTE: salva in RAM temporaneamente
 const upload = multer({ storage: storage });
@@ -32,7 +32,7 @@ moduloRouter.get('/:id/docenti', getDocentiByModulo);
 moduloRouter.get('/:id/materiali', getMaterialeByModulo);
 moduloRouter.post('/:id/materiali', addMaterialeToModulo);
 moduloRouter.delete('/:id/materiali/:materiale_id', deleteMaterialeFromModulo);
-//moduloRouter.post('/completo', upload.single('file'), uploadCompleteModulo);
+moduloRouter.post('/:id/completo', upload.single('file'), uploadMaterialeToModulo);
 
 //PROGRAMMI
 moduloRouter.get('/:id/programmi', getProgrammiByModulo);

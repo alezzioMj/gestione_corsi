@@ -137,7 +137,7 @@ export default function MaterialeCard({ materiale, onDelete }: MaterialeCardProp
               color="error"
               onClick={() => {
                 onDelete(materiale.id)
-                setPreviewOpen(false);
+                setPreviewOpen(false);  
               }}
             >
               Elimina
