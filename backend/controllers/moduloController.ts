@@ -200,7 +200,7 @@ const getProgrammiByModulo = async (req: express.Request, res: express.Response)
     res.status(500).json({ error: "Errore ricerca programmi" });
   }
 };
-
+/*
 const uploadCompleteModulo = async (req: express.Request, res: express.Response) => {
   try {
     if (!req.file) return res.status(400).send("File mancante.");
@@ -254,7 +254,7 @@ const uploadCompleteModulo = async (req: express.Request, res: express.Response)
     res.status(500).json({ error: "Errore durante la creazione completa" });
   }
 };
-
+*/
 export {
   getModuli,
   getModulo,
@@ -266,5 +266,4 @@ export {
   addMaterialeToModulo,
   deleteMaterialeFromModulo,
   getProgrammiByModulo,
-  uploadCompleteModulo
 };
