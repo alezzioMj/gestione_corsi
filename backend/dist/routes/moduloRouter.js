@@ -22,7 +22,7 @@ moduloRouter.get('/:id/docenti', moduloController_1.getDocentiByModulo);
 moduloRouter.get('/:id/materiali', moduloController_1.getMaterialeByModulo);
 moduloRouter.post('/:id/materiali', moduloController_1.addMaterialeToModulo);
 moduloRouter.delete('/:id/materiali/:materiale_id', moduloController_1.deleteMaterialeFromModulo);
-moduloRouter.post('/completo', upload.single('file'), moduloController_1.uploadCompleteModulo);
+//moduloRouter.post('/completo', upload.single('file'), uploadCompleteModulo);
 //PROGRAMMI
 moduloRouter.get('/:id/programmi', moduloController_1.getProgrammiByModulo);
 exports.default = moduloRouter;
