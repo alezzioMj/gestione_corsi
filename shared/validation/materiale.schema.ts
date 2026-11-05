@@ -39,6 +39,7 @@ export const materialeSchema = z.object({
   originalName: z.string(),
   mimeType: z.string(),
   sizeBytes: z.number(),
+  checksum: z.string(),
   tipo: z.enum(["pdf", "immagine", "video", "altro"]),
   url: z.string(), // aggiunto dal backend (URL firmato o route interna)
   createdBy: z.string().nullable(),

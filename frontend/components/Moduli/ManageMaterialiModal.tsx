@@ -18,6 +18,8 @@ import { API_BASE_URL } from "@/lib/config";
 import { CATEGORIE_MATERIALE, Materiale } from "@progetto/shared/validation/materiale.schema";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
+import { useSnackbar } from "../SnackbarContext";
+import { useConfirm } from "../ConfirmContext";
 
 interface ModuloMaterialeAssociation {
     materiale_id: string;
@@ -32,17 +34,74 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [loading, setLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-        open: false,
-        message: '',
-        severity: 'success',
-    });
+    const { showMessage } = useSnackbar();
+    const { confirm } = useConfirm();
     const { data: materialiAssociati, isLoading, error, mutate } = useSWR(`${API_BASE_URL}/moduli/${modulo.id}/materiali`, fetcher);
 
     const handleUpload = async () => {
         if (!selectedFile) return;
         setLoading(true);
         try {
+            const resMateriali = await fetch(`${API_BASE_URL}/materiali/metadata`, {
+                method: "GET"
+            });
+            if (!resMateriali.ok) {
+                const errorData: ApiErrorData | null = await resMateriali.json().catch(() => null);
+                const msg = errorData?.issues
+                    ? errorData.issues.map((i) => i.message).join(", ")
+                    : errorData?.error || "Impossibile ottenere gli hashcode"
+                throw new Error(msg);
+            }
+            const materiali: Materiale[] = await resMateriali.json();
+
+            const arrayBuffer = await selectedFile.arrayBuffer();
+
+            const hashBuffer = await crypto.subtle.digest(
+                "SHA-256",
+                arrayBuffer
+            );
+            const checksum = Array.from(new Uint8Array(hashBuffer))
+                .map(b => b.toString(16).padStart(2, "0"))
+                .join("");
+            console.log("Checksum calcolato:", checksum);
+
+            console.log("Materiali:", materiali.map(m => ({
+                id: m.id,
+                titolo: m.titolo,
+                checksum: m.checksum
+            })));
+            const materialeDuplicato = materiali.find(
+                m => m.checksum === checksum
+            )
+
+            if (materialeDuplicato) {
+                const ok = await confirm({
+                    message: `Il materiale è già presente come ${materialeDuplicato.titolo}. Desideri aggiungere questo materiale al modulo?`,
+                    confirmColor: "primary"
+                }
+                );
+                if (ok) {
+                    const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/materiali`, {
+                        method: "POST",
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            materiale_id: materialeDuplicato.id
+                        }),
+                    });
+                    if (!res.ok) {
+                        const errorData: ApiErrorData | null = await res.json().catch(() => null);
+                        const msg = errorData?.issues
+                            ? errorData.issues.map((i) => i.message).join(", ")
+                            : errorData?.error || "Impossibile associare il materiale";
+                        throw new Error(msg);
+                    }
+                    mutate();
+                }
+                return;
+            }
+
             const dataMateriale = new FormData();
             dataMateriale.append("titolo", formData.titolo.trim());
             dataMateriale.append("descrizione", formData.descrizione.trim());
@@ -68,11 +127,10 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             mutate();
         } catch (error: unknown) {
             console.error("Errore durante l'upload:", error);
-            setSnackbar({
-                open: true,
-                message: error instanceof Error ? error.message : "Errore sconosciuto durante l'upload",
-                severity: "error"
-            });
+            showMessage(
+                "Errore sconosciuto durante l'upload",
+                "error"
+            );
         } finally {
             setLoading(false);
         }
@@ -212,18 +270,6 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                 </DialogContent>
                 <DialogActions><Button onClick={() => setOpen(false)}>Chiudi</Button></DialogActions>
             </Dialog>
-
-            {/* Snackbar per feedback success/error */}
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled" sx={{ width: '100%' }}>
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </>
     );
 }
