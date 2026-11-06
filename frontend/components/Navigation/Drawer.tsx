@@ -116,7 +116,8 @@ export default function SideDrawer() {
           { text: "Docenti", href: "/docenti" },
           { text: "Programmi", href: "/programmi" },
           { text: "Moduli", href: "/moduli" },
-          { text: "Materiali", href: "/materiali" }
+          { text: "Materiali", href: "/materiali" },
+          { text: "Indisponibilità", href: "/indisponibilita" }
 
         ].map((item) => {
           // Controlla se il pathname inizia con l'href per evidenziare anche le sottosezioni (es. /sedi/123/aule)
