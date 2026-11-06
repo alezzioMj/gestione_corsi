@@ -93,8 +93,7 @@ model docente_modulo {
 }
 
 model indisponibilita {
-  id          Int       @id @default(autoincrement())
-  tipologia   String    @db.VarChar(50)
+  id          Int       @id @default(autoincrement()) 
   docente_cf  String?   @db.VarChar(16)
   sede_id     Int?
   aula_id     Int?
