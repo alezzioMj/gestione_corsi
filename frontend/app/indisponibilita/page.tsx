@@ -17,7 +17,6 @@ export default function IndisponibilitaPage() {
     const [formData, setFormData] = useState({
         docente_cf: "",
         sede_id: null as number | null,
-        tipologia: "",
         aula_id: null as number | null,
         data_inizio: "",
         data_fine: "",
@@ -32,35 +31,40 @@ export default function IndisponibilitaPage() {
     const { data: sedi, isLoading: sediLoading, error: sediError } = useSWR(`${API_BASE_URL}/sedi`, fetcher);
     const { data: aule, isLoading: auleLoading, error: auleError } = useSWR(`${API_BASE_URL}/aule`, fetcher);
 
-    const handleSubmit = async (e: React.SubmitEvent) => {
-        try {
-            setSubmitting(true);
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
 
-            e.preventDefault();
-            const data = new FormData();
+    try {
+        setSubmitting(true);
 
-            Object.entries(formData).forEach(([key, value]) => {
-                data.append(key, value === null ? "" : String(value));
-            });
+        const payload = {
+            ...formData,
+            docente_cf: oggetto === "DOCENTE" ? formData.docente_cf : null,
+            sede_id: oggetto === "SEDE" ? formData.sede_id : null,
+            aula_id: oggetto === "AULA" ? formData.aula_id : null
+        };
 
-            const res = await fetch(`${API_BASE_URL}/indisponibilita`, {
-                method: "POST",
-                body: data
-            })
+        const res = await fetch(`${API_BASE_URL}/indisponibilita`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(payload)
+        });
 
-            if (!res.ok) {
-                throw ("Errore nell'invio dei dati");
-            }
-
-            setSubmitting(false);
-        } catch (error: unknown) {
-            console.error("Errore:", error);
-            alert("Errore di rete.");
+        if (!res.ok) {
+            const error = await res.json();
+            throw new Error(error.error || "Errore nell'invio dei dati");
         }
-        finally{
-            setSubmitting(false);
-        }
+
+        // Eventuale reset del form
+    } catch (error: unknown) {
+        console.error("Errore:", error);
+        alert(error instanceof Error ? error.message : "Errore di rete.");
+    } finally {
+        setSubmitting(false);
     }
+};
 
     const renderOptions = <T,>(
         loading: boolean,
@@ -116,24 +120,21 @@ export default function IndisponibilitaPage() {
                 }}>
                     <TextField
                         required
-                        label="Tipologia"
-                        fullWidth
-                        value={formData.tipologia}
-                        onChange={(e) => setFormData({
-                            ...formData,
-                            tipologia: e.target.value
-                        })}
-                    >
-                        {/* Inserisci qui le tipologie ammesse */}
-                    </TextField>
-
-                    <TextField
-                        required
                         select
                         label="Oggetto"
                         fullWidth
                         value={oggetto}
-                        onChange={(e) => setOggetto(e.target.value as Oggetto)}
+                        onChange={(e) => {
+                            const value = e.target.value as Oggetto;
+                            setOggetto(value);
+
+                            setFormData({
+                                ...formData,
+                                docente_cf: "",
+                                sede_id: null,
+                                aula_id: null
+                            });
+                        }}
                     >
                         <MenuItem value="DOCENTE">Docente</MenuItem>
                         <MenuItem value="SEDE">Sede</MenuItem>
@@ -146,7 +147,8 @@ export default function IndisponibilitaPage() {
                         label={
                             oggetto === "DOCENTE" ? "Docente"
                                 : oggetto === "SEDE" ? "Sede"
-                                    : "Aula"
+                                    : oggetto === "AULA" ? "Aula"
+                                        : ""
                         }
                         disabled={!oggetto}
                         fullWidth
