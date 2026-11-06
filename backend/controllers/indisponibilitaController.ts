@@ -3,7 +3,9 @@ import express from "express";
 
 const getIndisponibilita = async (req: express.Request, res: express.Response) => {
   try {
-    const indisponibilita = await prisma.indisponibilita.findMany();
+    const indisponibilita = await prisma.indisponibilita.findMany({
+      orderBy: {data_inizio: "desc"}
+    });
     res.json(indisponibilita);
   } catch (error) {
     console.error("Errore nel recupero delle indisponibilità:", error);
@@ -33,7 +35,6 @@ const getIndisponibilitaById = async (req: express.Request, res: express.Respons
 const createIndisponibilita = async (req: express.Request, res: express.Response) => {
   try {
     const {
-      tipologia,
       docente_cf,
       sede_id,
       aula_id,
@@ -47,7 +48,6 @@ const createIndisponibilita = async (req: express.Request, res: express.Response
 
     const indisponibilita = await prisma.indisponibilita.create({
       data: {
-        tipologia,
         docente_cf,
         sede_id,
         aula_id,
@@ -76,7 +76,6 @@ const updateIndisponibilita = async (req: express.Request, res: express.Response
     const id = Number(req.params.id);
 
     const {
-      tipologia,
       docente_cf,
       sede_id,
       aula_id,
@@ -91,7 +90,6 @@ const updateIndisponibilita = async (req: express.Request, res: express.Response
     const indisponibilita = await prisma.indisponibilita.update({
       where: { id },
       data: {
-        tipologia,
         docente_cf,
         sede_id,
         aula_id,
