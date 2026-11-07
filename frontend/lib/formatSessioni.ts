@@ -1,3 +1,4 @@
+import { CalendarRow, SlotView } from "@/components/ScheduleGrid/types";
 import { Corso, Docente, SessioneWithRelations } from "@progetto/shared/validation/types";
 
 export interface DocenteLegenda {
@@ -6,17 +7,7 @@ export interface DocenteLegenda {
     colore: string;
 }
 
-export interface SlotOrario {
-    iniziale: string;
-    colore: string;
-    docenteNome?: string;
-}
-
-export interface GiornoOrario {
-    mattina: (SlotOrario | null)[];
-    pomeriggio: (SlotOrario | null)[];
-}
-
+/*
 export interface RigaCommessa {
     id: number;
     nomeCorso: string;
@@ -31,8 +22,8 @@ export function trasformaSessioniInCommesse(
     sessioniFromDb: SessioneWithRelations[],
     corsiAnagrafica: Corso[] = [],
     docentiAnagrafica: Docente[] = []
-): RigaCommessa[] {
-    const commesseMap: Record<number, RigaCommessa> = {};
+): CalendarRow[] {
+    const commesseMap: Record<number, CalendarRow> = {};
 
     sessioniFromDb.forEach((sess) => {
         const corsoId = sess.corso_id;
@@ -87,10 +78,10 @@ export function trasformaSessioniInCommesse(
             });
         }
 
-        const slotInfo: SlotOrario = {
+        const slotInfo: SlotView = {
             iniziale,
             colore: coloreDocente,
-            docenteNome: nomeDocente
+            tooltip: nomeDocente
         };
 
         const oraInizio = parseInt(sess.ora_inizio?.split(":")[0] || "8", 10);
@@ -106,4 +97,6 @@ export function trasformaSessioniInCommesse(
     });
 
     return Object.values(commesseMap);
+    
 }
+*/

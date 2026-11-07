@@ -1,20 +1,22 @@
 "use client";
 
 import React, { useState, useMemo, useSyncExternalStore } from "react";
-
-import { RigaCommessa } from "@/lib/formatSessioni";
-import { Docente } from "@progetto/shared/validation/types";
-import { Corso } from "@progetto/shared/validation/types";
+import { Box, Button, Stack, Typography } from "@mui/material";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
 import DayCell from "./DayCell";
-import SessioneModal from "../Sessioni/AddSessioneModal";
+import { CalendarRow } from "./types";
+import { toDateKey } from "./utils";
 
 const MESI = [
     "Gennaio", "Febbraio", "Marzo", "Aprile", "Maggio", "Giugno",
-    "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre"
+    "Luglio", "Agosto", "Settembre", "Ottobre", "Novembre", "Dicembre",
 ];
-
 const GIORNI_SETTIMANA = ["DOM", "LUN", "MAR", "MER", "GIO", "VEN", "SAB"];
+
+const LEFT_WIDTH = 384; 
+const DAY_WIDTH = 112;  
 
 const getDaysInMonth = (year: number, month: number) => {
     const date = new Date(year, month, 1);
@@ -26,56 +28,77 @@ const getDaysInMonth = (year: number, month: number) => {
     return days;
 };
 
-interface ScheduleGridProps {
-    commesse?: RigaCommessa[];
-    docenti?: Docente[];
-    corsi?: Corso[];
-    onCellClick: (dateKey: string, commessaId?: number) => void;
+function useIsClient() {
+    return useSyncExternalStore(
+        () => () => { },
+        () => true,
+        () => false
+    );
 }
 
 interface TimeBarProps {
     handleDate: (d: Date) => void;
     anno: number;
-    mese: number
-}
-
-function useIsClient() {
-    return useSyncExternalStore(
-        () => () => { },   // subscribe: nessun cambiamento da ascoltare, basta il mount
-        () => true,        // snapshot lato client
-        () => false         // snapshot lato server
-    );
+    mese: number;
 }
 
 function TimeBar({ handleDate, anno, mese }: TimeBarProps) {
+    const navSx = { bgcolor: "#1f2937", "&:hover": { bgcolor: "#374151" }, fontWeight: 600 };
+
     return (
-        <div className="flex justify-between items-center p-3 bg-gray-900 text-white rounded border border-gray-800">
-            <div className="flex gap-2">
-                <button
+        <Stack
+            direction="row"
+            sx={{
+                justifyContent: "space-between", alignItems: "center", p: 1.5, bgcolor: "#111827", color: "white", borderRadius: 1, border: "1px solid #1f2937"
+            }}
+        >
+            <Stack direction="row" spacing={1}>
+                <Button
+                    size="small"
+                    variant="contained"
+                    color="inherit"
+                    startIcon={<ChevronLeftIcon />}
                     onClick={() => handleDate(new Date(anno, mese - 1, 1))}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded transition text-xs font-semibold"
+                    sx={{ ...navSx, color: "white" }}
                 >
-                    &larr; Prec
-                </button>
-                <button
+                    Prec
+                </Button>
+                <Button
+                    size="small"
+                    variant="contained"
                     onClick={() => handleDate(new Date())}
-                    className="px-3 py-1 bg-blue-600 hover:bg-blue-500 rounded transition text-xs font-semibold"
+                    sx={{ fontWeight: 600 }}
                 >
                     Oggi
-                </button>
-                <button
+                </Button>
+                <Button
+                    size="small"
+                    variant="contained"
+                    color="inherit"
+                    endIcon={<ChevronRightIcon />}
                     onClick={() => handleDate(new Date(anno, mese + 1, 1))}
-                    className="px-3 py-1 bg-gray-800 hover:bg-gray-700 rounded transition text-xs font-semibold"
+                    sx={{ ...navSx, color: "white" }}
                 >
-                    Succ &rarr;
-                </button>
-            </div>
-            <div className="text-lg font-bold text-blue-400">{MESI[mese]} {anno}</div>
-        </div>
-    )
+                    Succ
+                </Button>
+            </Stack>
+
+            <Typography variant="h6" sx={{ fontWeight: 700, color: "#60a5fa" }}>
+                {MESI[mese]} {anno}
+            </Typography>
+        </Stack>
+    );
 }
 
-export default function ScheduleGrid({ commesse = [], docenti = [], corsi = [], onCellClick }: ScheduleGridProps) {
+interface ScheduleGridProps {
+    rows: CalendarRow[];
+    legend?: React.ReactNode;
+    /** Intestazione della colonna sinistra, dipende dalla vista */
+    headerLeft?: React.ReactNode;
+    onCellClick: (dateKey: string, rowId?: CalendarRow["id"]) => void;
+}
+
+export default function ScheduleGrid({ rows, legend, headerLeft, onCellClick }: ScheduleGridProps) {
     const isClient = useIsClient();
     const [currentDate, setCurrentDate] = useState(() => new Date());
     const anno = currentDate.getFullYear();
@@ -86,131 +109,152 @@ export default function ScheduleGrid({ commesse = [], docenti = [], corsi = [], 
     if (!isClient) return null;
 
     return (
-        <div className="w-full space-y-4 font-sans">
-            {/* BARRA TEMPORALE */}
+        <Stack spacing={2} sx={{ width: "100%" }}>
             <TimeBar handleDate={setCurrentDate} anno={anno} mese={mese} />
-            {/* LEGENDA DOCENTI */}
-            {docenti && docenti.length > 0 && (
-                <div className="p-3 bg-gray-900 rounded border border-gray-800 flex flex-wrap items-center gap-2">
-                    <span className="text-xs font-semibold text-gray-400 mr-2">Docenti:</span>
-                    {docenti.map((doc) => (
-                        <div
-                            key={doc.codice_fiscale}
-                            className="text-xs px-2 py-0.5 rounded font-medium border border-black/30 text-black"
-                            style={{ backgroundColor: doc.colore || "#e5e7eb" }}
-                        >
-                            {doc.nome} {doc.cognome}
-                        </div>
-                    ))}
-                </div>
+
+            {legend && (
+                <Stack
+                    direction="row"
+                    useFlexGap
+                    spacing={1}
+                    sx={{
+                        flexWrap: "wrap",
+                        alignItems: "center",
+                        p: 1.5,
+                        bgcolor: "#111827",
+                        borderRadius: 1,
+                        border: "1px solid #1f2937"
+                    }}
+                >
+                    {legend}
+                </Stack>
             )}
 
-            {/* TABELLA EXCEL */}
-            <div className="w-full overflow-x-auto border border-black bg-white text-black text-xs">
-                <div className="inline-block min-w-full">
-
+            {/* TABELLA */}
+            <Box
+                sx={{
+                    width: "100%",
+                    overflowX: "auto",
+                    border: "1px solid black",
+                    bgcolor: "white",
+                    color: "black",
+                    fontSize: 12,
+                }}
+            >
+                <Box sx={{ display: "inline-block", minWidth: "100%" }}>
                     {/* INTESTAZIONE GIORNI */}
-                    <div className="flex border-b-2 border-black sticky top-0 bg-white z-10">
+                    <Box
+                        sx={{
+                            display: "flex",
+                            borderBottom: "2px solid black",
+                            position: "sticky",
+                            top: 0,
+                            bgcolor: "white",
+                            zIndex: 10,
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                width: LEFT_WIDTH,
+                                flexShrink: 0,
+                                display: "flex",
+                                borderRight: "2px solid black",
+                                fontWeight: 700,
+                                position: "sticky",
+                                left: 0,
+                                top: 0,
+                                zIndex: 20,
+                                bgcolor: "white",
+                            }}
+                        >
+                            {headerLeft ?? (
+                                <>
+                                    <Box
+                                        sx={{
+                                            width: 96,
+                                            p: 1,
+                                            bgcolor: "#fef9c3",
+                                            borderRight: "1px solid black",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            textAlign: "center",
+                                        }}
+                                    >
+                                        AULA
+                                    </Box>
+                                    <Box
+                                        sx={{
+                                            flex: 1,
+                                            p: 1,
+                                            bgcolor: "#1e3a8a",
+                                            color: "white",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                            fontSize: 14,
+                                        }}
+                                    >
+                                        COMMESSA / CORSO
+                                    </Box>
+                                </>
+                            )}
+                        </Box>
 
-                        {/* SCHEDA SINISTRA INTESTAZIONE (AULA / COMMESSA) */}
-                        <div className="w-96 flex-shrink-0 flex border-r-2 border-black font-bold sticky left-0 top-0 z-20 bg-white">
-                            <div className="w-24 p-2 bg-yellow-100 border-r border-black flex items-center justify-center text-center">
-                                AULA
-                            </div>
-                            <div className="flex-1 p-2 bg-blue-900 text-white flex items-center justify-center text-sm">
-                                COMMESSA / CORSO
-                            </div>
-                        </div>
-
-                        {/* GIORNI DEL MESE */}
-                        <div className="flex">
+                        <Box sx={{ display: "flex" }}>
                             {giorniDelMese.map((giorno) => {
                                 const isWeekend = giorno.getDay() === 0 || giorno.getDay() === 6;
-                                const dateIso = giorno.toISOString();
                                 return (
-                                    <div key={dateIso} className={`w-28 flex-shrink-0 border-r border-black text-center ${isWeekend ? "bg-gray-300" : "bg-yellow-100"}`}>
-                                        <div className="font-bold border-b border-black py-0.5">
+                                    <Box
+                                        key={toDateKey(giorno)}
+                                        sx={{
+                                            width: DAY_WIDTH,
+                                            flexShrink: 0,
+                                            borderRight: "1px solid black",
+                                            textAlign: "center",
+                                            bgcolor: isWeekend ? "grey.300" : "#fef9c3",
+                                        }}
+                                    >
+                                        <Box sx={{ fontWeight: 700, borderBottom: "1px solid black", py: 0.25 }}>
                                             {GIORNI_SETTIMANA[giorno.getDay()]}
-                                        </div>
-                                        <div className="py-0.5 font-semibold">
-                                            {String(giorno.getDate()).padStart(2, '0')}-{MESI[mese].substring(0, 3).toLowerCase()}-{String(anno).slice(-2)}
-                                        </div>
-                                    </div>
+                                        </Box>
+                                        <Box sx={{ fontWeight: 600, py: 0.25 }}>
+                                            {String(giorno.getDate()).padStart(2, "0")}-
+                                            {MESI[mese].substring(0, 3).toLowerCase()}-{String(anno).slice(-2)}
+                                        </Box>
+                                    </Box>
                                 );
                             })}
-                        </div>
-                    </div>
-                    {/* BLOCCO COMMESSA */}
-                    {commesse.map((commessa) => {
-                        console.log("Corsi" + corsi.length);
-                        // Cerca il corso associato verificando le varie proprietà id possibili
-                        const corso = corsi?.find(
-                            (c) => c.id === commessa.id || c.id === commessa.id || c.id === commessa.id
-                        );
+                        </Box>
+                    </Box>
 
-                        // Recupero Nome e Cliente
-                        const titoloCorso = corso?.nome || commessa.nomeCorso || `Corso #${commessa.id}`;
-                        const cliente = corso?.cliente ? `[${corso.cliente}]` : "";
-                        const oreTotali = corso?.n_ore ?? commessa.totaleOre ?? 0;
+                    {/* RIGHE */}
+                    {rows.map((row) => (
+                        <Box key={row.id} sx={{ display: "flex", borderBottom: "2px solid black" }}>
+                            <Box
+                                sx={{
+                                    width: LEFT_WIDTH,
+                                    flexShrink: 0,
+                                    display: "flex",
+                                    borderRight: "2px solid black",
+                                    bgcolor: "white",
+                                    position: "sticky",
+                                    left: 0,
+                                    zIndex: 10,
+                                }}
+                            >
+                                {row.header}
+                            </Box>
 
-                        // Composizione Orari
-                        const orarioFormatted = corso
-                            ? `${corso.mattina_inizio}-${corso.mattina_fine} / ${corso.pomeriggio_inizio}-${corso.pomeriggio_fine}`
-                            : "09:00-13:00 / 14:00-18:00";
-
-                        return (
-                            <div key={commessa.id} className="flex border-b-2 border-black">
-
-                                {/* SCHEDA SINISTRA */}
-                                <div className="w-96 flex-shrink-0 flex border-r-2 border-black bg-white sticky left-0 z-10">
-                                    <div className="w-24 p-2 bg-amber-200 border-r border-black flex items-center justify-center font-bold text-center">
-                                        {commessa.aula}
-                                    </div>
-
-                                    <div className="flex-1 flex flex-col justify-between p-1.5">
-                                        {/* NOME CORSO & CLIENTE */}
-                                        <div className="font-bold text-xs uppercase text-blue-900 border-b border-gray-300 pb-1 mb-1 truncate" title={`${titoloCorso} ${cliente}`}>
-                                            {titoloCorso} <span className="text-gray-500 font-normal">{cliente}</span>
-                                        </div>
-
-                                        {/* Docenti */}
-                                        <div className="space-y-0.5">
-                                            {commessa.docenti?.map((docentiCommessa, dIdx) => {
-                                                const docente = docenti.find(d => d.codice_fiscale === docentiCommessa.cf);
-
-                                                return (
-                                                    <div
-                                                        key={dIdx}
-                                                        className="px-2 py-0.5 font-bold text-center uppercase border border-black/20 rounded-sm"
-                                                        style={{ backgroundColor: docente?.colore || "#f3f4f6" }}
-                                                    >
-                                                        {docente ? `${docente.nome} ${docente.cognome}` : docentiCommessa.nome}
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* ORARIO E ORE TOTALI */}
-                                        <div className="border-t border-black mt-1 pt-1 flex justify-between font-bold text-[10px]">
-                                            <span className="truncate pr-1" title={orarioFormatted}>ORARIO: {orarioFormatted}</span>
-                                            <span className="flex-shrink-0">TOT: {oreTotali}h</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* GRIGLIA GIORNI */}
-                                <div className="flex">
-                                    {giorniDelMese.map((giorno) => {
-                                        return <DayCell key={giorno.getDate()} giorno={giorno} commessa={commessa} onClick={onCellClick} />
-                                    })}
-                                </div>
-
-                            </div>
-                        );
-                    })}
-
-                </div>
-            </div>
-        </div>
+                            <Box sx={{ display: "flex" }}>
+                                {giorniDelMese.map((giorno) => (
+                                    <DayCell key={giorno.getDate()} giorno={giorno} row={row} onClick={onCellClick} />
+                                ))}
+                            </Box>
+                        </Box>
+                    ))}
+                </Box>
+            </Box>
+        </Stack>
     );
 }

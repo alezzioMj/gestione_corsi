@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { moduloSchema } from './modulo.schema';
 import { sessioneSchema } from './sessione.schema';
 import { materialeSchema } from './materiale.schema';
+import { indisponibilitaSchema } from './indisponibilita.schema';
 
 // Schema per l'INVIO (Input dal form/frontend)
 export type CorsoFormInput = z.infer<typeof corsoSchema>;
@@ -72,6 +73,7 @@ export type Docente = z.infer<typeof docenteDbSchema>;
 export type Sede = z.infer<typeof sedeDbSchema>;
 export type Modulo = z.infer<typeof moduloDbSchema>;
 export type Materiale = z.infer<typeof materialeSchema>;
+export type Indisponibilita = z.infer<typeof indisponibilitaSchema>
 
 export const SessioneWithRelations = sessioneDbSchema.extend({
     corso: corsoDbSchema,

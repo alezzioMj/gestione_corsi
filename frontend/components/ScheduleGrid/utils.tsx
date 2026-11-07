@@ -1,0 +1,1 @@
+export const toDateKey = (d: Date) => d.toLocaleDateString("sv-SE");
