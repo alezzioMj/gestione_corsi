@@ -13,5 +13,6 @@ export const API_ENDPOINTS = {
   sedi : `${API_BASE_URL}/sedi/`,
   materiali : `${API_BASE_URL}/materiali/`,
   moduli : `${API_BASE_URL}/moduli/`,
-  aule : `${API_BASE_URL}/aule/`
+  aule : `${API_BASE_URL}/aule/`,
+  indisponibilita : `${API_BASE_URL}/indisponibilita/`
 } as const;

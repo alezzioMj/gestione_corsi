@@ -1,8 +1,8 @@
-import { Corso, SessioneWithRelations } from "@progetto/shared/validation/types";
+import { Aula, Corso, Docente, Indisponibilita, Sede, SessioneWithRelations } from "@progetto/shared/validation/types";
 import { CalendarRow, DayView, SlotView } from "./types";
 import { Box, Typography } from "@mui/material";
 import React from "react";
-import { toDateKey } from "./utils";
+import { buildRows, makeHeader, toDateKey } from "./utils";
 
 
 export function sessioniToRows(
@@ -40,6 +40,32 @@ export function sessioniToRows(
     return { id: c.id, header, days };
   });
 }
-//export function indisponibilitaDocentiToRows(docenti, indisp): CalendarRow[] {  }
-//export function indisponibilitaAuleToRows(aule, indisp): CalendarRow[] {  }
-//export function indisponibilitaSediToRows(sedi, indisp): CalendarRow[] {  }
+
+const COLORE_INDISP = "#f87171";
+
+export function indisponibilitaDocentiToRows(docenti: Docente[], indisp: Indisponibilita[]): CalendarRow[] {
+  return buildRows(docenti, indisp, {
+    id: (d) => d.codice_fiscale,
+    header: (d) => makeHeader(`${d.nome} ${d.cognome}`),
+    match: (i, d) => i.docente_cf === d.codice_fiscale,
+    colore: (d) => d.colore || COLORE_INDISP,
+  });
+}
+
+export function indisponibilitaAuleToRows(aule: Aula[], indisp: Indisponibilita[]): CalendarRow[] {
+  return buildRows(aule, indisp, {
+    id: (a) => a.id,
+    header: (a) => makeHeader(a.nome),
+    match: (i, a) => i.aula_id === a.id,
+    colore: () => COLORE_INDISP,
+  });
+}
+
+export function indisponibilitaSediToRows(sedi: Sede[], indisp: Indisponibilita[]): CalendarRow[] {
+  return buildRows(sedi, indisp, {
+    id: (s) => s.id,
+    header: (s) => makeHeader(s.nome),
+    match: (i, s) => i.sede_id === s.id,
+    colore: () => COLORE_INDISP,
+  });
+}
