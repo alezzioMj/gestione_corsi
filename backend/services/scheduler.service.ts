@@ -18,11 +18,9 @@ const logger = {
 };
 
 export const schedule = async (corso_id: number, giorniDisponibili: number[], ordine: Ordine[]) => {
-    console.log("🔥 SCHEDULE V2 - con SchedulingError attivi 🔥");
     return await prisma.$transaction(async (tx) => {
         const sessioniBulk: Prisma.sessioneCreateManyInput[] = [];
 
-        // Caricamento dati iniziali (Pre-fetch)
         const corso = await tx.corso.findUnique({
             where: { id: corso_id },
             include: { programma: true }
@@ -44,7 +42,6 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
 
         const listaAule = corsoConAule?.corso_sede.flatMap(cs => cs.sede.aula) ?? [];
 
-        // Pulizia sessioni esistenti in stato Bozza per questo corso
         await tx.sessione.deleteMany({
             where: {
                 corso_id: corso_id,
@@ -52,7 +49,6 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
             }
         });
 
-        // Caricamento sessioni esistenti per controllo OVERLAP (Cache)
         const dataInizio = corso.inizio;
         const dataFine = corso.fine;
 
@@ -62,9 +58,15 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
             }
         });
 
+        const indisponibilita = await tx.indisponibilita.findMany({
+            where: {
+                data_inizio: { lte: dataFine },
+                data_fine: { gte: dataInizio },
+            },
+        });
+
         let cacheSessioni = [...tutteLeSessioniEsistenti];
 
-        // Generazione Slot potenziali
         const slots = generateSlots(
             corso.inizio,
             corso.fine,
@@ -75,7 +77,6 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
             giorniDisponibili,
         );
 
-        // 1. Recupero Moduli del Programma associato al Corso
         const pm = await tx.programma_modulo.findMany({
             where: { programma_id: corso.programma?.id },
             include: { modulo: true }
@@ -124,18 +125,17 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
                 );
             }
 
-            // Loop on slots to find one
             while (oreRimanenti > 0 && slotIndex < slots.length) {
                 const currentSlot = slots[slotIndex];
 
                 try {
-                    const aula = await findAula(listaAule, currentSlot, cacheSessioni);
+                    const aula = await findAula(listaAule, currentSlot, cacheSessioni, indisponibilita);
                     if (!aula) {
                         slotIndex++;
                         continue;
                     }
 
-                    const docente = await findDocente(docentiModulo, currentSlot, aula.sede_id, cacheSessioni);
+                    const docente = await findDocente(docentiModulo, currentSlot, aula.sede_id, cacheSessioni, indisponibilita);
 
                     if (!docente) {
                         logger.warn(`[SKIP] Slot ${currentSlot.data.toLocaleDateString()} ${currentSlot.ora_inizio}: Docente: ${!!docente}, Aula: ${!!aula}`);
@@ -182,7 +182,6 @@ export const schedule = async (corso_id: number, giorniDisponibili: number[], or
             }
         }
 
-        // 4. SALVATAGGIO MASSIVO E RETURN
         if (sessioniBulk.length > 0) {
             logger.info(`Salvataggio massivo di ${sessioniBulk.length} sessioni...`);
             await tx.sessione.createMany({
