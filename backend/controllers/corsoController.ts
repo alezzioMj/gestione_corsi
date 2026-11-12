@@ -32,7 +32,7 @@ const getCorso = async (req: express.Request, res: express.Response) => {
 
 interface CreateCorsoBody {
   nome: string;
-  cliente: string;
+  cliente: number;
   programma_id: number;
   n_ore: number;
   inizio: string | Date;
@@ -47,7 +47,7 @@ const createCorso = async (req: express.Request, res: express.Response) => {
   try {
     const {
       nome,
-      cliente,
+      cliente_id,
       programma_id,
       n_ore,
       inizio,
@@ -61,7 +61,7 @@ const createCorso = async (req: express.Request, res: express.Response) => {
     const corso = await prisma.corso.create({
       data: {
         nome, // Includi il nome
-        cliente,
+        cliente_id,
         programma_id,
         n_ore,
         inizio,
@@ -86,6 +86,64 @@ const createCorso = async (req: express.Request, res: express.Response) => {
   }
 };
 
+const createCorsoCompleto = async (req: express.Request, res: express.Response) => {
+  try {
+    const {
+      ragione_sociale,
+      partita_iva,
+      sede_legale,
+      agente_id,
+      nome,
+      programma_id,
+      n_ore,
+      inizio,
+      fine,
+      mattina_inizio,
+      mattina_fine,
+      pomeriggio_inizio,
+      pomeriggio_fine
+    } = req.body;
+
+    const result = await prisma.$transaction(async (tx) => {
+      const cliente = await prisma.cliente.create({
+        data: {
+          ragione_sociale,
+          partita_iva,
+          sede_legale,
+          agente_id,
+        }
+      });
+      const cliente_id = cliente.id;
+      const corso = await prisma.corso.create({
+        data: {
+          cliente_id,
+          nome, // Includi il nome
+          programma_id,
+          n_ore,
+          inizio,
+          fine,
+          mattina_inizio,
+          mattina_fine,
+          pomeriggio_inizio,
+          pomeriggio_fine
+        }
+      })
+      return { cliente, corso }
+    })
+
+    res.status(201).json(result);
+  } catch (err: any) {
+    console.error({
+      message: "Errore nella creazione del corso",
+      error: err,
+    });
+    if (err.code === "P2002") {
+      return res.status(400).json({ error: "Il corso esiste già" });
+    }
+    res.status(500).json({ error: "Errore creazione corso" });
+  }
+};
+
 type UpdateCorsoBody = Partial<CreateCorsoBody>;
 
 const updateCorso = async (req: express.Request, res: express.Response) => {
@@ -93,7 +151,7 @@ const updateCorso = async (req: express.Request, res: express.Response) => {
     const id = Number(req.params.id);
     const {
       nome,
-      cliente,
+      cliente_id,
       programma_id,
       n_ore,
       inizio,
@@ -108,7 +166,7 @@ const updateCorso = async (req: express.Request, res: express.Response) => {
       where: { id },
       data: {
         nome,
-        cliente,
+        cliente_id,
         programma_id,
         n_ore,
         inizio,

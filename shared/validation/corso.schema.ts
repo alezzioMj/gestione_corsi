@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const corsoSchema = z.object({
-  cliente: z.string().max(150),
+  cliente_id: z.number(),
   programma_id: z.number(),
   n_ore: z.number(),
   nome : z.string().max(150),
