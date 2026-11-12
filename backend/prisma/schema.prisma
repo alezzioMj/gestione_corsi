@@ -20,6 +20,10 @@ model aula {
   
 }
 
+model agente {
+  id                Int             @id @default(autoincrement())
+}
+
 model corso {
   id                Int             @id @default(autoincrement())
   nome              String          @db.VarChar(150)
@@ -33,6 +37,7 @@ model corso {
   mattina_fine      String
   pomeriggio_inizio String
   pomeriggio_fine   String
+  
   created_at        DateTime?       @default(now()) @db.Timestamp(6)
   created_by        String?         @db.VarChar(100)
   programma         programma?      @relation(fields: [programma_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -117,13 +122,50 @@ enum CategoriaMateriale {
   ALTRO
 }
 
+model cliente {
+  id              Int      @id @default(autoincrement())
+  ragione_sociale String
+  partita_iva     String   @unique
+  sede_legale     String
+
+  agente_id       Int
+  agente          agente   @relation(fields: [agente_id], references: [id])
+
+  sedi            cliente_sede[]
+}
+
+model cliente_sede {
+  id         Int              @id @default(autoincrement())
+  cliente_id Int
+
+  nome       String           @db.VarChar(150)
+  indirizzo  String           @db.VarChar(150)
+  civico     String           @db.VarChar(20)
+  cap        String           @db.Char(5)
+  citta      String           @db.VarChar(100)
+  provincia  String           @db.Char(2)
+
+  cliente    cliente          @relation(fields: [cliente_id], references: [id])
+  contatti   cliente_contatto[]
+}
+
+model cliente_contatto {
+  id       Int          @id @default(autoincrement())
+  sede_id  Int
+
+  nome     String       @db.VarChar(150)
+  email    String?      @db.VarChar(255)
+  telefono String?      @db.VarChar(30)
+
+  sede     cliente_sede @relation(fields: [sede_id], references: [id])
+}
+
 model materiale {
   id           Int             @id @default(autoincrement())
   titolo       String
   descrizione  String?
   categoria    CategoriaMateriale @default(ALTRO)
 
-  // dati del file
   storageKey   String             @unique
   originalName String
   mimeType     String
