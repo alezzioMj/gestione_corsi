@@ -28,6 +28,11 @@ REVOKE ALL ON SCHEMA "public" FROM "pg_database_owner";
 
 REVOKE ALL ON SCHEMA "public" FROM "service_role";
 
+REVOKE ALL ON SCHEMA "public" FROM "postgres";
+
+GRANT CREATE, USAGE ON SCHEMA "public" TO "postgres";
+
+
 COMMENT ON SCHEMA "public" IS NULL;
 
 CREATE SEQUENCE "public"."aula_id_seq" AS integer INCREMENT BY 1 MINVALUE 1 MAXVALUE 2147483647 START WITH 1 CACHE 1 NO CYCLE;
@@ -421,8 +426,4 @@ CREATE UNIQUE INDEX "materiale_storageKey_key" ON public.materiale USING btree (
 CREATE UNIQUE INDEX programma_modulo_programma_id_ordine_key ON public.programma_modulo USING btree (programma_id, ordine);
 
 CREATE UNIQUE INDEX sessione_docente_cf_data_ora_inizio_ora_fine_key ON public.sessione USING btree (docente_cf, DATA, ora_inizio, ora_fine);
-
-REVOKE ALL ON SCHEMA "public" FROM "postgres";
-
-GRANT CREATE, USAGE ON SCHEMA "public" TO "postgres";
 
