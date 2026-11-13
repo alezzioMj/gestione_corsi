@@ -18,15 +18,25 @@ import AddIcon from "@mui/icons-material/Add";
 import { Contatto } from "@progetto/shared/validation/types";
 import { DeleteOutlineOutlined } from "@mui/icons-material";
 
+export type ContattoForm = {
+    id?: number;
+    sede_id?: number;
+    nome: string;
+    email?: string | null;
+    telefono?: string | null;
+};
+
 export type SedeFormData = {
     id?: number;
+    cliente_id?: number;
+    tipo: "LEGALE" | "OPERATIVA";
     nome: string;
     indirizzo: string;
     civico: string;
     cap: string;
     citta: string;
     provincia: string;
-    contatti: Contatto[];
+    contatti: ContattoForm[];
 };
 
 interface SedeFormProps {
@@ -75,16 +85,19 @@ export default function SedeForm({
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5 }}>
 
                     <TextField fullWidth label="Nome"
+                        required
                         value={sede.nome}
                         onChange={e => onChange(index, "nome", e.target.value)}
                     />
 
                     <Box sx={{ display: "flex", gap: 2 }}>
                         <TextField fullWidth label="Indirizzo" sx={{ flex: 3 }}
+                            required
                             value={sede.indirizzo}
                             onChange={e => onChange(index, "indirizzo", e.target.value)}
                         />
                         <TextField label="Civico" sx={{ flex: 1 }}
+                            required
                             value={sede.civico}
                             onChange={e => onChange(index, "civico", e.target.value)}
                         />
@@ -92,14 +105,17 @@ export default function SedeForm({
 
                     <Box sx={{ display: "flex", gap: 2 }}>
                         <TextField label="CAP" sx={{ flex: 1 }}
+                            required
                             value={sede.cap}
                             onChange={e => onChange(index, "cap", e.target.value)}
                         />
                         <TextField label="Città" sx={{ flex: 3 }}
+                            required
                             value={sede.citta}
                             onChange={e => onChange(index, "citta", e.target.value)}
                         />
                         <TextField label="Provincia" sx={{ flex: 1 }}
+                            required
                             value={sede.provincia}
                             onChange={e => onChange(index, "provincia", e.target.value)}
                         />
@@ -143,16 +159,19 @@ export default function SedeForm({
                                 </Box>
 
                                 <TextField fullWidth label="Nome"
+                                    required
                                     value={contatto.nome}
                                     onChange={e => onChangeContatto(index, indexContatto, "nome", e.target.value)}
                                 />
 
                                 <Box sx={{ display: "flex", gap: 2 }}>
                                     <TextField fullWidth label="Email"
+                                        required
                                         value={contatto.email ?? ""}
                                         onChange={e => onChangeContatto(index, indexContatto, "email", e.target.value)}
                                     />
                                     <TextField fullWidth label="Telefono"
+                                        required
                                         value={contatto.telefono ?? ""}
                                         onChange={e => onChangeContatto(index, indexContatto, "telefono", e.target.value)}
                                     />
