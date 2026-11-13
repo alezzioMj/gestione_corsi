@@ -7,6 +7,7 @@ import { useState } from "react";
 
 export default function ClientiPage() {
     const [open, setOpen] = useState(false);
+
     return (
         <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
             <Box sx={{
@@ -31,7 +32,7 @@ export default function ClientiPage() {
                     {" Gestione dei clienti "}
                 </Typography>
 
-                <ClientiModal open={open} onClose={()=>1} onSuccess={()=>1}></ClientiModal>
+                <ClientiModal open={open} onClose={() => setOpen(false)} onSuccess={()=>1}></ClientiModal>
             </Box>
         </Container>)
 }

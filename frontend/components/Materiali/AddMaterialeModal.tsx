@@ -85,7 +85,7 @@ export default function AddMaterialeModal({ onMaterialeAdded }: AddMaterialeProp
         selectFile(e.dataTransfer.files?.[0]);
     };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    const handleSubmit = async (e: React.SubmitEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         if (!file) {

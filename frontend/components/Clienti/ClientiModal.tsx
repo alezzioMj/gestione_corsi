@@ -1,4 +1,4 @@
-import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, Paper, TextField, Typography } from "@mui/material";
+import { Box, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogTitle, Divider, TextField, Typography } from "@mui/material";
 import { ClienteWithRelations, Contatto } from "@progetto/shared/validation/types";
 import { useState } from "react";
 import SedeForm from "./SedeForm";
@@ -130,9 +130,36 @@ export default function ClientiModal({ open, onClose, onSuccess, cliente }: Clie
         }));
     };
 
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+
+        try {
+            setSubmitting(true);
+
+            const res = await fetch("https://jsonplaceholder.typicode.com/posts", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(form),
+            });
+
+            if (!res.ok) {
+                throw new Error("Errore durante il salvataggio del cliente");
+            }
+
+            onSuccess();
+            onClose();
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     return (
         <Dialog maxWidth="lg" fullWidth open={open}>
-            <form>
+            <form onSubmit={handleSubmit}>
                 <DialogTitle>Aggiungi cliente</DialogTitle>
                 <DialogContent dividers>
                     <Box sx={{ overflow: 'hidden', display: 'flex', flexDirection: 'column', gap: 2.5, mt: 1 }}>

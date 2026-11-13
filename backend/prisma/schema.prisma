@@ -157,29 +157,34 @@ model cliente {
   id              Int    @id @default(autoincrement())
   ragione_sociale String
   partita_iva     String @unique
-  sede_legale     String
 
-  agente_id Int
-  agente    agente @relation(fields: [agente_id], references: [id])
+  agente_id Int?
+  agente    agente? @relation(fields: [agente_id], references: [id])
 
   sedi     cliente_sede[]
   corsi    corso[]
   commesse commessa[]
 }
 
+enum tipo_sede {
+  LEGALE
+  OPERATIVA
+}
+
 model cliente_sede {
-  id         Int @id @default(autoincrement())
+  id         Int       @id @default(autoincrement())
   cliente_id Int
+  tipo       tipo_sede @default(OPERATIVA)
 
-  nome      String @db.VarChar(150)
-  indirizzo String @db.VarChar(150)
-  civico    String @db.VarChar(20)
-  cap       String @db.Char(5)
-  citta     String @db.VarChar(100)
-  provincia String @db.Char(2)
+  nome      String?
+  indirizzo String
+  civico    String
+  cap       String
+  citta     String
+  provincia String
 
-  cliente  cliente            @relation(fields: [cliente_id], references: [id])
   contatti cliente_contatto[]
+  cliente  cliente            @relation(fields: [cliente_id], references: [id])
 }
 
 model cliente_contatto {

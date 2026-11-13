@@ -112,6 +112,7 @@ export default function SideDrawer() {
       <List>
         {[
           { text: "Commesse", href: "/commesse" },
+          { text: "Clienti", href: "/clienti" },
           { text: "Sedi", href: "/sedi" },
           { text: "Docenti", href: "/docenti" },
           { text: "Programmi", href: "/programmi" },
