@@ -1,7 +1,28 @@
 import express from "express";
 import { prisma } from "../prisma";
-import { Prisma, sede } from "@prisma/client";
+import { cliente_sede, Prisma, sede } from "@prisma/client";
 import { Sede, SedeCliente } from "@progetto/shared/validation/types";
+
+const getClienti = async (req: express.Request, res: express.Response) => {
+    try {
+        const clienti = await prisma.cliente.findMany({
+            orderBy: { id: "desc" },
+            include: {
+                agente: true,
+                sedi: {
+                    include: { contatti: true }
+                }
+            }
+        })
+
+        res.status(200).json(clienti);
+    }
+    catch (error) {
+        return res.status(500).json({
+            error: "Errore durante il recupero dei clienti"
+        });
+    }
+}
 
 const createCliente = async (req: express.Request, res: express.Response) => {
     try {
@@ -16,11 +37,11 @@ const createCliente = async (req: express.Request, res: express.Response) => {
                 }
             })
 
-            const sedi = await px.cliente_sede.createMany({
-                data: sedi.map(sede => ({
+            const resultSedi = await px.cliente_sede.createMany({
+                data: sedi.map(({ contatti, ...sede }) => ({
                     ...sede,
-                    cliente_id: cliente.id,
-                })),
+                    cliente_id: cliente.id
+                }))
             })
 
             return { cliente, sedi }
@@ -33,8 +54,9 @@ const createCliente = async (req: express.Request, res: express.Response) => {
             error: "Errore durante la creazione del cliente"
         });
     }
-}  
+}
 
 export {
-    createCliente
+    createCliente,
+    getClienti
 }
