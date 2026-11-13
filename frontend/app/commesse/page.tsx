@@ -31,7 +31,6 @@ interface Corso {
 }
 
 export default function CommessePage() {
-
     const { data: corsi, error, isLoading, mutate } = useSWR(API_ENDPOINTS.corsi, fetcher);
     const [openInfoModal, setOpenInfoModal] = useState(false);
     const [selectedCorsoInfo, setSelectedCorsoInfo] = useState<Corso | null>(null);

@@ -18,4 +18,4 @@ export const sedeSchema = z.object({
 })
 
 
-export type  SedeFormInput = z.infer<typeof sedeSchema>;
+export type SedeFormInput = z.infer<typeof sedeSchema>;

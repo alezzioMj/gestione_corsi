@@ -9,6 +9,9 @@ import { moduloSchema } from './modulo.schema';
 import { sessioneSchema } from './sessione.schema';
 import { materialeSchema } from './materiale.schema';
 import { indisponibilitaSchema } from './indisponibilita.schema';
+import { clienteSchema } from './cliente.schema';
+import { sedeClienteSchema } from './sedecliente.schema';
+import { contattoSchema } from './contatto.schema';
 
 // Schema per l'INVIO (Input dal form/frontend)
 export type CorsoFormInput = z.infer<typeof corsoSchema>;
@@ -67,13 +70,28 @@ export type ApiErrorData = z.infer<typeof apiErrorSchema>;
 
 // Esportazione dei tipi derivati dagli schemi DB
 export type Corso = z.infer<typeof corsoDbSchema>;
+export type Contatto = z.infer<typeof contattoSchema>
+export type Cliente = z.infer<typeof clienteSchema>
 export type Programma = z.infer<typeof programmaDbSchema>;
 export type Aula = z.infer<typeof aulaDbSchema>;
 export type Docente = z.infer<typeof docenteDbSchema>;
 export type Sede = z.infer<typeof sedeDbSchema>;
+export type SedeCliente = z.infer<typeof sedeClienteSchema>
 export type Modulo = z.infer<typeof moduloDbSchema>;
 export type Materiale = z.infer<typeof materialeSchema>;
 export type Indisponibilita = z.infer<typeof indisponibilitaSchema>
+
+export const SedeWithRelations = sedeClienteSchema.extend({
+    contatti: z.array(contattoSchema),
+});
+
+export type SedeWithRelations = z.infer<typeof SedeWithRelations>;
+
+export const ClienteWithRelations = clienteSchema.extend({
+    sedi: z.array(SedeWithRelations),
+});
+
+export type ClienteWithRelations = z.infer<typeof ClienteWithRelations>;
 
 export const SessioneWithRelations = sessioneDbSchema.extend({
     corso: corsoDbSchema,
@@ -82,6 +100,7 @@ export const SessioneWithRelations = sessioneDbSchema.extend({
     aula: aulaDbSchema,
     sede: sedeDbSchema,
 });
+
 export type SessioneWithRelations = z.infer<typeof SessioneWithRelations>;
 
 export interface ApiErrorBody {
