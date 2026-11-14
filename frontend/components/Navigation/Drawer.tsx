@@ -91,14 +91,14 @@ export default function SideDrawer() {
         <ListItem disablePadding sx={{ mb: 1 }}>
           <ListItemButton
             component={Link}
-            href="/sessioni"
-            selected={pathname === "/sessioni"}
+            href="/calendario"
+            selected={pathname === "/calendario"}
             sx={{
               '&:hover': { backgroundColor: theme.palette.action.hover },
-              ...(pathname === "/sessioni" && { backgroundColor: theme.palette.action.selected }),
+              ...(pathname === "/calendario" && { backgroundColor: theme.palette.action.selected }),
             }}
           >
-            <ListItemText primary="Sessioni" />
+            <ListItemText primary="Calendario" />
           </ListItemButton>
         </ListItem>
       </List>
