@@ -184,7 +184,7 @@ model cliente_sede {
   provincia String
 
   contatti cliente_contatto[]
-  cliente  cliente            @relation(fields: [cliente_id], references: [id])
+  cliente  cliente            @relation(fields: [cliente_id], references: [id], onDelete: Cascade)
 }
 
 model cliente_contatto {
@@ -195,7 +195,7 @@ model cliente_contatto {
   email    String? @db.VarChar(255)
   telefono String? @db.VarChar(30)
 
-  sede cliente_sede @relation(fields: [sede_id], references: [id])
+  sede cliente_sede @relation(fields: [sede_id], references: [id], onDelete: Cascade)
 }
 
 model materiale {
