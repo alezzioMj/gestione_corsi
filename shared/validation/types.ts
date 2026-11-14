@@ -91,6 +91,31 @@ export const ClienteWithRelations = clienteSchema.extend({
     sedi: z.array(SedeWithRelations),
 });
 
+export const ClienteUpdateSchema = ClienteWithRelations.omit({
+    id: true,
+    agente_id: true
+}).extend({
+    sedi: z.array(
+        ClienteWithRelations.shape.sedi.element.omit({
+            cliente_id: true,
+            id: true
+        }).extend({
+            id: z.number().int().positive().optional(),
+
+            contatti: z.array(
+                ClienteWithRelations.shape.sedi.element.shape.contatti.element
+                    .omit({
+                        sede_id: true,
+                        id: true
+                    })
+                    .extend({
+                        id: z.number().int().positive().optional()
+                    })
+            )
+        })
+    )
+});
+
 export type ClienteWithRelations = z.infer<typeof ClienteWithRelations>;
 
 export const SessioneWithRelations = sessioneDbSchema.extend({
