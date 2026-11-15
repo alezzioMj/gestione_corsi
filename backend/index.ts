@@ -13,6 +13,7 @@ app.use(cors(corsOptions)); // Abilita CORS per tutte le origini
 app.use(express.json());
 
 import clienteRouter from "./routes/clienteRouter";
+import commessaRouter from "./routes/commessaRouter";
 import docenteRoutes from "./routes/docenteRouter"; 
 import sedeRouter from "./routes/sedeRouter";
 import materialeRouter from "./routes/materialeRouter";
@@ -24,6 +25,7 @@ import indisponibilitaRouter from "./routes/indisponibilitaRouter";
 import sessioneRouter from "./routes/sessioneRouter";
 
 app.use('/clienti', clienteRouter);
+app.use('/commesse', commessaRouter);
 app.use('/docenti', docenteRoutes);
 app.use('/sedi', sedeRouter);
 app.use('/materiali', materialeRouter);
