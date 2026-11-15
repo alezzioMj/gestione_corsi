@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build:shared": "npm run build -w shared",
-    "build:backend": "npm run build:shared && npm run build -w backend",
+    "build:backend": "npm run db:generate -w backend && npm run build:shared && npm run build -w backend",
     "build:frontend": "npm run build:shared && npm run build -w frontend"
   },
   "repository": {
