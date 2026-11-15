@@ -104,21 +104,16 @@ export default function SideDrawer() {
       </List>
 
       <Divider sx={{ borderColor: theme.palette.divider, my: 1 }} />
-
-      {/* Sezione Anagrafiche */}
       <Typography variant="overline" sx={{ px: 2.5, pt: 1, display: 'block', color: 'text.secondary' }}>
-        Anagrafiche
+        Gestionale
       </Typography>
       <List>
         {[
           { text: "Commesse", href: "/commesse" },
+          { text: "Corsi", href: "/corsi" },
           { text: "Clienti", href: "/clienti" },
-          { text: "Sedi", href: "/sedi" },
-          { text: "Docenti", href: "/docenti" },
-          { text: "Programmi", href: "/programmi" },
-          { text: "Moduli", href: "/moduli" },
-          { text: "Materiali", href: "/materiali" },
           { text: "Indisponibilità", href: "/indisponibilita" }
+
 
         ].map((item) => {
           // Controlla se il pathname inizia con l'href per evidenziare anche le sottosezioni (es. /sedi/123/aule)
@@ -140,6 +135,40 @@ export default function SideDrawer() {
           );
         })}
       </List>
+
+      {/* Sezione Anagrafiche */}
+      <Typography variant="overline" sx={{ px: 2.5, pt: 1, display: 'block', color: 'text.secondary' }}>
+        Anagrafiche
+      </Typography>
+      <List>
+        {[
+          { text: "Sedi", href: "/sedi" },
+          { text: "Docenti", href: "/docenti" },
+          { text: "Programmi", href: "/programmi" },
+          { text: "Moduli", href: "/moduli" },
+          { text: "Materiali", href: "/materiali" },
+
+        ].map((item) => {
+          // Controlla se il pathname inizia con l'href per evidenziare anche le sottosezioni (es. /sedi/123/aule)
+          const isSelected = pathname.startsWith(item.href);
+          return (
+            <ListItem key={item.text} disablePadding sx={{ mb: 1 }}>
+              <ListItemButton
+                component={Link}
+                href={item.href}
+                selected={isSelected}
+                sx={{
+                  '&:hover': { backgroundColor: theme.palette.action.hover },
+                  ...(isSelected && { backgroundColor: theme.palette.action.selected }),
+                }}
+              >
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
+      </List>
+
     </Drawer>
   );
 }

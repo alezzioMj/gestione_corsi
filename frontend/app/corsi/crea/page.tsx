@@ -30,7 +30,7 @@ async function getDocenti() {
     return res.json();
 }
 
-export default async function CreaCommessaPage() {
+export default async function CreaCorsoPage() {
     // Recuperiamo i dati necessari per popolare le opzioni dello stepper
     const [sedi, programmi, docenti] = await Promise.all([
         getSedi(),
@@ -42,7 +42,7 @@ export default async function CreaCommessaPage() {
         <Container maxWidth="xl" sx={{ py: 4 }}>
             <Box sx={{ mb: 4 }}>
                 <Typography variant="h4" gutterBottom>
-                    Crea Nuova Commessa
+                    Crea Nuovo Corso
                 </Typography>
                 <Typography variant="body1" color="text.secondary">
                     Inserisci i dettagli del corso, associa i docenti e genera automaticamente il calendario delle sessioni.
