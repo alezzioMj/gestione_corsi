@@ -1,70 +1,109 @@
+
 'use client'
 
 import DelayedLoading from "@/components/DelayedLoading";
 import { API_BASE_URL } from "@/lib/config";
 import { fetcher } from "@/lib/swr-config";
+import { useSnackbar } from "@/components/SnackbarContext";
 import { ErrorOutlineOutlined } from "@mui/icons-material";
-import { Box, Button, Container, Divider, MenuItem, TextField, Typography } from "@mui/material"
+import {
+    Box,
+    Button,
+    Container,
+    Divider,
+    MenuItem,
+    TextField,
+    Typography
+} from "@mui/material";
 import { Aula, Docente, Sede } from "@progetto/shared/validation/types";
-import { useState } from "react"
+import { useState } from "react";
 import useSWR from "swr";
-import { da } from "zod/v4/locales";
+
+type Oggetto = "DOCENTE" | "SEDE" | "AULA" | "";
+
+const initialFormData = {
+    docente_cf: "",
+    sede_id: null as number | null,
+    aula_id: null as number | null,
+    data_inizio: "",
+    data_fine: "",
+    ora_inizio: "",
+    ora_fine: "",
+    causale: "",
+    descrizione: ""
+};
 
 export default function IndisponibilitaPage() {
-    type Oggetto = "DOCENTE" | "SEDE" | "AULA" | "";
-
     const [submitting, setSubmitting] = useState(false);
-    const [formData, setFormData] = useState({
-        docente_cf: "",
-        sede_id: null as number | null,
-        aula_id: null as number | null,
-        data_inizio: "",
-        data_fine: "",
-        ora_inizio: "",
-        ora_fine: "",
-        causale: "",
-        descrizione: ""
-    });
+    const [formData, setFormData] = useState(initialFormData);
     const [oggetto, setOggetto] = useState<Oggetto>("");
 
-    const { data: docenti, isLoading: docentiLoading, error: docentiError } = useSWR(`${API_BASE_URL}/docenti`, fetcher);
-    const { data: sedi, isLoading: sediLoading, error: sediError } = useSWR(`${API_BASE_URL}/sedi`, fetcher);
-    const { data: aule, isLoading: auleLoading, error: auleError } = useSWR(`${API_BASE_URL}/aule`, fetcher);
+    const { showMessage } = useSnackbar();
+
+    const {
+        data: docenti,
+        isLoading: docentiLoading,
+        error: docentiError
+    } = useSWR<Docente[]>(`${API_BASE_URL}/docenti`, fetcher);
+
+    const {
+        data: sedi,
+        isLoading: sediLoading,
+        error: sediError
+    } = useSWR<Sede[]>(`${API_BASE_URL}/sedi`, fetcher);
+
+    const {
+        data: aule,
+        isLoading: auleLoading,
+        error: auleError
+    } = useSWR<Aula[]>(`${API_BASE_URL}/aule`, fetcher);
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+        e.preventDefault();
 
-    try {
-        setSubmitting(true);
+        try {
+            setSubmitting(true);
 
-        const payload = {
-            ...formData,
-            docente_cf: oggetto === "DOCENTE" ? formData.docente_cf : null,
-            sede_id: oggetto === "SEDE" ? formData.sede_id : null,
-            aula_id: oggetto === "AULA" ? formData.aula_id : null
-        };
+            const payload = {
+                ...formData,
+                docente_cf: oggetto === "DOCENTE" ? formData.docente_cf : null,
+                sede_id: oggetto === "SEDE" ? formData.sede_id : null,
+                aula_id: oggetto === "AULA" ? formData.aula_id : null
+            };
 
-        const res = await fetch(`${API_BASE_URL}/indisponibilita`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-        });
+            const res = await fetch(`${API_BASE_URL}/indisponibilita`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
 
-        if (!res.ok) {
-            const error = await res.json();
-            throw new Error(error.error || "Errore nell'invio dei dati");
+            if (!res.ok) {
+                const error = await res.json();
+                throw new Error(
+                    error.error || error.message || "Errore nell'invio dei dati."
+                );
+            }
+
+            showMessage("Indisponibilità aggiunta correttamente.", "success");
+
+            setFormData(initialFormData);
+            setOggetto("");
+
+        } catch (error: unknown) {
+            console.error("Errore:", error);
+
+            showMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Errore di rete durante l'invio.",
+                "error"
+            );
+        } finally {
+            setSubmitting(false);
         }
-
-        // Eventuale reset del form
-    } catch (error: unknown) {
-        console.error("Errore:", error);
-        alert(error instanceof Error ? error.message : "Errore di rete.");
-    } finally {
-        setSubmitting(false);
-    }
-};
+    };
 
     const renderOptions = <T,>(
         loading: boolean,
@@ -79,7 +118,9 @@ export default function IndisponibilitaPage() {
             return (
                 <Container>
                     <ErrorOutlineOutlined />
-                    <Typography>Impossibile caricare gli elementi</Typography>
+                    <Typography>
+                        Impossibile caricare gli elementi
+                    </Typography>
                 </Container>
             );
         }
@@ -90,7 +131,6 @@ export default function IndisponibilitaPage() {
             </MenuItem>
         ));
     };
-
 
     return (
         <Container maxWidth="md" sx={{ py: 3 }}>
@@ -106,11 +146,11 @@ export default function IndisponibilitaPage() {
                 }}
             >
                 <Typography variant="h5">
-                    {"Nuova indisponibilità"}
+                    Nuova indisponibilità
                 </Typography>
 
                 <Typography variant="subtitle2" color="primary">
-                    {"Informazioni sull'indisponibilità"}
+                    Informazioni sull'indisponibilità
                 </Typography>
 
                 <Box sx={{
@@ -128,12 +168,12 @@ export default function IndisponibilitaPage() {
                             const value = e.target.value as Oggetto;
                             setOggetto(value);
 
-                            setFormData({
-                                ...formData,
+                            setFormData(prev => ({
+                                ...prev,
                                 docente_cf: "",
                                 sede_id: null,
                                 aula_id: null
-                            });
+                            }));
                         }}
                     >
                         <MenuItem value="DOCENTE">Docente</MenuItem>
@@ -175,14 +215,29 @@ export default function IndisponibilitaPage() {
                     >
                         {
                             oggetto === "DOCENTE"
-                                ? renderOptions(docentiLoading, docentiError, docenti,
-                                    (d: Docente) => d.codice_fiscale, d => d.nome)
+                                ? renderOptions(
+                                    docentiLoading,
+                                    docentiError,
+                                    docenti,
+                                    d => d.codice_fiscale,
+                                    d => d.nome
+                                )
                                 : oggetto === "SEDE"
-                                    ? renderOptions(sediLoading, sediError, sedi,
-                                        (s: Sede) => s.id, s => s.nome)
+                                    ? renderOptions(
+                                        sediLoading,
+                                        sediError,
+                                        sedi,
+                                        s => s.id,
+                                        s => s.nome
+                                    )
                                     : oggetto === "AULA"
-                                        ? renderOptions(auleLoading, auleError, aule,
-                                            (a: Aula) => a.id, a => a.nome)
+                                        ? renderOptions(
+                                            auleLoading,
+                                            auleError,
+                                            aule,
+                                            a => a.id,
+                                            a => a.nome
+                                        )
                                         : null
                         }
                     </TextField>
@@ -205,10 +260,10 @@ export default function IndisponibilitaPage() {
                         label="Data inizio"
                         fullWidth
                         value={formData.data_inizio}
-                        onChange={(e) => setFormData({
-                            ...formData,
+                        onChange={(e) => setFormData(prev => ({
+                            ...prev,
                             data_inizio: e.target.value
-                        })}
+                        }))}
                         slotProps={{ inputLabel: { shrink: true } }}
                     />
 
@@ -218,10 +273,10 @@ export default function IndisponibilitaPage() {
                         label="Data fine"
                         fullWidth
                         value={formData.data_fine}
-                        onChange={(e) => setFormData({
-                            ...formData,
+                        onChange={(e) => setFormData(prev => ({
+                            ...prev,
                             data_fine: e.target.value
-                        })}
+                        }))}
                         slotProps={{ inputLabel: { shrink: true } }}
                     />
 
@@ -231,10 +286,10 @@ export default function IndisponibilitaPage() {
                         label="Ora inizio"
                         fullWidth
                         value={formData.ora_inizio}
-                        onChange={(e) => setFormData({
-                            ...formData,
+                        onChange={(e) => setFormData(prev => ({
+                            ...prev,
                             ora_inizio: e.target.value
-                        })}
+                        }))}
                         slotProps={{ inputLabel: { shrink: true } }}
                     />
 
@@ -244,10 +299,10 @@ export default function IndisponibilitaPage() {
                         label="Ora fine"
                         fullWidth
                         value={formData.ora_fine}
-                        onChange={(e) => setFormData({
-                            ...formData,
+                        onChange={(e) => setFormData(prev => ({
+                            ...prev,
                             ora_fine: e.target.value
-                        })}
+                        }))}
                         slotProps={{ inputLabel: { shrink: true } }}
                     />
                 </Box>
@@ -263,10 +318,10 @@ export default function IndisponibilitaPage() {
                     label="Causale"
                     fullWidth
                     value={formData.causale}
-                    onChange={(e) => setFormData({
-                        ...formData,
+                    onChange={(e) => setFormData(prev => ({
+                        ...prev,
                         causale: e.target.value
-                    })}
+                    }))}
                 />
 
                 <TextField
@@ -275,18 +330,19 @@ export default function IndisponibilitaPage() {
                     multiline
                     minRows={3}
                     value={formData.descrizione}
-                    onChange={(e) => setFormData({
-                        ...formData,
+                    onChange={(e) => setFormData(prev => ({
+                        ...prev,
                         descrizione: e.target.value
-                    })}
+                    }))}
                 />
+
                 <Button
                     disabled={submitting}
                     type="submit"
                     variant="contained"
-                    sx={{ minWidth: '120px' }}
+                    sx={{ minWidth: "120px" }}
                 >
-                    Aggiungi indisponibilità
+                    {submitting ? "Invio in corso..." : "Aggiungi indisponibilità"}
                 </Button>
             </Box>
         </Container>

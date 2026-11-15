@@ -5,7 +5,7 @@ import useSWR from "swr";
 import { Alert, Box, Button, Chip, Container, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { CalendarMonthOutlined } from "@mui/icons-material";
 
-import { Docente } from "@progetto/shared/validation/types";
+import { Aula, Docente, Sede } from "@progetto/shared/validation/types";
 
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
@@ -17,6 +17,7 @@ import { useConfirm } from "@/components/ConfirmContext";
 import { useSnackbar } from "@/components/SnackbarContext";
 import AddSessioneModal from "@/components/Sessioni/AddSessioneModal";
 import DayCellModal from "@/components/ScheduleGrid/DayCellModal";
+import IndisponibilitaModal, { IndisponibilitaConId } from "@/components/ScheduleGrid/IndisponibilitaModal";
 import ScheduleGrid from "@/components/ScheduleGrid/ScheduleGrid";
 import {
     sessioniToRows,
@@ -147,8 +148,44 @@ export default function SessioniPage() {
         return sessioniData.filter((s: { corso_id: number }) => s.corso_id === selectedCellData.rowId);
     }, [selectedCellData, sessioniData]);
 
+    // Indisponibilità della riga cliccata (viste docenti, aule e sedi).
+    // Il filtro per giorno lo fa IndisponibilitaModal.
+    const indispModal = useMemo<IndisponibilitaConId[]>(() => {
+        if (!selectedCellData || vista === "sessioni" || !Array.isArray(indispData)) return [];
+        const { rowId } = selectedCellData;
+
+        return indispData.filter((i: IndisponibilitaConId) => {
+            switch (vista) {
+                case "docenti": return i.docente_cf === rowId;
+                case "aule": return i.aula_id === rowId;
+                case "sedi": return i.sede_id === rowId;
+                default: return false;
+            }
+        });
+    }, [selectedCellData, vista, indispData]);
+
+    // Nome del docente, aula o sede cliccati, mostrato nel titolo del modale
+    const titoloIndispModal = useMemo(() => {
+        if (!selectedCellData) return undefined;
+        const { rowId } = selectedCellData;
+
+        if (vista === "docenti") {
+            const docenti: Docente[] = Array.isArray(docentiData) ? docentiData : [];
+            const d = docenti.find((doc) => doc.codice_fiscale === rowId);
+            return d ? `${d.nome} ${d.cognome}` : undefined;
+        }
+        if (vista === "aule") {
+            const aule: Aula[] = Array.isArray(auleData) ? auleData : [];
+            return aule.find((a) => a.id === rowId)?.nome;
+        }
+        if (vista === "sedi") {
+            const sedi: Sede[] = Array.isArray(sediData) ? sediData : [];
+            return sedi.find((s) => s.id === rowId)?.nome;
+        }
+        return undefined;
+    }, [selectedCellData, vista, docentiData, auleData, sediData]);
+
     const handleCellClick = (dateKey: string, rowId?: CalendarRow["id"]) => {
-        if (vista !== "sessioni") return; // per le indisponibilità non c'è ancora un modal
         setSelectedCellData({ dateKey, rowId });
         setIsModalOpen(true);
     };
@@ -189,6 +226,41 @@ export default function SessioniPage() {
         }
     };
 
+    const handleDeleteIndisponibilita = async (indisponibilitaId: number) => {
+        const ok = await confirm({
+            title: "Elimina indisponibilità",
+            message: "Sei sicuro di voler eliminare questa indisponibilità?",
+            cancelText: "Annulla",
+            confirmText: "Elimina",
+            confirmColor: "error",
+        });
+        if (!ok) return;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/indisponibilita/${indisponibilitaId}`, {
+                method: "DELETE",
+            });
+            if (!res.ok) {
+                const errorData = await res.json().catch(() => ({}));
+                throw new Error(
+                    errorData.error ||
+                    errorData.message ||
+                    `Errore durante l'eliminazione dell'indisponibilità: ${res.statusText}`
+                );
+            }
+            // Aggiorna la cache SWR: la griglia e il modale si aggiornano da soli
+            indispMutate();
+            showMessage("Indisponibilità eliminata con successo!");
+        } catch (error) {
+            if (!(error instanceof Error)) {
+                console.error("Errore sconosciuto nell'eliminazione dell'indisponibilità:", error);
+                return;
+            }
+            showMessage(`Errore: ${error.message}`);
+            console.error("Errore nell'eliminazione dell'indisponibilità:", error);
+        }
+    };
+
     const retry = () => {
         corsiMutate();
         docentiMutate();
@@ -207,13 +279,24 @@ export default function SessioniPage() {
     return (
         <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
             {selectedCellData && (
-                <DayCellModal
-                    open={isModalOpen}
-                    onClose={handleCloseModal}
-                    giorno={dateFromKey(selectedCellData.dateKey)}
-                    sessioni={sessioniModal}
-                    onDeleteSessione={handleDeleteSessione}
-                />
+                vista === "sessioni" ? (
+                    <DayCellModal
+                        open={isModalOpen}
+                        onClose={handleCloseModal}
+                        giorno={dateFromKey(selectedCellData.dateKey)}
+                        sessioni={sessioniModal}
+                        onDeleteSessione={handleDeleteSessione}
+                    />
+                ) : (
+                    <IndisponibilitaModal
+                        open={isModalOpen}
+                        onClose={handleCloseModal}
+                        dateKey={selectedCellData.dateKey}
+                        titolo={titoloIndispModal}
+                        indisponibilita={indispModal}
+                        onDelete={handleDeleteIndisponibilita}
+                    />
+                )
             )}
 
             <Box sx={{ mb: 4 }}>
