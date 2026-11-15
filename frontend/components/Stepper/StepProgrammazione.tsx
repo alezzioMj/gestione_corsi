@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import { useMemo } from "react";
 import { Box, Typography, Paper, Button, FormControl, InputLabel, Select, MenuItem, FormHelperText, OutlinedInput } from "@mui/material";
 import { AddCircleOutlineOutlined, RemoveCircleOutlineOutlined } from "@mui/icons-material";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
@@ -105,37 +105,36 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
     const selectedProgramId = watch("programmi");
     const moduliOrdinati: string[] = watch("moduliOrdinati") || [];
 
-    React.useEffect(() => {
-        const program = programmi.find(p => p.id === selectedProgramId);
-        const currentOreTotali = getValues("oreTotali");
-        const currentNome = getValues("nome");
+    // Applica i valori di default del programma solo quando l'utente lo cambia.
+    // Fatto qui e non in un useEffect, altrimenti al ritorno sullo step
+    // (il componente viene rimontato) l'ordine dei moduli verrebbe azzerato.
+    const handleProgramChange = (programId: number) => {
+        const program = programmi.find(p => p.id === programId);
 
-        if (program) {
-            // Auto-popola il nome del corso se è vuoto
-            if (!currentNome) {
-                setValue("nome", program.titolo, { shouldValidate: true });
-            }
+        setValue("programmi", programId, { shouldValidate: true, shouldDirty: true });
 
-            // If the current oreTotali is less than the program's duration, enforce the minimum
-            if (currentOreTotali < program.durata_totale) {
-                setValue("oreTotali", program.durata_totale, { shouldValidate: true });
-            }
-            // Initialize moduliOrdinati with the default order from the program
-            // Se un modulo ha n_ripetizioni > 1, viene aggiunto più volte
-            const moduleIds: string[] = [];
-            program.programma_modulo.forEach(pm => {
-                for (let i = 0; i < (pm.n_ripetizioni || 1); i++) {
-                    moduleIds.push(`${pm.modulo_id}-${i}`);
-                }
-            });
-            setValue("moduliOrdinati", moduleIds);
-            // If currentOreTotali is already greater or equal, do nothing, allow user to keep higher value
-        } else if (selectedProgramId === 0 && currentOreTotali !== 0) {
-            // If no program is selected (id 0) and oreTotali is not 0, reset it
+        if (!program) {
             setValue("oreTotali", 0, { shouldValidate: true });
             setValue("moduliOrdinati", []);
+            return;
         }
-    }, [selectedProgramId, programmi, setValue, getValues]); // getValues is stable, so it won't cause re-renders
+
+        // Auto-popola il nome del corso se e' vuoto
+        if (!getValues("nome")) {
+            setValue("nome", program.titolo, { shouldValidate: true });
+        }
+
+        setValue("oreTotali", program.durata_totale, { shouldValidate: true });
+
+        // Ordine di default del programma; con n_ripetizioni > 1 il modulo compare piu' volte
+        const moduleIds: string[] = [];
+        program.programma_modulo.forEach(pm => {
+            for (let i = 0; i < (pm.n_ripetizioni || 1); i++) {
+                moduleIds.push(`${pm.modulo_id}-${i}`);
+            }
+        });
+        setValue("moduliOrdinati", moduleIds);
+    };
 
 
     const selectedProgram = useMemo(() =>
@@ -166,8 +165,7 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
 
     // Handles generating a unique ID and appending a new instance of the module
     const handleAddModuloInstance = (moduloId: number) => {
-        const existingInstancesCount = moduliOrdinati.filter(id => id.startsWith(`${moduloId}-`)).length;
-        const newUniqueId = `${moduloId}-${crypto.randomUUID()}`;;
+        const newUniqueId = `${moduloId}-${crypto.randomUUID()}`;
 
         setValue("moduliOrdinati", [...moduliOrdinati, newUniqueId], {
             shouldValidate: true,
@@ -232,6 +230,7 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
                             label="Programmi"
                             {...field}
                             value={field.value || ""}
+                            onChange={(e) => handleProgramChange(Number(e.target.value))}
                         >
                             {programmi.map((p) => (
                                 <MenuItem key={p.id} value={p.id}> {/* Invia l'ID del programma */}

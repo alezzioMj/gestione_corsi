@@ -26,7 +26,7 @@ import {
 
 import StepDocenti from "./StepDocenti";
 import StepReview from "./StepReview";
-import StepForm from "./StepForm";
+import StepForm, { CommessaOption } from "./StepForm";
 import { useSnackbar } from "../SnackbarContext";
 import { ApiErrorBody } from "@progetto/shared/validation/types";
 
@@ -35,10 +35,11 @@ const StepProgrammazione = dynamic(
     { ssr: false }
 );
 
-export default function MyStepper({ sedi, programmi, docenti }: {
+export default function MyStepper({ sedi, programmi, docenti, commesse }: {
     sedi: SedeFormInput[],
     programmi: ProgrammaConModuli[],
-    docenti: DocenteConModuli[]
+    docenti: DocenteConModuli[],
+    commesse: CommessaOption[]
 }) {
     const steps = ["Anagrafica corso", "Programmazione", "Docenti", "Conferma"];
 
@@ -86,7 +87,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
     const methods = useForm<FormType>({
         resolver: zodResolver(dynamicSchema),
         defaultValues: {
-            cliente: "",
+            commessa_id: 0,
             nome: "",
             sedi: [],
             programmi: 0,
@@ -114,7 +115,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
             const corsoId = await creaCorsoCompleto({
                 corsoData: {
                     nome: data.nome,
-                    cliente: data.cliente,
+                    commessa_id: data.commessa_id,
                     programma_id: data.programmi,
                     n_ore: data.oreTotali,
                     inizio: data.dataInizio,
@@ -148,7 +149,7 @@ export default function MyStepper({ sedi, programmi, docenti }: {
         let fieldsToValidate: (keyof FormType)[] = [];
 
         if (activeStep === 0) {
-            fieldsToValidate = ["nome", "cliente", "sedi", "dataInizio", "dataFine"];
+            fieldsToValidate = ["nome", "commessa_id", "sedi", "dataInizio", "dataFine"];
         } else if (activeStep === 1) {
             fieldsToValidate = ["moduliOrdinati", "programmi", "oreTotali"];
 
@@ -188,10 +189,11 @@ export default function MyStepper({ sedi, programmi, docenti }: {
                 <Box sx={{ mt: 3 }}>
                     {activeStep === 0 && <StepForm
                         sedi={sedi}
+                        commesse={commesse}
                     />}
                     {activeStep === 1 && <StepProgrammazione programmi={programmi} />}
                     {activeStep === 2 && <StepDocenti docenti={docenti}></StepDocenti>}
-                    {activeStep === 3 && <StepReview docenti={docenti} programmi={programmi} />}
+                    {activeStep === 3 && <StepReview docenti={docenti} programmi={programmi} commesse={commesse} />}
                 </Box>
 
                 {/* BOTTONI */}

@@ -26,7 +26,7 @@ async function postJson<T>(url: string, body: unknown): Promise<T> {
 
 export interface CorsoData {
     nome: string;
-    cliente: string;
+    commessa_id: number;
     programma_id: number;
     n_ore: number;
     inizio: string;

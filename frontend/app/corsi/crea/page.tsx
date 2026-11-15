@@ -18,6 +18,14 @@ async function getProgrammi() {
     return res.json();
 }
 
+async function getCommesse() {
+    const res = await fetch(`${API_BASE_URL}/commesse`, { cache: "no-store" });
+    if (!res.ok) {
+        throw new Error(`Errore durante il recupero delle commesse: ${res.statusText}`);
+    }
+    return res.json();
+}
+
 async function getDocenti() {
     const url = `${API_BASE_URL}/docenti`;
     console.log("DEBUG: Tentativo di fetch su:", url); // Questo apparirà nel terminale di VS Code, non nel browser!
@@ -32,10 +40,11 @@ async function getDocenti() {
 
 export default async function CreaCorsoPage() {
     // Recuperiamo i dati necessari per popolare le opzioni dello stepper
-    const [sedi, programmi, docenti] = await Promise.all([
+    const [sedi, programmi, docenti, commesse] = await Promise.all([
         getSedi(),
         getProgrammi(),
         getDocenti(),
+        getCommesse(),
     ]);
 
     return (
@@ -50,7 +59,7 @@ export default async function CreaCorsoPage() {
             </Box>
 
             <Paper variant="outlined" sx={{ p: { xs: 2, md: 4 }, borderRadius: 2 }}>
-                <MyStepper sedi={sedi} programmi={programmi} docenti={docenti} />
+                <MyStepper sedi={sedi} programmi={programmi} docenti={docenti} commesse={commesse} />
             </Paper>
         </Container>
     );

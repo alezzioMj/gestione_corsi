@@ -11,11 +11,20 @@ import dayjs from "dayjs";
 import { SedeFormInput } from "@progetto/shared/validation/types";
 import { FormType } from "@/validation/corso-form.schema";
 
+// Commessa come arriva da GET /commesse (con il cliente incluso)
+export type CommessaOption = {
+    id: number;
+    codice_commessa: string;
+    cliente?: { ragione_sociale: string } | null;
+};
+
 export default function StepForm({
     sedi,
+    commesse,
 }: {
     sedi: SedeFormInput[];
-    }) {
+    commesse: CommessaOption[];
+}) {
     
     const { control, formState: { errors } } = useFormContext<FormType>();
     
@@ -38,16 +47,25 @@ export default function StepForm({
             />
 
             <Controller
-                name="cliente"
+                name="commessa_id"
                 control={control}
                 render={({ field }) => (
-                    <FormControl variant="outlined" fullWidth margin="normal" error={!!errors.cliente}>
-                        <InputLabel>Cliente</InputLabel>
-                        <OutlinedInput
-                            label="Cliente"
+                    <FormControl variant="outlined" fullWidth margin="normal" error={!!errors.commessa_id}>
+                        <InputLabel id="commessa-label">Commessa</InputLabel>
+                        <Select
+                            labelId="commessa-label"
+                            label="Commessa"
                             {...field}
-                        />
-                        {errors.cliente && <FormHelperText>{errors.cliente.message}</FormHelperText>}
+                            value={field.value || ""}
+                        >
+                            {commesse.map((c) => (
+                                <MenuItem key={c.id} value={c.id}>
+                                    {c.codice_commessa}
+                                    {c.cliente ? ` - ${c.cliente.ragione_sociale}` : ""}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                        {errors.commessa_id && <FormHelperText>{errors.commessa_id.message}</FormHelperText>}
                     </FormControl>
                 )}
             />

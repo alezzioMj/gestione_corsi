@@ -3,7 +3,7 @@ import { Docente, Programma } from "@progetto/shared/validation/types";
 
 export const formSchema = z.object({
     nome: z.string().min(1, "Il nome del corso è obbligatorio"),
-    cliente: z.string().min(1, "Il cliente è obbligatorio"),
+    commessa_id: z.number().int().positive("Seleziona una commessa"),
     sedi: z.array(z.string()).min(1, "Seleziona almeno una sede"),
     programmi: z.number().min(1, "Seleziona un programma"),
     docenti: z.array(z.string()).min(1, "Seleziona almeno un docente"),
