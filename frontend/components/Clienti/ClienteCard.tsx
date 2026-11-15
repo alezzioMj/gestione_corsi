@@ -128,7 +128,6 @@ export default function ClienteCard({
 
                     <Divider />
 
-                    {/* Azioni */}
                     <Stack
                         sx={{
                             direction: "row",

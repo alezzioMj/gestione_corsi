@@ -1,4 +1,3 @@
-
 import {
     Box,
     Button,
@@ -20,6 +19,7 @@ import {
 import { useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import SedeForm, { SedeFormData, ContattoForm } from "./SedeForm";
+import { useSnackbar } from "../SnackbarContext";
 
 interface ClientiModalProps {
     open: boolean;
@@ -73,7 +73,7 @@ export default function ClientiModal({
         email: null,
         telefono: null
     });
-    
+
     const aggiungiSede = () => {
         setForm(prev => ({
             ...prev,
@@ -82,13 +82,10 @@ export default function ClientiModal({
     };
 
     const rimuoviSede = (index: number) => {
-        setForm(prev => prev.sedi.length > 1
-            ? {
-                ...prev,
-                sedi: prev.sedi.filter((_, i) => i !== index)
-            }
-            : prev
-        );
+        setForm(prev => ({
+            ...prev,
+            sedi: prev.sedi.filter((_, i) => i !== index)
+        }));
     };
 
     const aggiornaSede = (
@@ -103,6 +100,19 @@ export default function ClientiModal({
                     ? { ...sede, [campo]: valore }
                     : sede
             )
+        }));
+    };
+
+    // Una sola sede legale per cliente: impostandone una, le altre diventano operative
+    const impostaLegale = (index: number, legale: boolean) => {
+        setForm(prev => ({
+            ...prev,
+            sedi: prev.sedi.map((sede, i): SedeFormData => {
+                if (i === index) {
+                    return { ...sede, tipo: legale ? "LEGALE" : "OPERATIVA" };
+                }
+                return legale ? { ...sede, tipo: "OPERATIVA" } : sede;
+            })
         }));
     };
 
@@ -253,6 +263,7 @@ export default function ClientiModal({
                                 sede={sede}
                                 index={index}
                                 onChange={aggiornaSede}
+                                onSetLegale={impostaLegale}
                                 onRemove={rimuoviSede}
                                 onAddContatto={aggiungiContatto}
                                 onRemoveContatto={rimuoviContatto}

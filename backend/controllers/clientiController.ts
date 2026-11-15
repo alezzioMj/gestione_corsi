@@ -191,9 +191,48 @@ const updateCliente = async (req: express.Request, res: express.Response) => {
 };
 
 
-const deleteCliente = async (req: express.Request, red: express.Response) => {
+const deleteCliente = async (req: express.Request, res: express.Response) => {
+    try {
+        const id = Number(req.params.id);
 
-}
+        const cliente = await prisma.cliente.findUnique({
+            where: { id },
+            include: {
+                _count: {
+                    select: {
+                        commesse: true
+                    }
+                }
+            }
+        });
+
+        if (!cliente) {
+            return res.status(404).json({
+                message: "Cliente non trovato."
+            });
+        }
+
+        if (cliente._count.commesse > 0) {
+            return res.status(409).json({
+                message: "Impossibile eliminare il cliente: è associato a una o più commesse."
+            });
+        }
+
+        await prisma.cliente.delete({
+            where: { id }
+        });
+
+        return res.status(200).json({
+            message: "Cliente eliminato correttamente."
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({
+            message: "Errore durante l'eliminazione del cliente."
+        });
+    }
+};
 
 export {
     createCliente,

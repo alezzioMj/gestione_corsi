@@ -4,7 +4,10 @@ import {
     AccordionSummary,
     Box,
     Button,
+    Checkbox,
+    Chip,
     Divider,
+    FormControlLabel,
     IconButton,
     Paper,
     TextField,
@@ -44,6 +47,7 @@ interface SedeFormProps {
     index: number;
     onChange: (index: number, campo: string, valore: string) => void;
     onRemove: (index: number) => void;
+    onSetLegale: (index: number, legale: boolean) => void;
     onAddContatto: (index: number) => void;
     onRemoveContatto: (indexSede: number, indexContatto: number) => void;
     onChangeContatto: (
@@ -55,7 +59,7 @@ interface SedeFormProps {
 }
 
 export default function SedeForm({
-    sede, index, onChange, onRemove,
+    sede, index, onChange, onRemove, onSetLegale,
     onAddContatto, onRemoveContatto, onChangeContatto
 }: SedeFormProps) {
 
@@ -63,10 +67,16 @@ export default function SedeForm({
         <Accordion defaultExpanded>
             <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                 <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%", pr: 1 }}>
-                    <Typography sx={{ fontWeight: 600 }}>
-                        {sede.nome || `Sede ${index + 1}`}
-                        {sede.citta && ` - ${sede.citta}`}
-                    </Typography>
+                    <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+                        <Typography sx={{ fontWeight: 600 }}>
+                            {sede.nome || `Sede ${index + 1}`}
+                            {sede.citta && ` - ${sede.citta}`}
+                        </Typography>
+
+                        {sede.tipo === "LEGALE" && (
+                            <Chip size="small" color="primary" label="Legale" />
+                        )}
+                    </Box>
 
                     <Tooltip title="Rimuovi sede">
                         <IconButton
@@ -120,6 +130,16 @@ export default function SedeForm({
                             onChange={e => onChange(index, "provincia", e.target.value)}
                         />
                     </Box>
+
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={sede.tipo === "LEGALE"}
+                                onChange={e => onSetLegale(index, e.target.checked)}
+                            />
+                        }
+                        label="Sede legale"
+                    />
 
                     <Divider />
 

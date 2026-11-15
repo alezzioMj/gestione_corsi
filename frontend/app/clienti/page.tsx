@@ -9,16 +9,23 @@ import { fetcher } from "@/lib/swr-config";
 import useSWR from "swr";
 import ClienteCard from "@/components/Clienti/ClienteCard";
 import { ClienteWithRelations } from "@progetto/shared/validation/types";
+import ClienteDrawer from "@/components/Clienti/ClienteDrawer";
+import { useSnackbar } from "@/components/SnackbarContext";
+import { useConfirm } from "@/components/ConfirmContext";
 
 export default function ClientiPage() {
     const [open, setOpen] = useState(false);
     const [clienteSelezionato, setClienteSelezionato] =
         useState<ClienteWithRelations | undefined>(undefined);
-
     const { data, isLoading, error, mutate } = useSWR<ClienteWithRelations[]>(
         `${API_BASE_URL}/clienti`,
         fetcher
     );
+    const [clienteDettaglio, setClienteDettaglio] =
+        useState<ClienteWithRelations | undefined>();
+    const [drawerOpen, setDrawerOpen] = useState(false);
+    const { showMessage } = useSnackbar();
+    const { confirm } = useConfirm();
 
     return (
         <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
@@ -96,11 +103,43 @@ export default function ClientiPage() {
                                     setClienteSelezionato(cliente);
                                     setOpen(true);
                                 }}
-                                onDelete={() => {
-                                    // Lo implementiamo successivamente
+                                onDelete={async () => {
+                                    const confirmed = await confirm({
+                                        title: "Elimina cliente",
+                                        message: `Sei sicuro di voler eliminare ${cliente.ragione_sociale}?`,
+                                        confirmText: "Elimina",
+                                        cancelText: "Annulla",
+                                        confirmColor: "error"
+                                    });
+
+                                    if (!confirmed) return;
+
+                                    try {
+                                        const response = await fetch(
+                                            `${API_BASE_URL}/clienti/${cliente.id}`,
+                                            { method: "DELETE" }
+                                        );
+
+                                        const result = await response.json();
+
+                                        if (!response.ok) {
+                                            showMessage(
+                                                result.message || "Errore durante l'eliminazione del cliente.",
+                                                "error"
+                                            );
+                                            return;
+                                        }
+
+                                        showMessage("Cliente eliminato correttamente.", "success");
+                                        mutate();
+
+                                    } catch {
+                                        showMessage("Errore di connessione al server.", "error");
+                                    }
                                 }}
                                 onClick={() => {
-                                    // Eventuale pagina di dettaglio
+                                    setClienteDettaglio(cliente);
+                                    setDrawerOpen(true);
                                 }}
                             />
                         </Grid>
@@ -114,7 +153,11 @@ export default function ClientiPage() {
                     Nessun cliente presente.
                 </Typography>
             )}
-
+            <ClienteDrawer
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                cliente={clienteDettaglio}
+            />
         </Container>
     );
 }
