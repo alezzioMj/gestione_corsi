@@ -1,12 +1,12 @@
 import express from "express";
 const commessaRouter = express.Router();
 import { validate } from "../middlewares/validate";
-import { createCliente, deleteCliente, getClienti, updateCliente } from "../controllers/clientiController";
-import { createCorso, getCorsi } from "../controllers/corsoController";
-import { createCommessaSchema } from "@progetto/shared/validation/commessa.schema";
+import { createCommessaSchema, updateCommessaSchema } from "@progetto/shared/validation/commessa.schema";
+import { createCommessa, deleteCommessa, getCommesse, updateCommessa } from "../controllers/commessaController";
 
-commessaRouter.get('/', getCorsi);
-commessaRouter.post('/', validate(createCommessaSchema), createCorso);
-commessaRouter.delete('/:id', deleteCliente);
+commessaRouter.get('/', getCommesse);
+commessaRouter.post('/', validate(createCommessaSchema), createCommessa);
+commessaRouter.put('/:id', validate(updateCommessaSchema), updateCommessa);
+commessaRouter.delete('/:id', deleteCommessa);
 
 export default commessaRouter;
