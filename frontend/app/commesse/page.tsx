@@ -1,7 +1,7 @@
 
 "use client";
 
-import { Box, Typography, Button, Alert, Container } from "@mui/material";
+import { Box, Typography, Button, Alert, Container, Stack } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import EmptyState from "@/components/EmptyState";
@@ -9,22 +9,83 @@ import DelayedLoading from "@/components/DelayedLoading";
 import { API_BASE_URL } from "@/lib/config";
 import { fetcher } from "@/lib/swr-config";
 import useSWR from 'swr';
-import CommesseModal from "@/components/Commesse/CommesseModal";
+import CommesseModal from "@/components/Commesse/CommessaModal";
 import { CommessaSchema } from "@progetto/shared/validation/types";
 import { useState } from "react";
+import CommessaCard from "@/components/Commesse/CommessaCard";
+import { useSnackbar } from "@/components/SnackbarContext";
+import { useConfirm } from "@/components/ConfirmContext";
+
+const STATI = [
+    { value: "APERTA", label: "Commesse aperte" },
+    { value: "IN_CORSO", label: "Commesse in corso" },
+    { value: "CHIUSA", label: "Commesse chiuse" },
+    { value: "ANNULLATA", label: "Commesse annullate" },
+] as const;
 
 export default function CommessePage() {
     const [open, setOpen] = useState(false);
     const [commessaSelezionata, setcommessaSelezionata] =
         useState<CommessaSchema | undefined>(undefined);
-
-    // TODO: Connect SWR to the commesse endpoint
-
     const { data, isLoading, error, mutate } = useSWR(`${API_BASE_URL}/commesse`, fetcher);
+    const { showMessage } = useSnackbar();
+    const { confirm } = useConfirm();
 
-    const handleRetry = () => {
-        // TODO: Retry loading commesse
+    const handleDelete = async (c: CommessaSchema) => {
+        const confirmed = await confirm({
+            title: "Eliminare commessa?",
+            message: `Sei sicuro di voler eliminare la commessa "${c.codice_commessa}"?`,
+            confirmText: "Elimina",
+            cancelText: "Annulla",
+            confirmColor: "error"
+        });
+
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch(`${API_BASE_URL}/commesse/${c.id}`, {
+                method: "DELETE"
+            });
+
+            if (!res.ok) {
+                const data = await res.json().catch(() => null);
+
+                throw new Error(
+                    data?.error ||
+                    data?.message ||
+                    "Errore durante l'eliminazione della commessa"
+                );
+            }
+
+            await mutate();
+
+            showMessage("Commessa eliminata con successo");
+        } catch (error) {
+            console.error(error);
+
+            showMessage(
+                error instanceof Error
+                    ? error.message
+                    : "Errore durante l'eliminazione della commessa"
+            );
+        }
     };
+
+    const handleEdit = (c: CommessaSchema) => {
+        setcommessaSelezionata(c);
+        setOpen(true);
+    }
+
+    const handleSubmit = () => {
+        mutate();
+        setcommessaSelezionata(undefined);
+        setOpen(false);
+    }
+
+    const handleClose = () => {
+        setcommessaSelezionata(undefined);
+        setOpen(false);
+    }
 
     return (
         <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
@@ -69,7 +130,6 @@ export default function CommessePage() {
                         <Button
                             color="inherit"
                             size="small"
-                            onClick={handleRetry}
                         >
                             Riprova
                         </Button>
@@ -83,26 +143,50 @@ export default function CommessePage() {
             {isLoading ? (
                 <DelayedLoading />
             ) : data.length === 0 ? (
-
-                /* Empty state */
                 <EmptyState
                     icon={WorkOutlineIcon}
                     title="Nessuna commessa trovata"
                     description="Inizia creando una nuova commessa."
                 />
-
             ) : (
+                <Stack spacing={4}>
+                    {STATI.map(stato => {
+                        const commesseFiltrate = data.filter(
+                            c => c.stato === stato.value
+                        );
 
-                /* Commesse list */
-                <Box>
-                    <Typography variant="h5" sx={{ mb: 2 }}>
-                        Commesse esistenti
-                    </Typography>
+                        if (commesseFiltrate.length === 0) return null;
 
-                    {/* TODO: Render commesse */}
-                </Box>
+                        return (
+                            <Box key={stato.value}>
+                                <Typography variant="h5" sx={{ mb: 2 }}>
+                                    {stato.label}
+                                </Typography>
+
+                                <Stack spacing={2}>
+                                    {commesseFiltrate.map(c => (
+                                        <CommessaCard
+                                            key={c.id}
+                                            commessa={c}
+                                            onDelete={() => handleDelete(c)}
+                                            onEdit={() => handleEdit(c)}
+                                        />
+                                    ))}
+                                </Stack>
+                            </Box>
+                        );
+                    })}
+                </Stack>
             )}
-            <CommesseModal open={open} onClose={() => 1} onSuccess={() => 1}></CommesseModal>
+            <CommesseModal
+                key={commessaSelezionata?.id}
+                commessa={commessaSelezionata}
+                open={open}
+                onClose={() => handleClose()}
+                onSuccess={() => handleSubmit()}
+            >
+
+            </CommesseModal>
         </Container>
     );
 }
