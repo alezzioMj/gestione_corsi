@@ -12,6 +12,7 @@ import { indisponibilitaSchema } from './indisponibilita.schema';
 import { clienteSchema } from './cliente.schema';
 import { sedeClienteSchema } from './sedecliente.schema';
 import { contattoSchema } from './contatto.schema';
+import { commessaSchema } from './commessa.schema';
 
 // Schema per l'INVIO (Input dal form/frontend)
 export type CorsoFormInput = z.infer<typeof corsoSchema>;
@@ -69,9 +70,11 @@ export const apiErrorSchema = z.object({
 export type ApiErrorData = z.infer<typeof apiErrorSchema>;
 
 // Esportazione dei tipi derivati dagli schemi DB
-export type Corso = z.infer<typeof corsoDbSchema>;
-export type Contatto = z.infer<typeof contattoSchema>
+
 export type Cliente = z.infer<typeof clienteSchema>
+export type Corso = z.infer<typeof corsoDbSchema>;
+export type CommessaSchema = z.infer<typeof commessaSchema>;
+export type Contatto = z.infer<typeof contattoSchema>
 export type Programma = z.infer<typeof programmaDbSchema>;
 export type Aula = z.infer<typeof aulaDbSchema>;
 export type Docente = z.infer<typeof docenteDbSchema>;
