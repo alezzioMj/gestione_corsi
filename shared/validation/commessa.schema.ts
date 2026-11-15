@@ -1,5 +1,11 @@
 import { z } from "zod";
-import { stato_commessa } from "@prisma/client";
+
+export const statiCommessa = [
+  "APERTA",
+  "IN_CORSO",
+  "CHIUSA",
+  "ANNULLATA"
+] as const;
 
 export const commessaSchema = z.object({
   id: z.number().int(),
@@ -8,8 +14,7 @@ export const commessaSchema = z.object({
   codice_rlom: z.string().max(255).nullable().optional(),
   descrizione: z.string().nullable().optional(),
   scadenza: z.coerce.date().nullable().optional(),
-  cliente_id: z.number().int().nullable().optional(),
-  stato: z.enum(stato_commessa).optional(), // default APERTA lato DB
+  cliente_id: z.number().int().nullable().optional(),stato: z.enum(statiCommessa).optional(),
 });
 
 // Per la creazione l'id non c'è (autoincrement)
