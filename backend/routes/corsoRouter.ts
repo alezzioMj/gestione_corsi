@@ -7,7 +7,7 @@ import { corsoSchema } from "@progetto/shared/validation/corso.schema";
 import {
   getCorsi,
   getCorso,
-  createCorso,
+  createCorsoCompleto,
   updateCorso,
   deleteCorso,
   getDocenti,
@@ -24,7 +24,7 @@ import { getDocentiByModulo } from "../controllers/corsoController";
 corsiRouter.get("/", getCorsi);
 corsiRouter.get("/:id", getCorso);
 
-corsiRouter.post("/", validate(corsoSchema), createCorso);
+corsiRouter.post("/", validate(corsoSchema), createCorsoCompleto);
 corsiRouter.put("/:id", validate(corsoSchema), updateCorso);
 corsiRouter.delete("/:id", deleteCorso);
 

@@ -1,33 +1,49 @@
 import { prisma } from "../prisma";
 import express from "express";
 
-
 const getCorsi = async (req: express.Request, res: express.Response) => {
-  try {
-    const corsi = await prisma.corso.findMany();
-    res.json(corsi);
-  } catch (error) {
-    console.error("Errore nel recupero dei corsi:", error);
-    res.status(500).send("Errore del server");
-  }
+    try {
+        const corsi = await prisma.corso.findMany({
+            include: {
+                commessa: {
+                    include: {
+                        cliente: true
+                    }
+                }
+            }
+        });
+
+        res.json(corsi);
+    } catch (error) {
+        console.error("Errore nel recupero dei corsi:", error);
+        res.status(500).send("Errore del server");
+    }
 };
 
 const getCorso = async (req: express.Request, res: express.Response) => {
-  try {
-    const id = Number(req.params.id);
-    const corso = await prisma.corso.findUnique({
-      where: { id },
-    });
+    try {
+        const id = Number(req.params.id);
 
-    if (!corso) {
-      return res.status(404).send("Corso non trovato");
+        const corso = await prisma.corso.findUnique({
+            where: { id },
+            include: {
+                commessa: {
+                    include: {
+                        cliente: true
+                    }
+                }
+            }
+        });
+
+        if (!corso) {
+            return res.status(404).send("Corso non trovato");
+        }
+
+        res.json(corso);
+    } catch (error) {
+        console.error("Errore nel recupero del corso:", error);
+        res.status(500).send("Errore del server");
     }
-
-    res.json(corso);
-  } catch (error) {
-    console.error("Errore nel recupero del corso:", error);
-    res.status(500).send("Errore del server");
-  }
 };
 
 interface CreateCorsoBody {
@@ -42,150 +58,128 @@ interface CreateCorsoBody {
   pomeriggio_inizio: string;
   pomeriggio_fine: string;
 }
-
-const createCorso = async (req: express.Request, res: express.Response) => {
-  try {
-    const {
-      nome,
-      cliente_id,
-      programma_id,
-      n_ore,
-      inizio,
-      fine,
-      mattina_inizio,
-      mattina_fine,
-      pomeriggio_inizio,
-      pomeriggio_fine
-    } = req.body;
-
-    const corso = await prisma.corso.create({
-      data: {
-        nome, // Includi il nome
-        cliente_id,
-        programma_id,
-        n_ore,
-        inizio,
-        fine,
-        mattina_inizio,
-        mattina_fine,
-        pomeriggio_inizio,
-        pomeriggio_fine
-      }
-    });
-
-    res.status(201).json(corso);
-  } catch (err: any) {
-    console.error({
-      message: "Errore nella creazione del corso",
-      error: err,
-    });
-    if (err.code === "P2002") {
-      return res.status(400).json({ error: "Il corso esiste già" });
-    }
-    res.status(500).json({ error: "Errore creazione corso" });
-  }
-};
+interface CreateCorsoBody {
+    nome: string;
+    commessa_id: number;
+    programma_id: number;
+    n_ore: number;
+    inizio: string | Date;
+    fine: string | Date;
+    mattina_inizio: string;
+    mattina_fine: string;
+    pomeriggio_inizio: string;
+    pomeriggio_fine: string;
+}
 
 const createCorsoCompleto = async (req: express.Request, res: express.Response) => {
-  try {
-    const {
-      ragione_sociale,
-      partita_iva,
-      sede_legale,
-      agente_id,
-      nome,
-      programma_id,
-      n_ore,
-      inizio,
-      fine,
-      mattina_inizio,
-      mattina_fine,
-      pomeriggio_inizio,
-      pomeriggio_fine
-    } = req.body;
+    try {
+        const {
+            nome,
+            commessa_id,
+            programma_id,
+            n_ore,
+            inizio,
+            fine,
+            mattina_inizio,
+            mattina_fine,
+            pomeriggio_inizio,
+            pomeriggio_fine
+        } = req.body as CreateCorsoBody;
 
-    const result = await prisma.$transaction(async (tx) => {
-      const cliente = await prisma.cliente.create({
-        data: {
-          ragione_sociale,
-          partita_iva,
-          sede_legale,
-          agente_id,
-        }
-      });
-      const cliente_id = cliente.id;
-      const corso = await prisma.corso.create({
-        data: {
-          cliente_id,
-          nome, // Includi il nome
-          programma_id,
-          n_ore,
-          inizio,
-          fine,
-          mattina_inizio,
-          mattina_fine,
-          pomeriggio_inizio,
-          pomeriggio_fine
-        }
-      })
-      return { cliente, corso }
-    })
+        const corso = await prisma.corso.create({
+            data: {
+                nome,
+                commessa_id,
+                programma_id,
+                n_ore,
+                inizio,
+                fine,
+                mattina_inizio,
+                mattina_fine,
+                pomeriggio_inizio,
+                pomeriggio_fine
+            },
+            include: {
+                commessa: {
+                    include: {
+                        cliente: true
+                    }
+                }
+            }
+        });
 
-    res.status(201).json(result);
-  } catch (err: any) {
-    console.error({
-      message: "Errore nella creazione del corso",
-      error: err,
-    });
-    if (err.code === "P2002") {
-      return res.status(400).json({ error: "Il corso esiste già" });
+        res.status(201).json(corso);
+    } catch (err: any) {
+        console.error("Errore nella creazione del corso:", err);
+
+        if (err.code === "P2002") {
+            return res.status(400).json({ error: "Il corso esiste già" });
+        }
+
+        if (err.code === "P2003") {
+            return res.status(400).json({ error: "La commessa o il programma selezionato non esiste" });
+        }
+
+        res.status(500).json({ error: "Errore creazione corso" });
     }
-    res.status(500).json({ error: "Errore creazione corso" });
-  }
 };
 
 type UpdateCorsoBody = Partial<CreateCorsoBody>;
 
 const updateCorso = async (req: express.Request, res: express.Response) => {
-  try {
-    const id = Number(req.params.id);
-    const {
-      nome,
-      cliente_id,
-      programma_id,
-      n_ore,
-      inizio,
-      fine,
-      mattina_inizio,
-      mattina_fine,
-      pomeriggio_inizio,
-      pomeriggio_fine
-    } = req.body;
+    try {
+        const id = Number(req.params.id);
 
-    const corso = await prisma.corso.update({
-      where: { id },
-      data: {
-        nome,
-        cliente_id,
-        programma_id,
-        n_ore,
-        inizio,
-        fine,
-        mattina_inizio,
-        mattina_fine,
-        pomeriggio_inizio,
-        pomeriggio_fine
-      }
-    });
+        const {
+            nome,
+            commessa_id,
+            programma_id,
+            n_ore,
+            inizio,
+            fine,
+            mattina_inizio,
+            mattina_fine,
+            pomeriggio_inizio,
+            pomeriggio_fine
+        } = req.body;
 
-    res.json(corso);
-  } catch (err: any) {
-    console.error({
-      message: "Errore nell'aggiornamento del corso",
-      error: err,
-    });
-    res.status(500).json({ error: "Errore aggiornamento corso" });
-  }
+        const corso = await prisma.corso.update({
+            where: { id },
+            data: {
+                nome,
+                commessa_id,
+                programma_id,
+                n_ore,
+                inizio,
+                fine,
+                mattina_inizio,
+                mattina_fine,
+                pomeriggio_inizio,
+                pomeriggio_fine
+            },
+            include: {
+                commessa: {
+                    include: {
+                        cliente: true
+                    }
+                }
+            }
+        });
+
+        res.json(corso);
+    } catch (err: any) {
+        console.error("Errore nell'aggiornamento del corso:", err);
+
+        if (err.code === "P2025") {
+            return res.status(404).json({ error: "Corso non trovato" });
+        }
+
+        if (err.code === "P2003") {
+            return res.status(400).json({ error: "La commessa o il programma selezionato non esiste" });
+        }
+
+        res.status(500).json({ error: "Errore aggiornamento corso" });
+    }
 };
 
 const deleteCorso = async (req: express.Request, res: express.Response) => {
@@ -406,7 +400,7 @@ const deleteSedeFromCorso = async (req: express.Request, res: express.Response) 
 export {
   getCorsi,
   getCorso,
-  createCorso,
+  createCorsoCompleto,
   updateCorso,
   deleteCorso,
   getDocenti,
