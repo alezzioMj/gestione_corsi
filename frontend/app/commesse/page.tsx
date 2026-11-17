@@ -15,6 +15,7 @@ import { useState } from "react";
 import CommessaCard from "@/components/Commesse/CommessaCard";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 const STATI = [
     { value: "APERTA", label: "Commesse aperte" },
@@ -27,7 +28,7 @@ export default function CommessePage() {
     const [open, setOpen] = useState(false);
     const [commessaSelezionata, setcommessaSelezionata] =
         useState<Commessa | undefined>(undefined);
-    const { data, isLoading, error, mutate } = useSWR(`${API_BASE_URL}/commesse`, fetcher);
+    const { data, isValidating, error, mutate } = useSWR(`${API_BASE_URL}/commesse`, fetcher);
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
 
@@ -62,12 +63,7 @@ export default function CommessePage() {
             showMessage("Commessa eliminata con successo");
         } catch (error) {
             console.error(error);
-
-            showMessage(
-                error instanceof Error
-                    ? error.message
-                    : "Errore durante l'eliminazione della commessa"
-            );
+            showMessage(getErrorMessage(error), "error");
         }
     };
 
@@ -122,12 +118,13 @@ export default function CommessePage() {
             </Box>
 
             {/* Error state */}
-            {error && (
+            { error && (
                 <Alert
                     severity="error"
                     sx={{ mb: 4 }}
                     action={
                         <Button
+                            onClick={mutate}
                             color="inherit"
                             size="small"
                         >
@@ -140,7 +137,7 @@ export default function CommessePage() {
             )}
 
             {/* Loading state */}
-            {isLoading ? (
+            {isValidating ? (
                 <DelayedLoading />
             ) : data.length === 0 ? (
                 <EmptyState
