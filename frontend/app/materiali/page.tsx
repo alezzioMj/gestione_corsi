@@ -13,9 +13,10 @@ import MaterialeCard from "@/components/Materiali/MaterialeCard";
 import { API_BASE_URL } from "@/lib/config";
 import { useConfirm } from "@/components/ConfirmContext";
 import { useSnackbar } from "@/components/SnackbarContext";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 export default function Materiali() {
-    const { data: materiali, isLoading, error, mutate } =
+    const { data: materiali, isValidating, error, mutate } =
         useSWR<Materiale[]>(API_ENDPOINTS.materiali, fetcher);
 
     const { confirm } = useConfirm();
@@ -37,19 +38,19 @@ export default function Materiali() {
                 );
                 if (!res.ok) {
                     const errorData = await res.json();
-                    throw new Error(errorData.message || `Errore durante l'eliminazione del materiale: ${res.statusText}`);
+                    throw new Error(errorData.message);
                 }
                 mutate();
                 showMessage("Materiale eliminato con successo!");
             }
             catch(error : unknown){
-                showMessage(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
-                console.error("Errore nell'eliminazione del materiale:", error);
+                console.error(error);
+                showMessage(getErrorMessage(error), "error");
             }
         }
     }
 
-    if (isLoading) return <DelayedLoading />;
+    if (isValidating) return <DelayedLoading />;
 
     return (
         <Container>
@@ -74,7 +75,7 @@ export default function Materiali() {
                     severity="error"
                     sx={{ mb: 4 }}
                     action={
-                        <Button color="inherit" size="small" onClick={() => mutate()}>
+                        <Button color="inherit" size="small" onClick={() => mutate}>
                             Riprova
                         </Button>
                     }

@@ -12,6 +12,7 @@ import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 export default function SediPage() {
     //SWR hook for fetching /Sedi
@@ -36,18 +37,14 @@ export default function SediPage() {
             });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.message || `Errore durante l'eliminazione della sede: ${res.statusText}`);
+                throw new Error(errorData.message);
             }
-            //Update SWR cache 
+            
             mutate();
             showMessage("Sede eliminata con successo!");
         } catch (error) {
-            if (!(error instanceof Error)) {
-                console.error("Errore sconosciuto nell'eliminazione della sede:", error);
-                return;
-            }
-            showMessage(`Errore: ${error.message}`);
-            console.error("Errore nell'eliminazione della sede:", error);
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         }
     };
 

@@ -8,10 +8,11 @@ import { API_BASE_URL } from "@/lib/config";
 import { fetcher } from "@/lib/swr-config";
 import useSWR from "swr";
 import ClienteCard from "@/components/Clienti/ClienteCard";
-import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
+import { Cliente, ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
 import ClienteDrawer from "@/components/Clienti/ClienteDrawer";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 export default function ClientiPage() {
     const [open, setOpen] = useState(false);
@@ -26,6 +27,38 @@ export default function ClientiPage() {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
+
+    const handleDelete = async (cliente: Cliente) => {
+        const confirmed = await confirm({
+            title: "Elimina cliente",
+            message: `Sei sicuro di voler eliminare ${cliente.ragione_sociale}?`,
+            confirmText: "Elimina",
+            cancelText: "Annulla",
+            confirmColor: "error"
+        });
+
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(
+                `${API_BASE_URL}/clienti/${cliente.id}`,
+                { method: "DELETE" }
+            );
+
+            const result = await response.json();
+
+            if (!response.ok) {
+                throw new Error(result.message);
+            }
+
+            showMessage("Cliente eliminato correttamente.", "success");
+            mutate();
+
+        } catch (error) {
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
+        }
+    }
 
     return (
         <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
@@ -103,40 +136,7 @@ export default function ClientiPage() {
                                     setClienteSelezionato(cliente);
                                     setOpen(true);
                                 }}
-                                onDelete={async () => {
-                                    const confirmed = await confirm({
-                                        title: "Elimina cliente",
-                                        message: `Sei sicuro di voler eliminare ${cliente.ragione_sociale}?`,
-                                        confirmText: "Elimina",
-                                        cancelText: "Annulla",
-                                        confirmColor: "error"
-                                    });
-
-                                    if (!confirmed) return;
-
-                                    try {
-                                        const response = await fetch(
-                                            `${API_BASE_URL}/clienti/${cliente.id}`,
-                                            { method: "DELETE" }
-                                        );
-
-                                        const result = await response.json();
-
-                                        if (!response.ok) {
-                                            showMessage(
-                                                result.message || "Errore durante l'eliminazione del cliente.",
-                                                "error"
-                                            );
-                                            return;
-                                        }
-
-                                        showMessage("Cliente eliminato correttamente.", "success");
-                                        mutate();
-
-                                    } catch {
-                                        showMessage("Errore di connessione al server.", "error");
-                                    }
-                                }}
+                                onDelete={() => handleDelete(cliente)}
                                 onClick={() => {
                                     setClienteDettaglio(cliente);
                                     setDrawerOpen(true);
@@ -145,7 +145,8 @@ export default function ClientiPage() {
                         </Grid>
                     ))}
                 </Grid>
-            )}
+            )
+            }
 
             {/* Nessun cliente */}
             {data?.length === 0 && !isLoading && (
@@ -159,5 +160,5 @@ export default function ClientiPage() {
                 cliente={clienteDettaglio}
             />
         </Container>
-    );
+    )
 }

@@ -1,13 +1,3 @@
-import AppError from "@progetto/shared/validation/types";
-
-const errorMessages: Record<string, string> = {
-    DUPLICATE_ENTRY: "Questo valore è già presente.",
-    INVALID_REFERENCE: "Riferimento non valido.",
-    RECORD_NOT_FOUND: "Elemento non trovato.",
-    DATABASE_ERROR: "Errore durante l'accesso al database.",
-    INTERNAL_ERROR: "Si è verificato un errore imprevisto.",
-};
-
 export interface ApiError {
     status: string;
     message: string;
@@ -26,7 +16,6 @@ export const getErrorMessage = (error: unknown): string => {
     };
 
     return (
-        errorMessages[data.code ?? ""] ??
-        "Si è verificato un errore. Riprova."
+        errorMessages[data.code ?? ""] ?? "Si è verificato un errore. Riprova."
     );
 };

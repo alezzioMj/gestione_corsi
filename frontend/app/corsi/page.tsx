@@ -17,6 +17,7 @@ import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 // Definizione di un tipo base per un corso
 interface Corso {
@@ -31,7 +32,7 @@ interface Corso {
 }
 
 export default function CorsiPage() {
-    const { data: corsi, error, isLoading, mutate } = useSWR(API_ENDPOINTS.corsi, fetcher);
+    const { data: corsi, error, isValidating, mutate } = useSWR(API_ENDPOINTS.corsi, fetcher);
     const [openInfoModal, setOpenInfoModal] = useState(false);
     const [selectedCorsoInfo, setSelectedCorsoInfo] = useState<Corso | null>(null);
     const [isLoadingInfo, setIsLoadingInfo] = useState(false);
@@ -55,32 +56,30 @@ export default function CorsiPage() {
             });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.message || `Errore durante l'eliminazione del corso: ${res.statusText}`);
+                throw new Error(errorData.message);
             }
-            // Aggiorna lo stato per rimuovere il corso eliminato
+            
             mutate();
             showMessage("Corso eliminato con successo!");
         } catch (error: unknown) {
-            showMessage(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
             console.error("Errore nell'eliminazione del corso:", error);
+            showMessage(getErrorMessage(error), "error");
         }
     };
 
-    // Logica per l'apertura del modal info
     const handleOpenInfo = async (corsoId: number) => {
         setIsLoadingInfo(true);
         setInfoError(null);
-        setOpenInfoModal(true); // Apri il modal per mostrare lo stato di caricamento
+        setOpenInfoModal(true); 
         if (!corsoId) {
-            console.log("corsoId non ancora disponibile, salto il fetch.");
-            return; // Oppure metti un return di default a seconda di dove ti trovi
+            return;
         }
         try {
-            const res = await fetcher(`${API_ENDPOINTS.corsi}${corsoId}`); // Fetch dettagli specifici            
+            const res = await fetcher(`${API_ENDPOINTS.corsi}${corsoId}`);            
             setSelectedCorsoInfo(res);
         } catch (error: unknown) {
-            console.error("Errore nel recupero info corso:", error);
-            setInfoError(error instanceof Error ? error.message : "Errore sconosciuto");
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setIsLoadingInfo(false);
         }
@@ -117,7 +116,7 @@ export default function CorsiPage() {
             </Box>
 
 
-            {error && ( // Display SWR error
+            {error && (
                 <Alert
                     severity="error"
                     sx={{ mb: 4 }}
@@ -131,7 +130,7 @@ export default function CorsiPage() {
                 </Alert>
             )}
 
-            {isLoading ? ( // Use SWR's isLoading
+            {isValidating ? (
                 <DelayedLoading />
             ) : corsi && corsi.length === 0 ? ( // Check su esitenza corsi
                 <EmptyState

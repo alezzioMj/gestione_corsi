@@ -20,11 +20,12 @@ import { ExtensionOffOutlined } from "@mui/icons-material";
 import { Modulo } from "@progetto/shared/validation/modulo.schema";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 export default function ModuliPage() {
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
-    const { data: moduli, error, isLoading, mutate } = useSWR(API_ENDPOINTS.moduli, fetcher);
+    const { data: moduli, error, isValidating, mutate } = useSWR(API_ENDPOINTS.moduli, fetcher);
 
     const handleDeleteModulo = async (moduloId: number) => {
         const ok = await confirm({
@@ -42,13 +43,13 @@ export default function ModuliPage() {
             });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.message || `Errore durante l'eliminazione del modulo: ${res.statusText}`);
+                throw new Error(errorData.message);
             }
             mutate();
             showMessage("Modulo eliminato con successo!");
         } catch (error: unknown) {
-            showMessage(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
-            console.error("Errore nell'eliminazione del modulo:", error);
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         }
     };
 
@@ -85,7 +86,7 @@ export default function ModuliPage() {
                     {error.message}
                 </Alert>
             )}
-            {isLoading ? (
+            {isValidating ? (
                 <DelayedLoading />
             ) : !moduli || moduli.length === 0 ? (
                 <EmptyState

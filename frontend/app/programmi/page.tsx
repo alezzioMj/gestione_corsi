@@ -22,9 +22,10 @@ import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.sc
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 export default function ProgrammiPage() {
-    const { data: programmi, isLoading, error, mutate } = useSWR(API_ENDPOINTS.programmi, fetcher);
+    const { data: programmi, isValidating, error, mutate } = useSWR(API_ENDPOINTS.programmi, fetcher);
     const { confirm } = useConfirm();
     const { showMessage } = useSnackbar();
 
@@ -44,13 +45,13 @@ export default function ProgrammiPage() {
             });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.message || `Errore durante l'eliminazione del programma: ${res.statusText}`);
+                throw new Error(errorData.message);
             }
             mutate();
             showMessage("Programma eliminato con successo!");
         } catch (error: unknown) {
-            showMessage(`Errore: ${error instanceof Error ? error.message : 'Errore sconosciuto'}`);
-            console.error("Errore nell'eliminazione del programma:", error);
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         }
     };
 
@@ -78,7 +79,7 @@ export default function ProgrammiPage() {
                     {error.message}
                 </Alert>
             )}
-            {isLoading ? (
+            {isValidating ? (
                 <DelayedLoading />
             ) : (!programmi || programmi.length === 0) ? (
                 <EmptyState

@@ -28,6 +28,7 @@ import {
     indisponibilitaSediToRows,
 } from "@/components/ScheduleGrid/adapters";
 import { CalendarRow } from "@/components/ScheduleGrid/types";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 type Vista = "sessioni" | "docenti" | "aule" | "sedi";
 
@@ -41,12 +42,12 @@ const VISTE: { value: Vista; label: string; headerLeft: string }[] = [
 const COLORE_INDISP = "#f87171";
 
 export default function SessioniPage() {
-    const { data: sessioniData, isLoading: sessioniLoading, error: sessioniError, mutate: sessioniMutate } = useSWR(API_ENDPOINTS.sessioniFull, fetcher);
-    const { data: docentiData, isLoading: docentiLoading, error: docentiError, mutate: docentiMutate } = useSWR(API_ENDPOINTS.docenti, fetcher);
-    const { data: corsiData, isLoading: corsiLoading, error: corsiError, mutate: corsiMutate } = useSWR(API_ENDPOINTS.corsi, fetcher);
-    const { data: indispData, isLoading: indispLoading, error: indispError, mutate: indispMutate } = useSWR(API_ENDPOINTS.indisponibilita, fetcher);
-    const { data: sediData, isLoading: sediLoading, error: sediError, mutate: sediMutate } = useSWR(API_ENDPOINTS.sedi, fetcher);
-    const { data: auleData, isLoading: auleLoading, error: auleError, mutate: auleMutate } = useSWR(API_ENDPOINTS.aule, fetcher);
+    const { data: sessioniData, isValidating: sessioniLoading, error: sessioniError, mutate: sessioniMutate } = useSWR(API_ENDPOINTS.sessioniFull, fetcher);
+    const { data: docentiData, isValidating: docentiLoading, error: docentiError, mutate: docentiMutate } = useSWR(API_ENDPOINTS.docenti, fetcher);
+    const { data: corsiData, isValidating: corsiLoading, error: corsiError, mutate: corsiMutate } = useSWR(API_ENDPOINTS.corsi, fetcher);
+    const { data: indispData, isValidating: indispLoading, error: indispError, mutate: indispMutate } = useSWR(API_ENDPOINTS.indisponibilita, fetcher);
+    const { data: sediData, isValidating: sediLoading, error: sediError, mutate: sediMutate } = useSWR(API_ENDPOINTS.sedi, fetcher);
+    const { data: auleData, isValidating: auleLoading, error: auleError, mutate: auleMutate } = useSWR(API_ENDPOINTS.aule, fetcher);
 
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
@@ -84,7 +85,6 @@ export default function SessioniPage() {
     const legend = useMemo(() => {
         const docenti: Docente[] = Array.isArray(docentiData) ? docentiData : [];
 
-        // Aule e sedi: un solo colore, quello delle indisponibilità
         if (vista === "aule" || vista === "sedi") {
             return (
                 <Chip
@@ -144,14 +144,11 @@ export default function SessioniPage() {
         );
     }, [vista]);
 
-    // Sessioni del corso cliccato (solo vista "sessioni")
     const sessioniModal = useMemo(() => {
         if (!selectedCellData || !Array.isArray(sessioniData)) return [];
         return sessioniData.filter((s: { corso_id: number }) => s.corso_id === selectedCellData.rowId);
     }, [selectedCellData, sessioniData]);
 
-    // Indisponibilità della riga cliccata (viste docenti, aule e sedi).
-    // Il filtro per giorno lo fa IndisponibilitaModal.
     const indispModal = useMemo<IndisponibilitaConId[]>(() => {
         if (!selectedCellData || vista === "sessioni" || !Array.isArray(indispData)) return [];
         const { rowId } = selectedCellData;
@@ -166,7 +163,6 @@ export default function SessioniPage() {
         });
     }, [selectedCellData, vista, indispData]);
 
-    // Nome del docente, aula o sede cliccati, mostrato nel titolo del modale
     const titoloIndispModal = useMemo(() => {
         if (!selectedCellData) return undefined;
         const { rowId } = selectedCellData;
@@ -215,16 +211,12 @@ export default function SessioniPage() {
                 const errorData = await res.json();
                 throw new Error(errorData.message || `Errore durante l'eliminazione della sessione: ${res.statusText}`);
             }
-            // Aggiorna la cache SWR
+
             sessioniMutate();
             showMessage("Sessione eliminata con successo!");
         } catch (error) {
-            if (!(error instanceof Error)) {
-                console.error("Errore sconosciuto nell'eliminazione della sessione:", error);
-                return;
-            }
-            showMessage(`Errore: ${error.message}`);
-            console.error("Errore nell'eliminazione della sessione:", error);
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         }
     };
 
@@ -242,24 +234,17 @@ export default function SessioniPage() {
             const res = await fetch(`${API_BASE_URL}/indisponibilita/${indisponibilitaId}`, {
                 method: "DELETE",
             });
+
             if (!res.ok) {
-                const errorData = await res.json().catch(() => ({}));
-                throw new Error(
-                    errorData.error ||
-                    errorData.message ||
-                    `Errore durante l'eliminazione dell'indisponibilità: ${res.statusText}`
-                );
+                const response = await res.json();
+                throw new Error(response.message);
             }
-            // Aggiorna la cache SWR: la griglia e il modale si aggiornano da soli
+
             indispMutate();
             showMessage("Indisponibilità eliminata con successo!");
         } catch (error) {
-            if (!(error instanceof Error)) {
-                console.error("Errore sconosciuto nell'eliminazione dell'indisponibilità:", error);
-                return;
-            }
-            showMessage(`Errore: ${error.message}`);
-            console.error("Errore nell'eliminazione dell'indisponibilità:", error);
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         }
     };
 
@@ -272,7 +257,6 @@ export default function SessioniPage() {
         auleMutate();
     };
 
-    // "YYYY-MM-DD" -> Date a mezzanotte locale (new Date("YYYY-MM-DD") sarebbe UTC)
     const dateFromKey = (key: string) => {
         const [y, m, d] = key.split("-").map(Number);
         return new Date(y, m - 1, d);

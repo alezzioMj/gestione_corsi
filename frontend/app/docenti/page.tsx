@@ -13,9 +13,10 @@ import EmptyState from "@/components/EmptyState";
 import { PersonOffOutlined } from "@mui/icons-material";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 export default function DocentiPage() {
-    const { data: docenti, error, isLoading, mutate } = useSWR(API_ENDPOINTS.docenti, fetcher);
+    const { data: docenti, error, isValidating, mutate } = useSWR(API_ENDPOINTS.docenti, fetcher);
     const { confirm } = useConfirm();
     const { showMessage } = useSnackbar();
 
@@ -35,17 +36,13 @@ export default function DocentiPage() {
             });
             if (!res.ok) {
                 const errorData = await res.json();
-                throw new Error(errorData.message || `Errore durante l'eliminazione del docente: ${res.statusText}`);
+                throw new Error(errorData.message);
             }
             mutate();
             showMessage("Docente eliminato con successo!");
         } catch (error: unknown) {
-            if (!(error instanceof Error)) {
-                console.error("Errore sconosciuto nell'eliminazione del docente:", error);
-                return;
-            }
-            showMessage(`Errore: ${error.message}`);
-            console.error("Errore nell'eliminazione del docente:", error);
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         }
     };
 
@@ -83,7 +80,7 @@ export default function DocentiPage() {
                 </Alert>
             )}
 
-            {isLoading ? (
+            {isValidating ? (
                 <DelayedLoading />
             ) : !docenti || docenti.length === 0 ? (
                 <EmptyState
