@@ -58,7 +58,6 @@ const createCliente = async (req: express.Request, res: express.Response) => {
                 data: {
                     ragione_sociale,
                     partita_iva,
-                    agente_id,
                     sedi: {
                         create: sedi.map(({ contatti, ...sede }) => ({
                             ...sede,
