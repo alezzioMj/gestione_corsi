@@ -27,38 +27,51 @@ const handlePrismaKnownError = (
     err: PrismaClientKnownRequestError
 ): AppError => {
     const errorMap: Record<string, () => AppError> = {
-        P2002: () => {
-            const field =
-                (err.meta?.target as string[])?.join(", ") ||
-                "field";
-            return new AppError(
-                `Duplicate value found for ${field}. Please use a different value.`,
-                409
-            );
-        },
-        P2003: () => {
-            const field =
-                (err.meta?.field_name as string) ||
-                (err.meta?.target as string) ||
-                "unknown field";
-            return new AppError(
-                `Invalid reference for field: ${field}`,
-                400
-            );
-        },
-        P2025: () => new AppError("Record not found.", 404),
+        P2002: () =>
+            new AppError(
+                "Duplicate value found.",
+                409,
+                "DUPLICATE_ENTRY"
+            ),
+
+        P2003: () =>
+            new AppError(
+                "Invalid reference.",
+                400,
+                "INVALID_REFERENCE"
+            ),
+
+        P2025: () =>
+            new AppError(
+                "Record not found.",
+                404,
+                "RECORD_NOT_FOUND"
+            ),
+
         P2021: () =>
-            new AppError("The table does not exist.", 500),
+            new AppError(
+                "The table does not exist.",
+                500,
+                "TABLE_NOT_FOUND"
+            ),
+
         P2022: () =>
-            new AppError("The column does not exist.", 500),
+            new AppError(
+                "The column does not exist.",
+                500,
+                "COLUMN_NOT_FOUND"
+            ),
     };
 
     return (
         errorMap[err.code]?.() ||
-        new AppError("Database error occurred.", 500)
+        new AppError(
+            "Database error occurred.",
+            500,
+            "DATABASE_ERROR"
+        )
     );
 };
-
 const handlePrismaInitializationError = (
     err: PrismaClientInitializationError
 ): AppError => {
@@ -85,6 +98,7 @@ const sendErrorDev = (
     res.status(err.statusCode || 500).json({
         status: err.status,
         message: err.message,
+        code: err.code,
         error: err,
         stack: err.stack,
     });
@@ -99,11 +113,13 @@ const sendErrorProd = (
         res.status(err.statusCode || 500).json({
             status: err.status,
             message: err.message,
+            code: err.code,
         });
     } else {
         res.status(500).json({
             status: "error",
             message: "Something went wrong!",
+            code: "INTERNAL_ERROR",
         });
     }
 };
