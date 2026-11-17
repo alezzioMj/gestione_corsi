@@ -62,4 +62,17 @@ export const docenteSchema = z.object({
     .string()
     .min(1, "Il contratto è obbligatorio")
     .max(255),
+
+  created_at:
+    z.coerce.date
 });
+
+export const createDocenteSchema = docenteSchema.omit({ created_at: true });
+
+export const updateDocenteSchema = docenteSchema.partial().required({codice_fiscale: true});
+
+export type Docente = z.infer<typeof docenteSchema>;
+export type CreateDocente = z.infer<typeof createDocenteSchema>;
+export type UpdateDocente = z.infer<typeof updateDocenteSchema>;
+
+

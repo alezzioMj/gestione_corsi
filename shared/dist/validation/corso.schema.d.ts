@@ -1,6 +1,6 @@
 import { z } from "zod";
 export declare const corsoSchema: z.ZodObject<{
-    cliente: z.ZodString;
+    commessa_id: z.ZodNumber;
     programma_id: z.ZodNumber;
     n_ore: z.ZodNumber;
     nome: z.ZodString;
