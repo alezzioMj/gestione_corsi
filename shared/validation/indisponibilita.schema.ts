@@ -1,25 +1,36 @@
+
 import { z } from "zod";
 
 export const indisponibilitaSchema = z.object({
-  docente_cf: z.string()
-    .length(16, "Il codice fiscale deve avere 16 caratteri")
-    .nullable()
-    .optional(),
+    id: z.number().int(),
 
-  sede_id: z.number().nullable().optional(),
+    docente_cf: z.string()
+        .length(16, "Il codice fiscale deve avere 16 caratteri")
+        .nullable()
+        .optional(),
 
-  aula_id: z.number().nullable().optional(),
+    sede_id: z.number().nullable().optional(),
 
-  data_inizio: z.coerce.date(),
-  data_fine: z.coerce.date(),
+    aula_id: z.number().nullable().optional(),
 
-  ora_inizio: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
-  ora_fine: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
+    data_inizio: z.coerce.date(),
+    data_fine: z.coerce.date(),
 
-  causale: z.string().min(1, "La causale è obbligatoria").max(100),
+    ora_inizio: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
+    ora_fine: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
 
-  descrizione: z.string().nullable().optional(),
+    causale: z.string().min(1, "La causale è obbligatoria").max(100),
+
+    descrizione: z.string().nullable().optional(),
 }).superRefine((data, ctx) => {
+    // Validate chronological consistency only when all fields are present
+    if (
+        data.data_inizio === undefined ||
+        data.data_fine === undefined ||
+        data.ora_inizio === undefined ||
+        data.ora_fine === undefined
+    ) return;
+
     const inizio = new Date(data.data_inizio);
     const fine = new Date(data.data_fine);
 
@@ -37,3 +48,15 @@ export const indisponibilitaSchema = z.object({
         });
     }
 });
+
+export const createIndisponibilitaSchema = indisponibilitaSchema.omit({
+    id: true
+});
+
+export const updateIndisponibilitaSchema = indisponibilitaSchema
+    .partial()
+    .required({ id: true });
+
+export type Indisponibilita = z.infer<typeof indisponibilitaSchema>;
+export type CreateIndisponibilita = z.infer<typeof createIndisponibilitaSchema>;
+export type UpdateIndisponibilita = z.infer<typeof updateIndisponibilitaSchema>;

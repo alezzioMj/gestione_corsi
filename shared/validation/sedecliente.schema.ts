@@ -1,4 +1,5 @@
 import z from "zod"
+import { contattoSchema } from "./contatto.schema";
 
 export const sedeClienteSchema = z.object({
     id: z.number(),
@@ -14,3 +15,16 @@ export const sedeClienteSchema = z.object({
     citta: z.string(),
     provincia: z.string()
 })
+
+export const SedeClienteWithRelationsSchema = sedeClienteSchema.extend({
+    contatti: z.array(contattoSchema),
+});
+
+export const createSedeClienteSchema = sedeClienteSchema.omit({ id: true })
+
+export const updateSedeClienteSchema = sedeClienteSchema.partial().required({ id: true })
+
+export type SedeCliente = z.infer<typeof sedeClienteSchema>
+export type SedeClienteWithRelations = z.infer<typeof SedeClienteWithRelationsSchema>;
+export type createSedeCliente = z.infer<typeof createSedeClienteSchema>
+export type updateSedeCliente = z.infer<typeof updateSedeClienteSchema>
