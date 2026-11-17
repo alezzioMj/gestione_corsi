@@ -1,8 +1,8 @@
-import { z } from "zod";
-import { commessaSchema, commessaWithRelationsSchema } from "./commessa.schema";
+import z from "zod";
+import { commessaWithRelationsSchema } from "./commessa.schema";
 import { programmaSchema } from "./programma.schema";
 
-export const corsoSchema = z.object({
+const corsoBaseSchema = z.object({
   id: z.number(),
   commessa_id: z.number(),
   programma_id: z.number(),
@@ -15,34 +15,18 @@ export const corsoSchema = z.object({
   pomeriggio_inizio: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
   pomeriggio_fine: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/),
   created_at: z.coerce.date()
-})
-  .refine((data) => data.fine >= data.inizio, {
-    message: "La data fine deve essere successiva o uguale alla data inizio",
-    path: ["fine"],
-  })
-  .refine((data) => data.mattina_fine > data.mattina_inizio, {
-    message: "L'orario di fine mattina deve essere successivo all'inizio",
-    path: ["mattina_fine"],
-  })
-  .refine((data) => data.pomeriggio_fine > data.pomeriggio_inizio, {
-    message: "L'orario di fine pomeriggio deve essere successivo all'inizio",
-    path: ["pomeriggio_fine"],
-  });
-
-export const corsoWithRelationsSchema = corsoSchema.extend({
-  commessa: commessaWithRelationsSchema,
-  programma: programmaSchema
 });
 
-export const createCorsoSchema = corsoSchema.omit(
-  {
-    id: true,
-    created_at: true,
-  }
-);
+const orari = (d: Partial<z.infer<typeof corsoBaseSchema>>, ctx: z.RefinementCtx) => {
+  if (d.inizio && d.fine && d.fine < d.inizio)
+    ctx.addIssue({ code: "custom", path: ["fine"], message: "La data fine deve essere successiva o uguale alla data inizio" });
+  if (d.mattina_inizio && d.mattina_fine && d.mattina_fine <= d.mattina_inizio)
+    ctx.addIssue({ code: "custom", path: ["mattina_fine"], message: "Fine mattina deve essere dopo l'inizio" });
+  if (d.pomeriggio_inizio && d.pomeriggio_fine && d.pomeriggio_fine <= d.pomeriggio_inizio)
+    ctx.addIssue({ code: "custom", path: ["pomeriggio_fine"], message: "Fine pomeriggio deve essere dopo l'inizio" });
+};
 
-export const updateCorsoSchema = corsoSchema.partial().required({ id: true });
-
-export type Corso = z.infer<typeof corsoSchema>;
-export type CreateCorso = z.infer<typeof createCorsoSchema>;
-export type UpdateCorso = z.infer<typeof updateCorsoSchema>;
+export const corsoSchema = corsoBaseSchema.superRefine(orari);
+export const corsoWithRelationsSchema = corsoBaseSchema.extend({ commessa: commessaWithRelationsSchema, programma: programmaSchema }).superRefine(orari);
+export const createCorsoSchema = corsoBaseSchema.omit({ id: true, created_at: true }).superRefine(orari);
+export const updateCorsoSchema = corsoBaseSchema.partial().superRefine(orari);

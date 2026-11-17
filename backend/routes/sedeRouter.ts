@@ -1,13 +1,13 @@
 import express from "express";
 const sediRouter = express.Router();
 import { validate} from "../middlewares/validate";
-import { sedeSchema } from "@progetto/shared/validation/sede.schema";
+import { createSedeSchema, updateSedeSchema } from "@progetto/shared/validation/sede.schema";
 import { getSedi , getSede, createSede, updateSede, deleteSede, getCorsiBySede } from '../controllers/sedeController';
 
 sediRouter.get('/', getSedi);
 sediRouter.get('/:id', getSede);
-sediRouter.post('/', validate(sedeSchema), createSede);
-sediRouter.put('/:id', validate(sedeSchema), updateSede);
+sediRouter.post('/', validate(createSedeSchema), createSede);
+sediRouter.put('/:id', validate(updateSedeSchema), updateSede);
 sediRouter.delete('/:id', deleteSede);
 
 //CORSI

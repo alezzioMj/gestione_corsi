@@ -27,7 +27,7 @@ export const createModuloSchema = moduloSchema.omit(
   }
 )
 
-export const updateModuloSchema = moduloSchema.partial().required({id: true})
+export const updateModuloSchema = moduloSchema.partial()
 
 export type Modulo = z.infer<typeof moduloSchema>
 export type CreateModulo = z.infer<typeof createModuloSchema>

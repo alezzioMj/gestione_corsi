@@ -1,7 +1,7 @@
 // hooks/useAuleBySede.ts
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
-import type { Aula } from "@progetto/shared/validation/types";
+import type { Aula } from "@progetto/shared/validation/aula.schema";
 
 export function useAuleBySede(enabled: boolean, sedeId?: number | null) {
     const { data: aule = [], isLoading, error } = useSWR<Aula[]>(

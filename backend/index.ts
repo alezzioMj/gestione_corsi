@@ -23,6 +23,7 @@ import programmaRouter from "./routes/programmaRouter";
 import corsoRouter from "./routes/corsoRouter"
 import indisponibilitaRouter from "./routes/indisponibilitaRouter";
 import sessioneRouter from "./routes/sessioneRouter";
+import globalErrorHandler from "./middlewares/errorHandler";
 
 app.use('/clienti', clienteRouter);
 app.use('/commesse', commessaRouter);
@@ -37,6 +38,8 @@ app.use('/indisponibilita', indisponibilitaRouter);
 app.use('/sessioni', sessioneRouter);
 
 const PORT = process.env.PORT || 3001;
+
+app.use(globalErrorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);

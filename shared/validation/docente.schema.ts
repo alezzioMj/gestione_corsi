@@ -65,14 +65,14 @@ export const docenteSchema = z.object({
     .max(255),
 
   created_at:
-    z.coerce.date
+    z.coerce.date()
 });
 
 export const docenteWithRelationsSchema = docenteSchema.extend({ moduli: z.array(moduloSchema) });
 
 export const createDocenteSchema = docenteSchema.omit({ created_at: true });
 
-export const updateDocenteSchema = docenteSchema.partial().required({codice_fiscale: true});
+export const updateDocenteSchema = docenteSchema.partial();
 
 export type Docente = z.infer<typeof docenteSchema>;
 export type DocenteWithRelations = z.infer<typeof docenteWithRelationsSchema>

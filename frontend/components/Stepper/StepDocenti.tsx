@@ -22,13 +22,14 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 
-import { FormType, DocenteConModuli } from "@/validation/corso-form.schema";
+import { FormType } from "@progetto/shared/validation/types";
+import { DocenteWithRelations } from "@progetto/shared/validation/docente.schema";
 import GIORNI_SETTIMANA from "@/lib/docenti/docenti";
 
 export default function StepDocenti({
   docenti,
 }: {
-  docenti: DocenteConModuli[];
+  docenti: DocenteWithRelations[];
 }) {
   const {
     control,
@@ -94,7 +95,7 @@ export default function StepDocenti({
                     <Box>
                       <Typography variant="body1">{d.nome} {d.cognome}</Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                        Moduli: {d.docente_modulo?.map(m => m.modulo.titolo).join(", ") || "Nessuno"}
+                        Moduli: {d.moduli?.map(m => m.titolo).join(", ") || "Nessuno"}
                       </Typography>
                     </Box>
                   </MenuItem>

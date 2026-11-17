@@ -8,7 +8,6 @@ import {
     Button,
     Box,
 } from "@mui/material";
-import { z } from "zod";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
@@ -20,11 +19,12 @@ import { messaggioErrore } from "@/lib/errors/errorMessage";
 import StepDocenti from "./StepDocenti";
 import StepReview from "./StepReview";
 import { useSnackbar } from "../SnackbarContext";
-import { ApiErrorBody } from "@progetto/shared/validation/types";
+import { ApiErrorBody, formSchema, FormType } from "@progetto/shared/validation/types";
 import { useState } from "react";
 import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
 import { DocenteWithRelations } from "@progetto/shared/validation/docente.schema";
 import { CommessaWithRelations } from "@progetto/shared/validation/commessa.schema";
+import StepForm from "./StepForm";
 
 const StepProgrammazione = dynamic(
     () => import("./StepProgrammazione"),
@@ -58,19 +58,19 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
             if (missingModuleIds.length > 0) {
                 const nomiModuliMancanti = selectedProgram.moduli
                     .filter(m => missingModuleIds.includes(m.id))
-                    .map(m => m.titolo)
+                    .map(m => m.modulo?.titolo)
                     .join(", ");
 
                 ctx.addIssue({
-                    code: 'copertura_insufficiente',
+                    code: "custom",
+                    path: ["moduli"], // il campo a cui agganciare l'errore nel form
                     message: `Copertura insufficiente. Mancano docenti per: ${nomiModuliMancanti}`,
-                    path: ["docenti"],
                 });
             }
 
             if (selectedProgram.durata_totale && data.oreTotali < selectedProgram.durata_totale) {
                 ctx.addIssue({
-                    code: 'ore_insufficienti',
+                    code: "custom",
                     message: `Le ore totali non possono essere inferiori a quelle del programma selezionato (${selectedProgram.durata_totale}h).`,
                     path: ["oreTotali"],
                 });
@@ -180,7 +180,6 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
                     ))}
                 </Stepper>
 
-                {/* CONTENUTO */}
                 <Box sx={{ mt: 3 }}>
                     {activeStep === 0 && <StepForm
                         sedi={sedi}
@@ -191,7 +190,6 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
                     {activeStep === 3 && <StepReview docenti={docenti} programmi={programmi} commesse={commesse} />}
                 </Box>
 
-                {/* BOTTONI */}
                 <Box sx={{ mt: 2 }}>
                     <Button disabled={activeStep === 0} onClick={handleBack}>
                         Indietro

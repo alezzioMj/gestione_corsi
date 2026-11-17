@@ -51,7 +51,7 @@ interface AddSessioneModalProps {
     onSessioneAdded?: () => void;
 }
 
-export default function AddSessioneModal({onSessioneAdded}: AddSessioneModalProps) {
+export default function AddSessioneModal({ onSessioneAdded }: AddSessioneModalProps) {
     const { open, openModal, closeModal, formData, setField } = useModalForm(EMPTY)
     const { corsi, isLoading: corsiIsLoading, error: corsiError } = useCorsi(open);
     const { docenti, isLoading: docenteIsLoading, error: docenteError } = useDocentiByCorso(open, formData.corso_id, formData.modulo_id);
@@ -67,10 +67,10 @@ export default function AddSessioneModal({onSessioneAdded}: AddSessioneModalProp
             showMessage("Errore nel recupero dei dati", "error");
         }
     }, [error, showMessage]);
-    const payload = { ...formData, priorita : 1 }
+    const payload = { ...formData, priorita: 1 }
     const { submitting, create } = useCreateEntity(`${API_BASE_URL}/sessioni`);
 
-    const handleSubmit = async (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         const ok = await create(payload);
         if (ok) {
@@ -113,12 +113,13 @@ export default function AddSessioneModal({onSessioneAdded}: AddSessioneModalProp
 
                                 <EntitySelect
                                     label="Modulo"
-                                    options={moduli || []}
-                                    getOptionId={(m: Modulo) => m.id}
+                                    options={moduli?.map(pm => pm.modulo)
+                                        .filter((modulo): modulo is Modulo => modulo !== null) ?? []}
+                                    getOptionId={(m) => m.id}
                                     value={formData.modulo_id}
                                     getOptionLabel={(m) => m.titolo}
                                     onChange={(id) => setField("modulo_id", id)}
-                                    disabled={!formData.corso_id || moduliIsLoading || !moduli}
+                                    disabled={!formData.corso_id || moduliIsLoading}
                                     required
                                 />
 

@@ -7,7 +7,7 @@ import { createClienteSchema, updateClienteSchema } from "@progetto/shared/valid
 
 clienteRouter.get('/', getClienti);
 clienteRouter.post('/', validate(createClienteSchema), createCliente);
-clienteRouter.put('/:id', validate(updateClienteSchema),updateCliente);
+clienteRouter.put('/:id', validate(createClienteSchema), updateCliente);
 clienteRouter.delete('/:id', deleteCliente);
 
 export default clienteRouter;

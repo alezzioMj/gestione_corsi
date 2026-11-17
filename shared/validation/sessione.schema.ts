@@ -28,10 +28,6 @@ export const sessioneSchema = z.object({
   created_at: z.coerce.date(),
   created_by: z.string().max(100).optional().nullable(),
 })
-  .refine((data) => data.ora_fine > data.ora_inizio, {
-    message: "ora_fine deve essere successiva a ora_inizio",
-    path: ["ora_fine"],
-  });
 
 export const sessioneWithRelationsSchema = sessioneSchema.extend(
   {
@@ -43,14 +39,13 @@ export const sessioneWithRelationsSchema = sessioneSchema.extend(
   }
 )
 
-export const createSessioneSchema = sessioneSchema.omit(
-  {
-    id: true,
-    created_at: true
-  }
-)
+const orarioValido = (d: { ora_inizio?: string; ora_fine?: string }) =>
+  !d.ora_inizio || !d.ora_fine || d.ora_fine > d.ora_inizio;
+const orarioMsg = { message: "ora_fine deve essere successiva a ora_inizio", path: ["ora_fine"] };
 
-export const updateSessioneSchema = sessioneSchema.partial().required({ id: true })
+export const createSessioneSchema = sessioneSchema.omit({ id: true, created_at: true }).refine(orarioValido, orarioMsg);
+export const updateSessioneSchema = sessioneSchema.partial().refine(orarioValido, orarioMsg);
+
 
 export type Sessione = z.infer<typeof sessioneSchema>
 export type SessioneWithRelations = z.infer<typeof sessioneWithRelationsSchema>

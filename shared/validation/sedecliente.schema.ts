@@ -22,7 +22,7 @@ export const SedeClienteWithRelationsSchema = sedeClienteSchema.extend({
 
 export const createSedeClienteSchema = sedeClienteSchema.omit({ id: true })
 
-export const updateSedeClienteSchema = sedeClienteSchema.partial().required({ id: true })
+export const updateSedeClienteSchema = sedeClienteSchema.partial()
 
 export type SedeCliente = z.infer<typeof sedeClienteSchema>
 export type SedeClienteWithRelations = z.infer<typeof SedeClienteWithRelationsSchema>;

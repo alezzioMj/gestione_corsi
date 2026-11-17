@@ -1,7 +1,7 @@
 import express from "express";
 const programmaRouter= express.Router();
 import { validate} from "../middlewares/validate";
-import { programmaSchema } from "@progetto/shared/validation/programma.schema";
+import { createProgrammaSchema, programmaSchema, updateProgrammaSchema } from "@progetto/shared/validation/programma.schema";
 import {
   getProgrammi,
   getProgramma,
@@ -17,8 +17,8 @@ import {
 
 programmaRouter.get('/', getProgrammi);
 programmaRouter.get('/:id', getProgramma);
-programmaRouter.post('/', validate(programmaSchema), createProgramma);
-programmaRouter.put('/:id', validate(programmaSchema.partial()), updateProgramma);
+programmaRouter.post('/', validate(createProgrammaSchema), createProgramma);
+programmaRouter.put('/:id', validate(updateProgrammaSchema.partial()), updateProgramma);
 programmaRouter.delete('/:id', deleteProgramma);
 
 //MODULI

@@ -10,7 +10,7 @@ export const contattoSchema = z.object({
 
 export const createContattoSchema = contattoSchema.omit({id:true})
 
-export const updateContattoSchema = contattoSchema.partial().required({id:true})
+export const updateContattoSchema = contattoSchema.partial()
 
 export type Contatto = z.infer<typeof contattoSchema>
 export type CreateContatto = z.infer<typeof createContattoSchema>

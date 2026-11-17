@@ -22,6 +22,10 @@ export const indisponibilitaSchema = z.object({
     causale: z.string().min(1, "La causale è obbligatoria").max(100),
 
     descrizione: z.string().nullable().optional(),
+})
+
+export const createIndisponibilitaSchema = indisponibilitaSchema.omit({
+    id: true
 }).superRefine((data, ctx) => {
     // Validate chronological consistency only when all fields are present
     if (
@@ -49,13 +53,7 @@ export const indisponibilitaSchema = z.object({
     }
 });
 
-export const createIndisponibilitaSchema = indisponibilitaSchema.omit({
-    id: true
-});
-
-export const updateIndisponibilitaSchema = indisponibilitaSchema
-    .partial()
-    .required({ id: true });
+export const updateIndisponibilitaSchema = indisponibilitaSchema.partial()
 
 export type Indisponibilita = z.infer<typeof indisponibilitaSchema>;
 export type CreateIndisponibilita = z.infer<typeof createIndisponibilitaSchema>;

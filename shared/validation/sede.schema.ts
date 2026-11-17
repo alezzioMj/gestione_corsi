@@ -30,7 +30,7 @@ export const createSedeSchema = sedeSchema.omit({
   created_at: true,
 })
 
-export const updateSedeSchema = sedeSchema.partial().required({id: true});
+export const updateSedeSchema = sedeSchema.partial();
 
 export type Sede = z.infer<typeof sedeSchema>
 export type SedeWithRelations = z.infer<typeof SedeWithRelationsSchema>

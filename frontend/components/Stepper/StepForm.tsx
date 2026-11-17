@@ -8,8 +8,8 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 
-import { SedeFormInput } from "@progetto/shared/validation/types";
-import { FormType } from "@/validation/corso-form.schema";
+import { CreateSede } from "@progetto/shared/validation/sede.schema";
+import { FormType } from "@progetto/shared/validation/types";
 
 // Commessa come arriva da GET /commesse (con il cliente incluso)
 export type CommessaOption = {
@@ -22,7 +22,7 @@ export default function StepForm({
     sedi,
     commesse,
 }: {
-    sedi: SedeFormInput[];
+    sedi: CreateSede[];
     commesse: CommessaOption[];
 }) {
     

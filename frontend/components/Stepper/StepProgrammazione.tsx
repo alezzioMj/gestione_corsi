@@ -5,7 +5,9 @@ import { Box, Typography, Paper, Button, FormControl, InputLabel, Select, MenuIt
 import { AddCircleOutlineOutlined, RemoveCircleOutlineOutlined } from "@mui/icons-material";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import { Controller, useFormContext } from "react-hook-form";
-import { FormType, ProgrammaConModuli } from "../../validation/corso-form.schema";
+import { FormType } from "@progetto/shared/validation/types";
+import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
+
 import {
     DndContext,
     closestCenter,
@@ -100,37 +102,32 @@ function SortableModuloItem({ modulo, onAddInstance, onRemoveInstance }: Sortabl
     );
 }
 
-export default function StepProgrammazione({ programmi }: { programmi: ProgrammaConModuli[] }) {
+export default function StepProgrammazione({ programmi }: { programmi: ProgrammaWithRelations[] }) {
     const { control, formState: { errors }, watch, setValue, getValues } = useFormContext<FormType>();
     const selectedProgramId = watch("programmi");
     const moduliOrdinati: string[] = watch("moduliOrdinati") || [];
 
-    // Applica i valori di default del programma solo quando l'utente lo cambia.
-    // Fatto qui e non in un useEffect, altrimenti al ritorno sullo step
-    // (il componente viene rimontato) l'ordine dei moduli verrebbe azzerato.
     const handleProgramChange = (programId: number) => {
-        const program = programmi.find(p => p.id === programId);
+        const programma = programmi.find(p => p.id === programId);
 
         setValue("programmi", programId, { shouldValidate: true, shouldDirty: true });
 
-        if (!program) {
+        if (!programma) {
             setValue("oreTotali", 0, { shouldValidate: true });
             setValue("moduliOrdinati", []);
             return;
         }
-
-        // Auto-popola il nome del corso se e' vuoto
         if (!getValues("nome")) {
-            setValue("nome", program.titolo, { shouldValidate: true });
+            setValue("nome", programma.titolo, { shouldValidate: true });
         }
 
-        setValue("oreTotali", program.durata_totale, { shouldValidate: true });
+        setValue("oreTotali", programma.durata_totale, { shouldValidate: true });
 
         // Ordine di default del programma; con n_ripetizioni > 1 il modulo compare piu' volte
         const moduleIds: string[] = [];
-        program.programma_modulo.forEach(pm => {
-            for (let i = 0; i < (pm.n_ripetizioni || 1); i++) {
-                moduleIds.push(`${pm.modulo_id}-${i}`);
+        programma.moduli.forEach(m => {
+            for (let i = 0; i < (m.n_ripetizioni || 1); i++) {
+                moduleIds.push(`${m.modulo_id}-${i}`);
             }
         });
         setValue("moduliOrdinati", moduleIds);
@@ -151,13 +148,13 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
         if (!selectedProgram) return [];
         return moduliOrdinati.map(uniqueId => {
             const moduloId = Number(uniqueId.split('-')[0]);
-            const rel = selectedProgram.programma_modulo.find(pm => pm.modulo_id === moduloId);
+            const rel = selectedProgram.moduli.find(m => m.id === moduloId);
             return {
                 uniqueId,
                 id: moduloId,
-                titolo: rel?.modulo.titolo || `Modulo ${moduloId}`,
-                n_ore: rel?.modulo.n_ore,
-                competenza: rel?.modulo.competenza,
+                titolo: rel?.modulo?.titolo || `Modulo ${moduloId}`,
+                n_ore: rel?.modulo?.n_ore,
+                competenza: rel?.modulo?.competenza,
                 multiplo: rel?.modulo?.multiplo ?? true, // Defaults to true if your database allows repeating lessons
             };
         });

@@ -11,7 +11,7 @@ export const aulaSchema = z.object({
 
 export const createAulaSchema = aulaSchema.omit({id : true})
 
-export const updateAulaSchema = aulaSchema.partial().required({id : true});
+export const updateAulaSchema = aulaSchema.partial();
 
 export type Aula = z.infer<typeof aulaSchema>;
 export type CreateAula = z.infer<typeof createAulaSchema>;

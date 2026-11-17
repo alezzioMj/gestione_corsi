@@ -43,26 +43,22 @@ export const updateClienteSchema = clienteWithRelationsSchema
     })
     .partial()
     .extend({
-        id: z.number().int().positive(),
-
-        sedi: clienteWithRelationsSchema.shape.sedi
-            .element
+        sedi: clienteWithRelationsSchema.shape.sedi.element
+            .omit({ cliente_id: true })
             .partial()
             .extend({
                 id: z.number().int().positive(),
-
                 contatti: z.array(
                     clienteWithRelationsSchema.shape.sedi.element.shape.contatti.element
+                        .omit({ sede_id: true })
                         .partial()
-                        .extend({
-                            id: z.number().int().positive()
-                        })
-                ).optional()
+                        .extend({ id: z.number().int().positive() })
+                ).optional(),
             })
             .array()
-            .optional()
+            .optional(),
     });
-    
+
 export type Cliente = z.infer<typeof clienteSchema>
 export type ClienteWithRelations = z.infer<typeof clienteWithRelationsSchema>
 export type CreateCliente = z.infer<typeof createClienteSchema>

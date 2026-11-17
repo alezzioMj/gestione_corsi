@@ -71,7 +71,7 @@ export default function ProgrammaCard({ programma, onProgrammaUpdated, onDeleteP
               programma.moduli.map((pm) => (
                 <Chip
                   key={pm.id}
-                  label={pm.titolo || "Senza Titolo"}
+                  label={pm.modulo?.titolo || "Senza Titolo"}
                   size="small"
                   variant="outlined"
                   color="secondary"
