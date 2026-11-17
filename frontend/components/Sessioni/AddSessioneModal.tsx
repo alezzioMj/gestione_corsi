@@ -16,10 +16,10 @@ import { useEffect } from "react";
 import { useDocentiByCorso } from "@/hooks/useDocentiByCorso";
 import { useSediByCorso } from "@/hooks/useSediByCorso";
 import { TimePicker } from "@mui/x-date-pickers/TimePicker";
-import { Aula } from "@progetto/shared/validation/types";
+import { Aula } from "@progetto/shared/validation/aula.schema";
 import { useAuleBySede } from "@/hooks/useAuleBySede";
 import { useModuliByCorso } from "@/hooks/useModuliByCorso";
-import { ModuloRelation } from "@/validation/corso-form.schema";
+import { Modulo } from "@progetto/shared/validation/modulo.schema";
 import { API_BASE_URL } from "@/lib/config";
 import { useCreateEntity } from "@/hooks/useCreateEntity";
 
@@ -114,9 +114,9 @@ export default function AddSessioneModal({onSessioneAdded}: AddSessioneModalProp
                                 <EntitySelect
                                     label="Modulo"
                                     options={moduli || []}
-                                    getOptionId={(m: ModuloRelation) => m.modulo_id}
+                                    getOptionId={(m: Modulo) => m.id}
                                     value={formData.modulo_id}
-                                    getOptionLabel={(m) => m.modulo.titolo}
+                                    getOptionLabel={(m) => m.titolo}
                                     onChange={(id) => setField("modulo_id", id)}
                                     disabled={!formData.corso_id || moduliIsLoading || !moduli}
                                     required

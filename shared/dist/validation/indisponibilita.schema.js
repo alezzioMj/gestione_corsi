@@ -1,8 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.indisponibilitaSchema = void 0;
+exports.updateIndisponibilitaSchema = exports.createIndisponibilitaSchema = exports.indisponibilitaSchema = void 0;
 const zod_1 = require("zod");
 exports.indisponibilitaSchema = zod_1.z.object({
+    id: zod_1.z.number().int(),
     docente_cf: zod_1.z.string()
         .length(16, "Il codice fiscale deve avere 16 caratteri")
         .nullable()
@@ -16,6 +17,12 @@ exports.indisponibilitaSchema = zod_1.z.object({
     causale: zod_1.z.string().min(1, "La causale è obbligatoria").max(100),
     descrizione: zod_1.z.string().nullable().optional(),
 }).superRefine((data, ctx) => {
+    // Validate chronological consistency only when all fields are present
+    if (data.data_inizio === undefined ||
+        data.data_fine === undefined ||
+        data.ora_inizio === undefined ||
+        data.ora_fine === undefined)
+        return;
     const inizio = new Date(data.data_inizio);
     const fine = new Date(data.data_fine);
     const [oreInizio, minutiInizio] = data.ora_inizio.split(":").map(Number);
@@ -30,3 +37,9 @@ exports.indisponibilitaSchema = zod_1.z.object({
         });
     }
 });
+exports.createIndisponibilitaSchema = exports.indisponibilitaSchema.omit({
+    id: true
+});
+exports.updateIndisponibilitaSchema = exports.indisponibilitaSchema
+    .partial()
+    .required({ id: true });

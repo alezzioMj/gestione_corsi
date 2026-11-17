@@ -32,7 +32,7 @@ export const createProgrammaSchema = programmaSchema.omit(
 export const updateProgrammaSchema = programmaSchema.partial().required({id: true})
 
 export type Programma = z.infer<typeof programmaSchema>
-export type programmaWithRelations = z.infer<typeof programmaWithRelationsSchema>
+export type ProgrammaWithRelations = z.infer<typeof programmaWithRelationsSchema>
 export type CreateProgramma = z.infer<typeof createProgrammaSchema>
 export type UpdateProgramma = z.infer<typeof updateProgrammaSchema>
 

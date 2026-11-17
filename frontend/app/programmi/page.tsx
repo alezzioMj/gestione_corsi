@@ -18,7 +18,7 @@ import DelayedLoading from "@/components/DelayedLoading";
 import { useConfirm } from "@/components/ConfirmContext";
 import { useSnackbar } from "@/components/SnackbarContext";
 
-import { ProgrammaConModuli } from "@/validation/corso-form.schema";
+import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema"
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
@@ -87,7 +87,7 @@ export default function ProgrammiPage() {
                     description={"Inizia aggiungendo un nuovo programma"}
                 />) : (
                 <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
-                    {programmi.map((p: ProgrammaConModuli) => (
+                    {programmi.map((p: ProgrammaWithRelations) => (
                         <Paper key={p.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <ProgrammaCard
                                 programma={p}

@@ -1,4 +1,9 @@
-import { Aula, Corso, Docente, Indisponibilita, Sede, SessioneWithRelations } from "@progetto/shared/validation/types";
+import { Aula } from "@progetto/shared/validation/aula.schema";
+import { Corso } from "@progetto/shared/validation/corso.schema";
+import { Docente } from "@progetto/shared/validation/docente.schema";
+import { Indisponibilita } from "@progetto/shared/validation/indisponibilita.schema";
+import { Sede } from "@progetto/shared/validation/sede.schema";
+import { SessioneWithRelations } from "@progetto/shared/validation/sessione.schema";
 import { CalendarRow, DayView, SlotView } from "./types";
 import { Box, Typography } from "@mui/material";
 import React from "react";

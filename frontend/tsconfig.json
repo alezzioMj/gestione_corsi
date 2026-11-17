@@ -21,7 +21,7 @@
     "paths": {
       "@/*": ["./*"],
       "@progetto/shared/*": ["../shared/*"],
-      "@backend/*" : ["../backend/*"]
+      "@backend/*": ["../backend/*"]
     }
   },
   "include": [
@@ -29,8 +29,7 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "lib/corsi"  ],
+  ],
   "exclude": ["node_modules"]
 }

@@ -3,11 +3,11 @@ const clienteRouter= express.Router();
 import { validate } from "../middlewares/validate";
 import { aulaSchema } from "@progetto/shared/validation/aula.schema";
 import { createCliente, deleteCliente, getClienti, updateCliente } from "../controllers/clientiController";
-import { ClienteUpdateSchema } from "@progetto/shared/validation/types";
+import { createClienteSchema, updateClienteSchema } from "@progetto/shared/validation/cliente.schema";
 
 clienteRouter.get('/', getClienti);
-clienteRouter.post('/', validate(ClienteUpdateSchema), createCliente);
-clienteRouter.put('/:id', validate(ClienteUpdateSchema),updateCliente);
+clienteRouter.post('/', validate(createClienteSchema), createCliente);
+clienteRouter.put('/:id', validate(updateClienteSchema),updateCliente);
 clienteRouter.delete('/:id', deleteCliente);
 
 export default clienteRouter;

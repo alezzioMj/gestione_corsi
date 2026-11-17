@@ -15,7 +15,7 @@ import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 
-import { ClienteWithRelations } from "@progetto/shared/validation/types";
+import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
 
 interface ClienteCardProps {
     cliente: ClienteWithRelations;

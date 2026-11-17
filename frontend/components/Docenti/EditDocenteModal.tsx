@@ -7,7 +7,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import * as countries from "i18n-iso-countries";
 import itLocale from "i18n-iso-countries/langs/it.json";
 
-import { Docente } from "@progetto/shared/validation/types";
+import { Docente } from "@progetto/shared/validation/docente.schema";
 import { DOCENTE_COLORS } from "@progetto/shared/constants/docente";
 
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";

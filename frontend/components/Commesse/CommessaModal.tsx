@@ -14,9 +14,9 @@ import {
     TextField
 } from "@mui/material";
 
-import { CommessaSchema } from "@progetto/shared/validation/types";
+import { Commessa } from "@progetto/shared/validation/commessa.schema";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import { useSnackbar } from "../SnackbarContext";
 import useSWR from "swr";
@@ -26,7 +26,7 @@ interface CommesseModalProps {
     open: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    commessa?: CommessaSchema;
+    commessa?: Commessa;
 }
 
 type ClienteOption = {
@@ -51,7 +51,7 @@ const STATI = [
     { value: "ANNULLATA", label: "Annullata" }
 ];
 
-const creaForm = (commessa?: CommessaSchema): CommessaForm => {
+const creaForm = (commessa?: Commessa): CommessaForm => {
     console.log(commessa?.codice_commessa);
     return ({
         codice_commessa: commessa?.codice_commessa ?? "",

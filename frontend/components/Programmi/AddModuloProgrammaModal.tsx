@@ -38,8 +38,8 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-import { Programma } from "@progetto/shared/validation/types";
-import { Modulo } from "@progetto/shared/validation/types";
+import { Programma } from "@progetto/shared/validation/programma.schema";
+import { Modulo } from "@progetto/shared/validation/modulo.schema";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 

@@ -14,21 +14,17 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
-import { SedeFormInput } from "@progetto/shared/validation/sede.schema";
+import { CreateSede } from "@progetto/shared/validation/sede.schema";
 import { creaCorsoCompleto } from "@/lib/corsi/createCorsoRollback";
 import { messaggioErrore } from "@/lib/errors/errorMessage";
-import {
-    formSchema,
-    FormType,
-    ProgrammaConModuli,
-    DocenteConModuli,
-} from "../../validation/corso-form.schema";
-
 import StepDocenti from "./StepDocenti";
 import StepReview from "./StepReview";
-import StepForm, { CommessaOption } from "./StepForm";
 import { useSnackbar } from "../SnackbarContext";
 import { ApiErrorBody } from "@progetto/shared/validation/types";
+import { useState } from "react";
+import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
+import { DocenteWithRelations } from "@progetto/shared/validation/docente.schema";
+import { CommessaWithRelations } from "@progetto/shared/validation/commessa.schema";
 
 const StepProgrammazione = dynamic(
     () => import("./StepProgrammazione"),
@@ -36,10 +32,10 @@ const StepProgrammazione = dynamic(
 );
 
 export default function MyStepper({ sedi, programmi, docenti, commesse }: {
-    sedi: SedeFormInput[],
-    programmi: ProgrammaConModuli[],
-    docenti: DocenteConModuli[],
-    commesse: CommessaOption[]
+    sedi: CreateSede[],
+    programmi: ProgrammaWithRelations[],
+    docenti: DocenteWithRelations[],
+    commesse: CommessaWithRelations[]
 }) {
     const steps = ["Anagrafica corso", "Programmazione", "Docenti", "Conferma"];
 
@@ -49,25 +45,24 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
             const selectedProgram = programmi.find(p => p.id === data.programmi);
             if (!selectedProgram) return;
 
-            const requiredModuleIds = selectedProgram.programma_modulo?.map(pm => pm.modulo_id) || [];
+            const requiredModuleIds = selectedProgram.moduli?.map(m => m.id) || [];
 
             const coveredModuleIds = new Set<number>();
             data.docenti.forEach(cf => {
                 const docente = docenti.find(d => d.codice_fiscale === cf);
-                docente?.docente_modulo?.forEach(dm => coveredModuleIds.add(dm.modulo_id));
+                docente?.moduli?.forEach(dm => coveredModuleIds.add(dm.id));
             });
 
-            // FFiltra moduli senza docente
             const missingModuleIds = requiredModuleIds.filter(id => !coveredModuleIds.has(id));
 
             if (missingModuleIds.length > 0) {
-                const nomiModuliMancanti = selectedProgram.programma_modulo
-                    .filter(pm => missingModuleIds.includes(pm.modulo_id))
-                    .map(pm => pm.modulo.titolo)
+                const nomiModuliMancanti = selectedProgram.moduli
+                    .filter(m => missingModuleIds.includes(m.id))
+                    .map(m => m.titolo)
                     .join(", ");
 
                 ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
+                    code: 'copertura_insufficiente',
                     message: `Copertura insufficiente. Mancano docenti per: ${nomiModuliMancanti}`,
                     path: ["docenti"],
                 });
@@ -75,7 +70,7 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
 
             if (selectedProgram.durata_totale && data.oreTotali < selectedProgram.durata_totale) {
                 ctx.addIssue({
-                    code: z.ZodIssueCode.custom,
+                    code: 'ore_insufficienti',
                     message: `Le ore totali non possono essere inferiori a quelle del programma selezionato (${selectedProgram.durata_totale}h).`,
                     path: ["oreTotali"],
                 });
@@ -84,7 +79,7 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
         });
     }, [programmi, docenti]);
 
-    const methods = useForm<FormType>({
+    const methods = useForm({
         resolver: zodResolver(dynamicSchema),
         defaultValues: {
             commessa_id: 0,
@@ -104,8 +99,8 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
             note: "",
         },
     });
-    const [activeStep, setActiveStep] = React.useState(0);
-    const [isSubmitting, setIsSubmitting] = React.useState(false);
+    const [activeStep, setActiveStep] = useState(0);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const router = useRouter();
 
     const onSubmit = async (data: FormType) => {

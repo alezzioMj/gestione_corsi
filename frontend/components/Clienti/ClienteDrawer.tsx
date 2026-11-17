@@ -15,7 +15,7 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import { ReactNode } from "react";
-import { ClienteWithRelations } from "@progetto/shared/validation/types";
+import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
 
 type Sede = ClienteWithRelations["sedi"][number];
 type Contatto = Sede["contatti"][number];
@@ -29,7 +29,7 @@ interface ClienteDrawerProps {
 // Riga con icona e testo, usata per email e telefono
 function InfoRow({ icon, children }: { icon: ReactNode; children: ReactNode }) {
     return (
-        <Stack direction="row" spacing={1} alignItems="center">
+        <Stack sx={{ direction: "row", spacing: 1, alignItems: "center" }}>
             <Box sx={{ display: "flex", color: "text.secondary", "& svg": { fontSize: 18 } }}>
                 {icon}
             </Box>
@@ -43,7 +43,7 @@ function InfoRow({ icon, children }: { icon: ReactNode; children: ReactNode }) {
 function ContattoItem({ contatto }: { contatto: Contatto }) {
     return (
         <Stack spacing={0.5}>
-            <Typography variant="body2" fontWeight={600}>
+            <Typography sx={{ variant: "body2", fontWeight: 600 }}>
                 {contatto.nome}
             </Typography>
 
@@ -75,14 +75,22 @@ function SedeCard({ sede }: { sede: Sede }) {
         <Paper variant="outlined" sx={{ p: 2, borderRadius: 2 }}>
             {/* Intestazione sede */}
             <Stack
-                direction="row"
-                justifyContent="space-between"
-                alignItems="center"
-                spacing={1}
+                sx={{
+                    direction: "row",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    spacing: 1
+                }}
             >
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack
+                    sx={{
+                        direction: "row",
+                        justifyContent: "space-between",
+                        spacing: 1
+                    }}
+                >
                     <LocationOnOutlinedIcon fontSize="small" color="action" />
-                    <Typography fontWeight={600}>
+                    <Typography sx={{ fontWeight: 600 }}>
                         {sede.nome || "Sede"}
                     </Typography>
                 </Stack>
@@ -157,13 +165,15 @@ export default function ClienteDrawer({
                     {/* Header fisso */}
                     <Box sx={{ px: 3, py: 2.5, borderBottom: 1, borderColor: "divider" }}>
                         <Stack
-                            direction="row"
-                            justifyContent="space-between"
-                            alignItems="flex-start"
-                            spacing={2}
+                            sx={{
+                                direction: "row",
+                                justifyContent: "space-between",
+                                alignItems: "flex-stat",
+                                spacing: 2
+                            }}
                         >
                             <Box>
-                                <Typography variant="h5" fontWeight={600}>
+                                <Typography sx={{ variant: "h5", fontWeight: 600 }}>
                                     {cliente.ragione_sociale}
                                 </Typography>
                                 <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
@@ -183,8 +193,15 @@ export default function ClienteDrawer({
 
                     {/* Contenuto scorrevole */}
                     <Box sx={{ flex: 1, overflowY: "auto", p: 3 }}>
-                        <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 2 }}>
-                            <Typography variant="h6" fontWeight={600}>
+                        <Stack
+                            sx={{
+                                direction: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                spacing: 1,
+                                mb: 2
+                            }}>
+                            <Typography sx={{ variant: "h6", fontWeight: 600 }}>
                                 Sedi
                             </Typography>
                             <Chip size="small" label={cliente.sedi.length} />

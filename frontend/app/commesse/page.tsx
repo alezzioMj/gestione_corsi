@@ -10,7 +10,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { fetcher } from "@/lib/swr-config";
 import useSWR from 'swr';
 import CommesseModal from "@/components/Commesse/CommessaModal";
-import { CommessaSchema } from "@progetto/shared/validation/types";
+import { Commessa } from "@progetto/shared/validation/commessa.schema";
 import { useState } from "react";
 import CommessaCard from "@/components/Commesse/CommessaCard";
 import { useSnackbar } from "@/components/SnackbarContext";
@@ -26,12 +26,12 @@ const STATI = [
 export default function CommessePage() {
     const [open, setOpen] = useState(false);
     const [commessaSelezionata, setcommessaSelezionata] =
-        useState<CommessaSchema | undefined>(undefined);
+        useState<Commessa | undefined>(undefined);
     const { data, isLoading, error, mutate } = useSWR(`${API_BASE_URL}/commesse`, fetcher);
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
 
-    const handleDelete = async (c: CommessaSchema) => {
+    const handleDelete = async (c: Commessa) => {
         const confirmed = await confirm({
             title: "Eliminare commessa?",
             message: `Sei sicuro di voler eliminare la commessa "${c.codice_commessa}"?`,
@@ -71,7 +71,7 @@ export default function CommessePage() {
         }
     };
 
-    const handleEdit = (c: CommessaSchema) => {
+    const handleEdit = (c: Commessa) => {
         setcommessaSelezionata(c);
         setOpen(true);
     }
@@ -151,8 +151,8 @@ export default function CommessePage() {
             ) : (
                 <Stack spacing={4}>
                     {STATI.map(stato => {
-                        const commesseFiltrate = data.filter(
-                            c => c.stato === stato.value
+                        const commesseFiltrate : Commessa[] = data.filter(
+                            (c : Commessa) => c.stato === stato.value
                         );
 
                         if (commesseFiltrate.length === 0) return null;

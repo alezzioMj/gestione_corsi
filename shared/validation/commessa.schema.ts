@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { stato_commessa } from "@prisma/client";
+import { clienteSchema } from "./cliente.schema";
 
 export const commessaSchema = z.object({
   id: z.number().int(),
@@ -12,8 +13,17 @@ export const commessaSchema = z.object({
   stato: z.enum(stato_commessa).optional(), // default APERTA lato DB
 });
 
-// Per la creazione l'id non c'è (autoincrement)
+export const commessaWithRelationsSchema = commessaSchema.extend(
+  {
+    cliente: clienteSchema
+  }
+)
+
 export const createCommessaSchema = commessaSchema.omit({ id: true });
 
-// Per la modifica parziale
 export const updateCommessaSchema = commessaSchema.omit({ id: true }).partial();
+
+export type Commessa = z.infer<typeof commessaSchema>
+export type CommessaWithRelations = z.infer<typeof commessaWithRelationsSchema>
+export type CreateCommessa = z.infer<typeof createCommessaSchema>
+export type UpdateCommessa = z.infer<typeof updateCommessaSchema>

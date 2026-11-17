@@ -1,5 +1,59 @@
 import { z } from "zod";
 export declare const corsoSchema: z.ZodObject<{
+    id: z.ZodNumber;
+    commessa_id: z.ZodNumber;
+    programma_id: z.ZodNumber;
+    n_ore: z.ZodNumber;
+    nome: z.ZodString;
+    inizio: z.ZodCoercedDate<unknown>;
+    fine: z.ZodCoercedDate<unknown>;
+    mattina_inizio: z.ZodString;
+    mattina_fine: z.ZodString;
+    pomeriggio_inizio: z.ZodString;
+    pomeriggio_fine: z.ZodString;
+    created_at: z.ZodCoercedDate<unknown>;
+}, z.core.$strip>;
+export declare const corsoWithRelationsSchema: z.ZodObject<{
+    id: z.ZodNumber;
+    commessa_id: z.ZodNumber;
+    programma_id: z.ZodNumber;
+    n_ore: z.ZodNumber;
+    nome: z.ZodString;
+    inizio: z.ZodCoercedDate<unknown>;
+    fine: z.ZodCoercedDate<unknown>;
+    mattina_inizio: z.ZodString;
+    mattina_fine: z.ZodString;
+    pomeriggio_inizio: z.ZodString;
+    pomeriggio_fine: z.ZodString;
+    created_at: z.ZodCoercedDate<unknown>;
+    commessa: z.ZodObject<{
+        id: z.ZodNumber;
+        codice_commessa: z.ZodString;
+        codice_ft: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        codice_rlom: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        descrizione: z.ZodOptional<z.ZodNullable<z.ZodString>>;
+        scadenza: z.ZodOptional<z.ZodNullable<z.ZodCoercedDate<unknown>>>;
+        cliente_id: z.ZodOptional<z.ZodNullable<z.ZodNumber>>;
+        stato: z.ZodOptional<z.ZodEnum<{
+            APERTA: "APERTA";
+            IN_CORSO: "IN_CORSO";
+            CHIUSA: "CHIUSA";
+            ANNULLATA: "ANNULLATA";
+        }>>;
+    }, z.core.$strip>;
+    programma: z.ZodObject<{
+        id: z.ZodNumber;
+        titolo: z.ZodString;
+        descrizione: z.ZodOptional<z.ZodString>;
+        durata_totale: z.ZodNumber;
+        ore_pratiche: z.ZodNumber;
+        ore_teoriche: z.ZodNumber;
+        ore_trasversali: z.ZodNumber;
+        created_at: z.ZodCoercedDate<unknown>;
+        created_by: z.ZodOptional<z.ZodString>;
+    }, z.core.$strip>;
+}, z.core.$strip>;
+export declare const createCorsoSchema: z.ZodObject<{
     commessa_id: z.ZodNumber;
     programma_id: z.ZodNumber;
     n_ore: z.ZodNumber;
@@ -11,3 +65,20 @@ export declare const corsoSchema: z.ZodObject<{
     pomeriggio_inizio: z.ZodString;
     pomeriggio_fine: z.ZodString;
 }, z.core.$strip>;
+export declare const updateCorsoSchema: z.ZodObject<{
+    id: z.ZodNonOptional<z.ZodOptional<z.ZodNumber>>;
+    commessa_id: z.ZodOptional<z.ZodNumber>;
+    programma_id: z.ZodOptional<z.ZodNumber>;
+    n_ore: z.ZodOptional<z.ZodNumber>;
+    nome: z.ZodOptional<z.ZodString>;
+    inizio: z.ZodOptional<z.ZodCoercedDate<unknown>>;
+    fine: z.ZodOptional<z.ZodCoercedDate<unknown>>;
+    mattina_inizio: z.ZodOptional<z.ZodString>;
+    mattina_fine: z.ZodOptional<z.ZodString>;
+    pomeriggio_inizio: z.ZodOptional<z.ZodString>;
+    pomeriggio_fine: z.ZodOptional<z.ZodString>;
+    created_at: z.ZodOptional<z.ZodCoercedDate<unknown>>;
+}, z.core.$strip>;
+export type Corso = z.infer<typeof corsoSchema>;
+export type CreateCorso = z.infer<typeof createCorsoSchema>;
+export type UpdateCorso = z.infer<typeof updateCorsoSchema>;

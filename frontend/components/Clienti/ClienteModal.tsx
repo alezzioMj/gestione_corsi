@@ -11,15 +11,10 @@ import {
     Typography
 } from "@mui/material";
 
-import {
-    ClienteWithRelations,
-    Contatto
-} from "@progetto/shared/validation/types";
-
+import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema"
 import { useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import SedeForm, { SedeFormData, ContattoForm } from "./SedeForm";
-import { useSnackbar } from "../SnackbarContext";
 
 interface ClientiModalProps {
     open: boolean;

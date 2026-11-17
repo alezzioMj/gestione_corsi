@@ -7,7 +7,7 @@ import { API_ENDPOINTS } from "@/lib/api";
 import { fetcher } from "@/lib/swr-config";
 import { FolderOffOutlined } from "@mui/icons-material";
 import { Container, Box, Typography, Alert, Button } from "@mui/material";
-import { Materiale } from "@progetto/shared/validation/types";
+import { Materiale } from "@progetto/shared/validation/materiale.schema";
 import useSWR from "swr";
 import MaterialeCard from "@/components/Materiali/MaterialeCard";
 import { API_BASE_URL } from "@/lib/config";
@@ -21,7 +21,7 @@ export default function Materiali() {
     const { confirm } = useConfirm();
     const { showMessage } = useSnackbar();
 
-    async function onDelete(materiale_id: string) {
+    async function onDelete(materiale_id: number) {
         const ok = await confirm({
             title: "Elimina materiale",
             message: "Sei sicuro di eliminre questo materiale?",

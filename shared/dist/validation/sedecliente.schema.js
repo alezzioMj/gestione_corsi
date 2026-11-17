@@ -3,8 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.sedeClienteSchema = void 0;
+exports.updateSedeClienteSchema = exports.createSedeClienteSchema = exports.SedeClienteWithRelationsSchema = exports.sedeClienteSchema = void 0;
 const zod_1 = __importDefault(require("zod"));
+const contatto_schema_1 = require("./contatto.schema");
 exports.sedeClienteSchema = zod_1.default.object({
     id: zod_1.default.number(),
     tipo: zod_1.default.enum([
@@ -19,3 +20,8 @@ exports.sedeClienteSchema = zod_1.default.object({
     citta: zod_1.default.string(),
     provincia: zod_1.default.string()
 });
+exports.SedeClienteWithRelationsSchema = exports.sedeClienteSchema.extend({
+    contatti: zod_1.default.array(contatto_schema_1.contattoSchema),
+});
+exports.createSedeClienteSchema = exports.sedeClienteSchema.omit({ id: true });
+exports.updateSedeClienteSchema = exports.sedeClienteSchema.partial().required({ id: true });

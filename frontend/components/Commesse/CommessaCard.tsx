@@ -11,10 +11,10 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import { CommessaSchema } from "@progetto/shared/validation/types";
+import { Commessa } from "@progetto/shared/validation/commessa.schema";
 
 interface CommessaCardProps {
-    commessa: CommessaSchema & {
+    commessa: Commessa & {
         cliente?: {
             ragione_sociale: string;
         } | null;

@@ -13,7 +13,7 @@ import AttachmentIcon from "@mui/icons-material/Attachment";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
 import { ApiErrorData } from "@progetto/shared/validation/types";
-import { Modulo } from "@progetto/shared/validation/types";
+import { Modulo } from "@progetto/shared/validation/modulo.schema";
 import { API_BASE_URL } from "@/lib/config";
 import { CATEGORIE_MATERIALE, Materiale } from "@progetto/shared/validation/materiale.schema";
 import useSWR from "swr";

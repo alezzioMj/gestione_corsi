@@ -1,5 +1,5 @@
 import { number, z } from "zod";
-import { corsoSchema } from "./corso.schema";
+import { corsoSchema, corsoWithRelationsSchema } from "./corso.schema";
 import { docenteSchema } from "./docente.schema";
 import { moduloSchema } from "./modulo.schema";
 import { aulaSchema } from "./aula.schema";
@@ -35,7 +35,7 @@ export const sessioneSchema = z.object({
 
 export const sessioneWithRelationsSchema = sessioneSchema.extend(
   {
-    corso: corsoSchema,
+    corso: corsoWithRelationsSchema,
     docente: docenteSchema,
     modulo: moduloSchema,
     aula: aulaSchema,

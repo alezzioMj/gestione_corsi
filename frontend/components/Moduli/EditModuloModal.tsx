@@ -17,9 +17,9 @@ import {
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 
-import { ApiErrorData, Modulo } from "@progetto/shared/validation/types";
-import { API_ENDPOINTS } from "@/lib/api";
+import { ApiErrorData } from "@progetto/shared/validation/types";
 import { API_BASE_URL } from "@/lib/config";
+import { Modulo } from "@progetto/shared/validation/modulo.schema";
 
 interface EditModuloModalProps {
     open: boolean;

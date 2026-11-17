@@ -15,7 +15,9 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import { Aula, Docente, Sede } from "@progetto/shared/validation/types";
+import { Aula } from "@progetto/shared/validation/aula.schema";
+import { Docente } from "@progetto/shared/validation/docente.schema";
+import { Sede } from "@progetto/shared/validation/sede.schema";
 import { useState } from "react";
 import useSWR from "swr";
 
@@ -150,7 +152,7 @@ export default function IndisponibilitaPage() {
                 </Typography>
 
                 <Typography variant="subtitle2" color="primary">
-                    Informazioni sull'indisponibilità
+                    {"Informazioni sull'indisponibilità"}
                 </Typography>
 
                 <Box sx={{

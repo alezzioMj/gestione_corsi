@@ -5,7 +5,9 @@ import useSWR from "swr";
 import { Alert, Box, Button, Chip, Container, ToggleButton, ToggleButtonGroup, Typography } from "@mui/material";
 import { CalendarMonthOutlined } from "@mui/icons-material";
 
-import { Aula, Docente, Sede } from "@progetto/shared/validation/types";
+import { Aula } from "@progetto/shared/validation/aula.schema";
+import { Docente } from "@progetto/shared/validation/docente.schema";
+import { Sede } from "@progetto/shared/validation/sede.schema";
 
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";

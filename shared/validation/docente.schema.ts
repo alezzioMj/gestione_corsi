@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DOCENTE_COLORS } from "../constants/docente";
+import { moduloSchema } from "./modulo.schema";
 
 export const docenteSchema = z.object({
   codice_fiscale: z
@@ -67,11 +68,14 @@ export const docenteSchema = z.object({
     z.coerce.date
 });
 
+export const docenteWithRelationsSchema = docenteSchema.extend({ moduli: z.array(moduloSchema) });
+
 export const createDocenteSchema = docenteSchema.omit({ created_at: true });
 
 export const updateDocenteSchema = docenteSchema.partial().required({codice_fiscale: true});
 
 export type Docente = z.infer<typeof docenteSchema>;
+export type DocenteWithRelations = z.infer<typeof docenteWithRelationsSchema>
 export type CreateDocente = z.infer<typeof createDocenteSchema>;
 export type UpdateDocente = z.infer<typeof updateDocenteSchema>;
 

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { commessaSchema } from "./commessa.schema";
+import { commessaSchema, commessaWithRelationsSchema } from "./commessa.schema";
 import { programmaSchema } from "./programma.schema";
 
 export const corsoSchema = z.object({
@@ -30,7 +30,7 @@ export const corsoSchema = z.object({
   });
 
 export const corsoWithRelationsSchema = corsoSchema.extend({
-  commessa: commessaSchema,
+  commessa: commessaWithRelationsSchema,
   programma: programmaSchema
 });
 

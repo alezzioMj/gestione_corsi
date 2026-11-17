@@ -8,7 +8,7 @@ import { API_BASE_URL } from "@/lib/config";
 import { fetcher } from "@/lib/swr-config";
 import useSWR from "swr";
 import ClienteCard from "@/components/Clienti/ClienteCard";
-import { ClienteWithRelations } from "@progetto/shared/validation/types";
+import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
 import ClienteDrawer from "@/components/Clienti/ClienteDrawer";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { useConfirm } from "@/components/ConfirmContext";

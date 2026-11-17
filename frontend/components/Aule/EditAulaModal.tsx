@@ -10,7 +10,7 @@ import {
     TextField,
     Box
 } from "@mui/material";
-import { Aula } from "@progetto/shared/validation/types";
+import { Aula } from "@progetto/shared/validation/aula.schema";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
 

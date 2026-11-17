@@ -1,7 +1,8 @@
 import express from "express";
 import { prisma } from "../prisma";
-import { cliente_sede, Prisma, sede } from "@prisma/client";
-import { Sede, SedeCliente } from "@progetto/shared/validation/types";
+import { SedeClienteWithRelations } from "@progetto/shared/validation/sedecliente.schema";
+import { Contatto } from "@progetto/shared/validation/contatto.schema";
+import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
 
 const getClienti = async (req: express.Request, res: express.Response) => {
     try {
@@ -35,7 +36,7 @@ const createCliente = async (req: express.Request, res: express.Response) => {
                     partita_iva,
 
                     sedi: {
-                        create: sedi.map(({ contatti, ...sede }) => ({
+                        create: sedi.map(({ contatti, ...sede }: SedeClienteWithRelations) => ({
                             ...sede,
 
                             contatti: {
@@ -72,7 +73,7 @@ const createCliente = async (req: express.Request, res: express.Response) => {
 const updateCliente = async (req: express.Request, res: express.Response) => {
     try {
         const id = Number(req.params.id);
-        const { ragione_sociale, partita_iva, sedi } = req.body;
+        const { ragione_sociale, partita_iva, sedi} : ClienteWithRelations = req.body;
 
         const result = await prisma.$transaction(async (px) => {
 
@@ -94,8 +95,8 @@ const updateCliente = async (req: express.Request, res: express.Response) => {
 
             for (const sede of sedi.filter(s => s.id != null)) {
                 const contattiEsistenti = sede.contatti
-                    .filter(c => c.id != null)
-                    .map(c => c.id!);
+                    .filter((c: Contatto) => c.id != null)
+                    .map((c: Contatto) => c.id!);
 
                 const contattiVerificati = await px.cliente_contatto.findMany({
                     where: {

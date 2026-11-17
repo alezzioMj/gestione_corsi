@@ -1,8 +1,8 @@
 import { aula, docente } from "@prisma/client";
 import { calculateHours, toMinutes, hasOverlap } from "../utils/time.utils"
-import { Indisponibilita, SessioneWithRelations } from "@progetto/shared/validation/types"
-import { sedeSchema } from "@progetto/shared/validation/sede.schema";
-import { indisponibilitaSchema } from "@progetto/shared/validation/indisponibilita.schema";
+import { Indisponibilita } from "@progetto/shared/validation/indisponibilita.schema";
+import { SessioneWithRelations } from "@progetto/shared/validation/sessione.schema";
+
 type Slot = {
     data: Date;
     ora_inizio: string;

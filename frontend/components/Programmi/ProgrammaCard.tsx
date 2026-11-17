@@ -3,14 +3,14 @@
 import React, { useState } from "react";
 import { Card, CardContent, Typography, Box, Divider, Chip, Button } from "@mui/material";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { ProgrammaConModuli } from "@/validation/corso-form.schema";
+import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
 import AddModuloProgrammaModal from "./AddModuloProgrammaModal";
 import EditProgrammaModal from "./EditProgrammaModal"; // Importa il modal di modifica
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 interface ProgrammaCardProps {
-  programma: ProgrammaConModuli;
+  programma: ProgrammaWithRelations;
   onProgrammaUpdated: () => void; // Callback per aggiornare la lista nel componente padre
   onDeleteProgramma: (programmaId: number) => void; // Callback per eliminare il programma
 }
@@ -67,11 +67,11 @@ export default function ProgrammaCard({ programma, onProgrammaUpdated, onDeleteP
             '&::-webkit-scrollbar': { height: '5px' },
             '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: '10px' },
           }}>
-            {programma.programma_modulo && programma.programma_modulo.length > 0 ? (
-              programma.programma_modulo.map((pm) => (
+            {programma.moduli && programma.moduli.length > 0 ? (
+              programma.moduli.map((pm) => (
                 <Chip
-                  key={pm.modulo_id}
-                  label={pm.modulo?.titolo || "Senza Titolo"}
+                  key={pm.id}
+                  label={pm.titolo || "Senza Titolo"}
                   size="small"
                   variant="outlined"
                   color="secondary"
