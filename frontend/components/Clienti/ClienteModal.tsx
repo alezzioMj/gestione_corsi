@@ -15,6 +15,8 @@ import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema
 import { useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import SedeForm, { SedeFormData, ContattoForm } from "./SedeForm";
+import { useSnackbar } from "../SnackbarContext";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface ClientiModalProps {
     open: boolean;
@@ -45,12 +47,10 @@ export default function ClientiModal({
     onSuccess,
     cliente
 }: ClientiModalProps) {
-
     const isEdit = Boolean(cliente);
-
     const [submitting, setSubmitting] = useState(false);
-
     const [form, setForm] = useState<ClienteForm>(() => creaForm(cliente));
+    const { showMessage } = useSnackbar();
 
     const nuovaSede = (): SedeFormData => ({
         tipo: "OPERATIVA",
@@ -188,16 +188,15 @@ export default function ClientiModal({
             });
 
             if (!res.ok) {
-                const data = await res.json();
-                throw new Error(
-                    data.error || "Errore durante il salvataggio del cliente"
-                );
+                const errorData = await res.json();
+                throw new Error(errorData.message);
             }
 
             onSuccess();
 
         } catch (error) {
             console.error(error);
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setSubmitting(false);
         }

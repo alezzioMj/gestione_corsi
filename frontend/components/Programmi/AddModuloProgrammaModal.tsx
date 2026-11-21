@@ -42,6 +42,8 @@ import { Programma } from "@progetto/shared/validation/programma.schema";
 import { Modulo } from "@progetto/shared/validation/modulo.schema";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
+import { useSnackbar } from "../SnackbarContext";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface AddModuloProgrammaModalProps {
     programma: Programma;
@@ -64,12 +66,12 @@ function SortableModuloItem({ modulo, onRemove }: { modulo: Modulo; onRemove: ()
             ref={setNodeRef}
             style={style}
             variant="outlined"
-            sx={{ 
-                p: 1.5, 
-                mb: 1, 
-                display: "flex", 
-                alignItems: "center", 
-                gap: 1, 
+            sx={{
+                p: 1.5,
+                mb: 1,
+                display: "flex",
+                alignItems: "center",
+                gap: 1,
                 bgcolor: isDragging ? "action.hover" : "background.paper",
                 boxShadow: isDragging ? 3 : 0,
                 touchAction: 'none' // Necessario per il corretto funzionamento su touch
@@ -92,6 +94,7 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
     const [moduli, setModuli] = useState<Modulo[]>([]);
     const [selectedIds, setSelectedIds] = useState<number[]>([]);
     const [searchQuery, setSearchQuery] = useState("");
+    const { showMessage } = useSnackbar();
     const router = useRouter();
 
     const sensors = useSensors(
@@ -115,19 +118,23 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
             setModuli(allModuli);
 
             const resAssociazioni = await fetch(`${API_BASE_URL}/programmi/${programma.id}/moduli`, { cache: 'no-store' });
-            if (resAssociazioni.ok) {
-                const data = await resAssociazioni.json();
-                const currentIds = data.map((m: Modulo) => m.id )
-                setSelectedIds(currentIds);
+            if (!resAssociazioni.ok) {
+                const errorData = await resAssociazioni.json();
+                throw Error(errorData.message);
             }
+            const data = await resAssociazioni.json();
+            const currentIds = data.map((m: Modulo) => m.id)
+            setSelectedIds(currentIds);
         } catch (error) {
-            console.error("Errore fetch:", error);
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setLoading(false);
         }
     };
 
     useEffect(() => { if (open) fetchData(); }, [open]);
+
 
     const handleToggle = (id: number) => () => {
         const currentIndex = selectedIds.indexOf(id);
@@ -161,19 +168,27 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ moduli_ids: selectedIds }),
             });
-            if (res.ok) { 
-                router.refresh(); 
-                handleClose(); 
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw Error(errorData.message);
             }
-        } catch (error) { console.error(error); } finally { setLoading(false); }
+            router.refresh();
+            handleClose();
+        } catch (error) {
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
+        }
+        finally {
+            setLoading(false);
+        }
     };
 
-    const filteredModuli = useMemo(() => 
+    const filteredModuli = useMemo(() =>
         moduli.filter(m => m.titolo.toLowerCase().includes(searchQuery.toLowerCase())),
         [moduli, searchQuery]
     );
 
-    const orderedSelectedModuli = useMemo(() => 
+    const orderedSelectedModuli = useMemo(() =>
         selectedIds.map(id => moduli.find(m => m.id === id)).filter(Boolean) as Modulo[],
         [selectedIds, moduli]
     );
@@ -195,16 +210,16 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
                                     <SortableContext items={selectedIds} strategy={verticalListSortingStrategy}>
                                         {orderedSelectedModuli.length > 0 ? (
                                             orderedSelectedModuli.map((modulo) => (
-                                                <SortableModuloItem 
-                                                    key={modulo.id} 
-                                                    modulo={modulo} 
-                                                    onRemove={handleToggle(modulo.id)} 
+                                                <SortableModuloItem
+                                                    key={modulo.id}
+                                                    modulo={modulo}
+                                                    onRemove={handleToggle(modulo.id)}
                                                 />
                                             ))
                                         ) : (
                                             <Box sx={{ mt: 10, textAlign: 'center' }}>
                                                 <Typography variant="body2" color="text.secondary">
-                                                    Seleziona i moduli dal catalogo<br/>per comporre il programma.
+                                                    Seleziona i moduli dal catalogo<br />per comporre il programma.
                                                 </Typography>
                                             </Box>
                                         )}
@@ -218,13 +233,13 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
                             <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', mb: 2 }}>
                                 CATALOGO COMPLETO
                             </Typography>
-                            <TextField 
-                                fullWidth 
-                                size="small" 
-                                placeholder="Cerca modulo..." 
+                            <TextField
+                                fullWidth
+                                size="small"
+                                placeholder="Cerca modulo..."
                                 sx={{ mb: 2 }}
-                                value={searchQuery} 
-                                onChange={(e) => setSearchQuery(e.target.value)} 
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
                             />
                             <Box sx={{ maxHeight: 400, overflowY: "auto", pr: 1 }}>
                                 <Grid container spacing={0}>
@@ -233,7 +248,7 @@ export default function AddModuloProgrammaModal({ programma }: AddModuloProgramm
                                             <FormControlLabel
                                                 sx={{ width: '100%', ml: 0 }}
                                                 control={<Checkbox size="small" checked={selectedIds.includes(modulo.id)} onChange={handleToggle(modulo.id)} />}
-                                                label={<Typography variant="body2">{modulo.titolo}</Typography>} 
+                                                label={<Typography variant="body2">{modulo.titolo}</Typography>}
                                             />
                                         </Grid>
                                     ))}

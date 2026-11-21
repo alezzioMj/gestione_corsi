@@ -16,7 +16,7 @@ import { getErrorMessage } from "@/utils/errorMessages";
 
 export default function SediPage() {
     //SWR hook for fetching /Sedi
-    const { data: sedi, error, isLoading, mutate } = useSWR(API_ENDPOINTS.sedi, fetcher);
+    const { data: sedi, error, isValidating, mutate } = useSWR(API_ENDPOINTS.sedi, fetcher);
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
 
@@ -86,7 +86,7 @@ export default function SediPage() {
                 )}
 
                 {/*Loading */}
-                {isLoading ? (
+                {isValidating ? (
                     <DelayedLoading />
                 ) : !sedi || sedi.length === 0 ? (
                     <>

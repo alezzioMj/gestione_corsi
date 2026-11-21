@@ -18,7 +18,6 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddIcon from "@mui/icons-material/Add";
 
-import { Contatto } from "@progetto/shared/validation/contatto.schema";
 import { DeleteOutlineOutlined } from "@mui/icons-material";
 
 export type ContattoForm = {

@@ -4,14 +4,15 @@ import React, { useState, useRef } from "react";
 import {
     Button, Dialog, DialogTitle, DialogContent,
     DialogActions, TextField, CircularProgress,
-    Box, Typography, Divider, MenuItem, Snackbar, Alert,
+    Box, Typography, Divider, MenuItem,
     FormControlLabel, Checkbox
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { ApiErrorData } from "@progetto/shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
+import { getErrorMessage } from "@/utils/errorMessages";
+import { useSnackbar } from "../SnackbarContext";
 
 interface AddModuloModalProps {
     onModuloAdded?: () => void;
@@ -24,16 +25,13 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
         titolo: "",
         competenza: "",
         descrizioneMateriale: "",
+        n_ore: 4,
         multiplo: false
     });
     const [file, setFile] = useState<File | null>(null);
     const [open, setOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-        open: false,
-        message: '',
-        severity: 'success',
-    });
+    const { showMessage } = useSnackbar();
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const handleOpen = () => setOpen(true);
@@ -44,6 +42,7 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
             titolo: "",
             competenza: "",
             descrizioneMateriale: "",
+            n_ore: 0,
             multiplo: false
         });
         setFile(null);
@@ -64,10 +63,12 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
             const data = new FormData();
             data.append("titolo", formData.titolo);
             data.append("competenza", formData.competenza);
+            data.append("n_ore", formData.n_ore.toString());
             data.append("descrizioneMateriale", formData.descrizioneMateriale);
             if (formData.multiplo) {
                 data.append("multiplo", "true");
             }
+               data.append("multiplo", "false");
             if (file) {
                 data.append("file", file);
             }
@@ -81,18 +82,11 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                 if (onModuloAdded) onModuloAdded();
                 handleClose();
             } else {
-                const errorData: ApiErrorData = await res.json();
-                const msg = errorData.issues
-                    ? errorData.issues.map((i) => i.message).join(", ")
-                    : (errorData.error || "Impossibile creare il modulo");
-                throw new Error(msg);
+                const errorData = await res.json();
+                throw Error(errorData.message);
             }
         } catch (error: unknown) {
-            setSnackbar({
-                open: true,
-                message: error instanceof Error ? error.message : "Errore di rete",
-                severity: "error"
-            });
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setSubmitting(false);
         }
@@ -216,16 +210,6 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
                     </DialogActions>
                 </form>
             </Dialog>
-
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-            >
-                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled">
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </>
     );
 }

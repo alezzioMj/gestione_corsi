@@ -16,13 +16,13 @@ import {
 } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import SearchIcon from "@mui/icons-material/Search";
-import { useRouter } from "next/navigation";
-
 import { Docente } from "@progetto/shared/validation/docente.schema";
 import useSWR, { useSWRConfig } from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
+import { getErrorMessage } from "@/utils/errorMessages";
+import { useSnackbar } from "../SnackbarContext";
 
 interface Modulo {
   id: number;
@@ -104,7 +104,7 @@ function ModuliChecklist({
 }) {
   const [selectedIds, setSelectedIds] = useState(initialSelectedIds); // ora è stato vero, editabile
   const { mutate } = useSWRConfig();
-  const router = useRouter();
+  const { showMessage } = useSnackbar();
 
   const handleToggle = (id: number) => () => {
     setSelectedIds((prev) =>
@@ -121,14 +121,15 @@ function ModuliChecklist({
         body: JSON.stringify({ moduli_ids: selectedIds }),
       });
 
-      if (res.ok) {
-        await mutate(`${API_ENDPOINTS.docenti}${docente.codice_fiscale}/moduli`);
-        onClose();
-      } else {
-        alert("Errore durante il salvataggio delle competenze");
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw Error(errorData.message)
       }
+      await mutate(`${API_ENDPOINTS.docenti}${docente.codice_fiscale}/moduli`);
+      onClose();
     } catch (error) {
-      console.error("Errore:", error);
+      console.error(error);
+      showMessage(getErrorMessage(error), "error")
     } finally {
       setSaving(false);
     }

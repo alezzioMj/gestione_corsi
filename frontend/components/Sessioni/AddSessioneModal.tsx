@@ -67,6 +67,11 @@ export default function AddSessioneModal({ onSessioneAdded }: AddSessioneModalPr
             showMessage("Errore nel recupero dei dati", "error");
         }
     }, [error, showMessage]);
+
+    useEffect(() => {
+        setField("aula_id", null);
+    }, [formData.corso_id]);
+
     const payload = { ...formData, priorita: 1 }
     const { submitting, create } = useCreateEntity(`${API_BASE_URL}/sessioni`);
 

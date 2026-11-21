@@ -6,7 +6,6 @@ import React, { useState } from "react";
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteIcon from '@mui/icons-material/Delete';
 import InfoIcon from '@mui/icons-material/Info';
-import EditIcon from '@mui/icons-material/Edit';
 import useSWR from 'swr';
 import DelayedLoading from "@/components/DelayedLoading";
 import { fetcher } from "@/lib/swr-config";

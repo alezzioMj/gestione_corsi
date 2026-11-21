@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import {
     Button, Dialog, DialogTitle, DialogContent, DialogActions,
     List, ListItem, ListItemText, IconButton, Typography,
-    Box, CircularProgress, TextField, Divider, Snackbar, Alert,
+    Box, CircularProgress, TextField, Divider,
     MenuItem
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -12,7 +12,6 @@ import AddIcon from "@mui/icons-material/Add";
 import AttachmentIcon from "@mui/icons-material/Attachment";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
-import { ApiErrorData } from "@progetto/shared/validation/types";
 import { Modulo } from "@progetto/shared/validation/modulo.schema";
 import { API_BASE_URL } from "@/lib/config";
 import { CATEGORIE_MATERIALE, Materiale } from "@progetto/shared/validation/materiale.schema";
@@ -20,6 +19,7 @@ import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { useSnackbar } from "../SnackbarContext";
 import { useConfirm } from "../ConfirmContext";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface ModuloMaterialeAssociation {
     materiale_id: string;
@@ -46,11 +46,8 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                 method: "GET"
             });
             if (!resMateriali.ok) {
-                const errorData: ApiErrorData | null = await resMateriali.json().catch(() => null);
-                const msg = errorData?.issues
-                    ? errorData.issues.map((i) => i.message).join(", ")
-                    : errorData?.error || "Impossibile ottenere gli hashcode"
-                throw new Error(msg);
+                const errorData = await resMateriali.json().catch(() => null);
+                throw new Error(errorData.message);
             }
             const materiali: Materiale[] = await resMateriali.json();
 
@@ -63,13 +60,7 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             const checksum = Array.from(new Uint8Array(hashBuffer))
                 .map(b => b.toString(16).padStart(2, "0"))
                 .join("");
-            console.log("Checksum calcolato:", checksum);
 
-            console.log("Materiali:", materiali.map(m => ({
-                id: m.id,
-                titolo: m.titolo,
-                checksum: m.checksum
-            })));
             const materialeDuplicato = materiali.find(
                 m => m.checksum === checksum
             )
@@ -91,11 +82,8 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                         }),
                     });
                     if (!res.ok) {
-                        const errorData: ApiErrorData | null = await res.json().catch(() => null);
-                        const msg = errorData?.issues
-                            ? errorData.issues.map((i) => i.message).join(", ")
-                            : errorData?.error || "Impossibile associare il materiale";
-                        throw new Error(msg);
+                        const errorData = await res.json();
+                        throw new Error(errorData.message);
                     }
                     mutate();
                 }
@@ -115,53 +103,18 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
             });
 
             if (!res.ok) {
-                const errorData: ApiErrorData | null = await res.json().catch(() => null);
-                const msg = errorData?.issues
-                    ? errorData.issues.map((i) => i.message).join(", ")
-                    : errorData?.error ||
-                    (res.status === 413
-                        ? "Il file è troppo grande"
-                        : "Impossibile caricare il file");
-                throw new Error(msg);
+                const errorData = await res.json().catch(() => null);;
+                throw new Error(errorData.message);
             }
             mutate();
         } catch (error: unknown) {
-            console.error("Errore durante l'upload:", error);
-            showMessage(
-                "Errore sconosciuto durante l'upload",
-                "error"
-            );
+            console.error(error);
+            showMessage(getErrorMessage(error), "error")
         } finally {
             setLoading(false);
         }
     };
-    /*
-    const handleRemove = async (materiale_id: number) => {
-        setLoading(true);
-        try {
-            const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/materiali/${materiale_id}`, {
-                method: "DELETE",
-            });
-            if (res.ok) {
-                fetchData();
-                setSnackbar({ open: true, message: "Materiale rimosso con successo!", severity: "success" });
-            } else {
-                const errorData = await res.json();
-                const msg = errorData.message || `Errore nella rimozione: ${res.statusText}`;
-                throw new Error(msg);
-            }
-        } catch (error: unknown) {
-            console.error("Errore nella rimozione:", error);
-            setSnackbar({
-                open: true,
-                message: error instanceof Error ? error.message : "Errore sconosciuto durante la rimozione",
-                severity: "error"
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-    */
+
     return (
         <>
             <Button variant="contained" size="small" startIcon={<AttachmentIcon />} onClick={() => setOpen(true)}>

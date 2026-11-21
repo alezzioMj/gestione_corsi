@@ -10,9 +10,10 @@ import {
 
 import AddIcon from "@mui/icons-material/Add";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import { ApiErrorData } from "@progetto/shared/validation/types";
 import { API_ENDPOINTS } from "@/lib/api";
 import { CATEGORIE_MATERIALE } from "@progetto/shared/validation/materiale.schema";
+import { getErrorMessage } from "@/utils/errorMessages";
+import { useSnackbar } from "../SnackbarContext";
 
 interface AddMaterialeProps {
     onMaterialeAdded?: () => void;
@@ -39,9 +40,7 @@ export default function AddMaterialeModal({ onMaterialeAdded }: AddMaterialeProp
     });
     const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const showError = (message: string) =>
-        setSnackbar({ open: true, message, severity: 'error' });
-
+    const {showMessage } = useSnackbar();
     const handleOpen = () => setOpen(true);
 
     const handleClose = () => {
@@ -57,11 +56,11 @@ export default function AddMaterialeModal({ onMaterialeAdded }: AddMaterialeProp
 
         const name = candidate.name.toLowerCase();
         if (!ALLOWED_EXTENSIONS.some((ext) => name.endsWith(ext))) {
-            showError(`Formato non supportato. Usa: ${ALLOWED_EXTENSIONS.join(", ")}`);
+            showMessage(`Formato non supportato. Usa: ${ALLOWED_EXTENSIONS.join(", ")}`);
             return;
         }
         if (candidate.size > MAX_FILE_MB * 1024 * 1024) {
-            showError(`Il file supera ${MAX_FILE_MB} MB`);
+            showMessage(`Il file supera ${MAX_FILE_MB} MB`);
             return;
         }
         setFile(candidate);
@@ -89,7 +88,7 @@ export default function AddMaterialeModal({ onMaterialeAdded }: AddMaterialeProp
         e.preventDefault();
 
         if (!file) {
-            showError("Seleziona un file da caricare");
+            showMessage("Seleziona un file da caricare");
             return;
         }
 
@@ -110,15 +109,8 @@ export default function AddMaterialeModal({ onMaterialeAdded }: AddMaterialeProp
             });
 
             if (!res.ok) {
-                // La risposta d'errore potrebbe non essere JSON (es. 413 da un proxy).
-                const errorData: ApiErrorData | null = await res.json().catch(() => null);
-                const msg = errorData?.issues
-                    ? errorData.issues.map((i) => i.message).join(", ")
-                    : errorData?.error ||
-                      (res.status === 413
-                          ? "Il file è troppo grande"
-                          : "Impossibile caricare il file");
-                throw new Error(msg);
+                const errorData = await res.json();
+                throw Error(errorData.message);
             }
 
             onMaterialeAdded?.();
@@ -126,7 +118,8 @@ export default function AddMaterialeModal({ onMaterialeAdded }: AddMaterialeProp
             handleClose();
             setSnackbar({ open: true, message: "Materiale caricato", severity: 'success' });
         } catch (error: unknown) {
-            showError(error instanceof Error ? error.message : "Errore di rete");
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setSubmitting(false);
         }

@@ -11,8 +11,9 @@ import {
     Box
 } from "@mui/material";
 import { Aula } from "@progetto/shared/validation/aula.schema";
-import { API_ENDPOINTS } from "@/lib/api";
 import { API_BASE_URL } from "@/lib/config";
+import { getErrorMessage } from "@/utils/errorMessages";
+import { useSnackbar } from "../SnackbarContext";
 
 interface EditAulaModalProps {
     open: boolean,
@@ -23,6 +24,7 @@ interface EditAulaModalProps {
 
 export default function EditAulaModal({ open, onClose, onSaveSuccess, aula }: EditAulaModalProps) {
     const [loading, setLoading] = useState(false);
+    const { showMessage } = useSnackbar();
 
     const [formData, setFormData] = useState({
         nome: aula.nome,
@@ -51,14 +53,16 @@ export default function EditAulaModal({ open, onClose, onSaveSuccess, aula }: Ed
                 }),
             });
 
-            if (res.ok) {
-                onSaveSuccess();
-                onClose(); // Ricarica i dati della pagina (Server Component)
-            } else {
-                alert("Errore durante la creazione dell'aula");
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw Error(errorData.message);
             }
+
+            onSaveSuccess();
+            onClose();
         } catch (error) {
-            console.error("Errore:", error);
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setLoading(false);
         }

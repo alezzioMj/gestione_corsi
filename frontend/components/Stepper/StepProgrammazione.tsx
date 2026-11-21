@@ -108,6 +108,7 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
     const moduliOrdinati: string[] = watch("moduliOrdinati") || [];
 
     const handleProgramChange = (programId: number) => {
+        console.log(JSON.stringify(programmi, null, 2));
         const programma = programmi.find(p => p.id === programId);
 
         setValue("programmi", programId, { shouldValidate: true, shouldDirty: true });
@@ -125,7 +126,7 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
 
         // Ordine di default del programma; con n_ripetizioni > 1 il modulo compare piu' volte
         const moduleIds: string[] = [];
-        programma.moduli.forEach(m => {
+        programma.programma_modulo.forEach(m => {
             for (let i = 0; i < (m.n_ripetizioni || 1); i++) {
                 moduleIds.push(`${m.modulo_id}-${i}`);
             }
@@ -148,7 +149,7 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
         if (!selectedProgram) return [];
         return moduliOrdinati.map(uniqueId => {
             const moduloId = Number(uniqueId.split('-')[0]);
-            const rel = selectedProgram.moduli.find(m => m.id === moduloId);
+            const rel = selectedProgram.programma_modulo.find(m => m.id === moduloId);
             return {
                 uniqueId,
                 id: moduloId,
@@ -278,7 +279,7 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
                             ))}
                         </SortableContext>
                     </DndContext>
-                </> 
+                </>
                 :
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
                     Seleziona un programma per riordinarne i moduli.

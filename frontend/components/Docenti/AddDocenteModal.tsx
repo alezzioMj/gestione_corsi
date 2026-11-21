@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button, Dialog, DialogTitle, DialogContent, DialogActions, TextField, MenuItem, Autocomplete, CircularProgress, Typography } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import AddIcon from "@mui/icons-material/Add";
@@ -13,6 +13,9 @@ import { DOCENTE_COLORS } from "@progetto/shared/constants/docente";
 
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
 import { API_ENDPOINTS } from "@/lib/api";
+import { useSnackbar } from "../SnackbarContext";
+import { getErrorMessage } from "@/utils/errorMessages";
+import { error } from "console";
 
 type Provincia = { codice: string; nome: string; regione: string; sigla: string };
 type Comune = { nome: string };
@@ -24,6 +27,7 @@ interface AddDocenteModalProps {
 }
 
 export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps) {
+    const { showMessage } = useSnackbar();
     const [formData, setFormData] = useState({
         colore: DOCENTE_COLORS[0] as string,
         nome: "",
@@ -47,15 +51,15 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
     const [open, setOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
 
-    const { data: regioni = [] } = useSWR(
+    const { data: regioni = [], error : regioniError} = useSWR(
         open && isItaly ? "https://comuni-ita.nicolorebaioli.dev/regioni" : null,
         fetcher
     );
-    const { data: province = [] } = useSWR(
+    const { data: province = [], error : provinceError } = useSWR(
         open && isItaly && formData.regione ? `https://comuni-ita.nicolorebaioli.dev/province?regione=${formData.regione}` : null,
         fetcher
     );
-    const { data: comuni = [] } = useSWR(
+    const { data: comuni = [], error : comuniError } = useSWR(
         open && isItaly && formData.provincia ? `https://comuni-ita.nicolorebaioli.dev/comuni?provincia=${formData.provincia}` : null,
         fetcher
     );
@@ -64,6 +68,13 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
         code,
         name
     }));
+
+    useEffect(() => {
+        const error = regioniError || provinceError || comuniError;
+        if(error){
+            showMessage(getErrorMessage(error), "error");
+        }
+    }, [regioniError, provinceError, comuniError, showMessage])
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => {
@@ -93,16 +104,16 @@ export default function AddDocenteModal({ onDocenteAdded }: AddDocenteModalProps
                 body: JSON.stringify(formData),
             });
 
-            if (res.ok) {
-                if (onDocenteAdded) onDocenteAdded();
-                handleClose();
-            } else {
+            if (!res.ok) {
                 const errorData = await res.json();
-                alert(`Errore: ${errorData.error || res.statusText}`);
+                throw Error(errorData.message);
             }
+
+            if (onDocenteAdded) onDocenteAdded();
+            handleClose();
         } catch (error) {
             console.error("Errore:", error);
-            alert("Errore di rete.");
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setSubmitting(false);
         }

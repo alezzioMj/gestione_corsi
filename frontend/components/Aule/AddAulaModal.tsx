@@ -37,7 +37,7 @@ export default function AddAulaModal({ sedeId, onAulaAdded }: AddAulaModalProps)
 
     return (
         <>
-            <Button variant="contained" startIcon={<AddIcon />} onClick={() => openModal}>
+            <Button variant="contained" startIcon={<AddIcon />} onClick={() => openModal()}>
                 Aggiungi Aula
             </Button>
 

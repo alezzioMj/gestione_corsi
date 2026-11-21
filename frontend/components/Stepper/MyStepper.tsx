@@ -63,7 +63,7 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
 
                 ctx.addIssue({
                     code: "custom",
-                    path: ["moduli"], // il campo a cui agganciare l'errore nel form
+                    path: ["docenti"], // il campo a cui agganciare l'errore nel form
                     message: `Copertura insufficiente. Mancano docenti per: ${nomiModuliMancanti}`,
                 });
             }

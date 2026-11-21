@@ -12,6 +12,8 @@ import { DOCENTE_COLORS } from "@progetto/shared/constants/docente";
 
 import ColorSwatchPicker from "@/components/Docenti/ColorSwatchPicker";
 import { API_BASE_URL } from "@/lib/config";
+import { getErrorMessage } from "@/utils/errorMessages";
+import { useSnackbar } from "../SnackbarContext";
 
 type Provincia = {
     id: number;
@@ -38,6 +40,7 @@ countries.registerLocale(itLocale);
 export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess }: EditDocenteModalProps) {
     const [loading, setLoading] = useState(false);
     const [coloreError, setColoreError] = useState(false);
+    const { showMessage } = useSnackbar();
 
     const [formData, setFormData] = useState({
         colore: docente?.colore || DOCENTE_COLORS[0],
@@ -74,22 +77,42 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
             if (isItaly) {
                 try {
                     const resRegioni = await fetch("https://comuni-ita.nicolorebaioli.dev/regioni");
+                    
+                    if (!resRegioni.ok) {
+                        const errorData = await resRegioni.json();
+                        throw Error(errorData.message);
+                    }
+
                     const dataRegioni = await resRegioni.json();
                     setRegioni(dataRegioni);
 
                     if (formData.regione) {
                         const resProvince = await fetch(`https://comuni-ita.nicolorebaioli.dev/province?regione=${encodeURIComponent(formData.regione)}`);
+
+                        if (!resProvince.ok) {
+                            const errorData = await resProvince.json();
+                            throw Error(errorData.message);
+                        }
+
                         const dataProvince = await resProvince.json();
                         setProvince(dataProvince);
 
                         if (formData.provincia) {
                             const resComuni = await fetch(`https://comuni-ita.nicolorebaioli.dev/comuni?provincia=${encodeURIComponent(formData.provincia)}`);
+
+                            if (!resComuni.ok) {
+                                const errorData = await resComuni.json();
+                                throw Error(errorData.message);
+                            }
+
                             const dataComuni = await resComuni.json();
                             setComuni(dataComuni);
                         }
                     }
-                } catch (err) {
-                    console.error("Errore caricamento dati geografici iniziali", err);
+
+                } catch (error) {
+                    console.error("Errore: " + error);
+                    showMessage("Errore recupero dati: " + getErrorMessage(error), "error");
                 }
             } else {
                 setRegioni([]);
@@ -116,8 +139,9 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
                 const res = await fetch(`https://comuni-ita.nicolorebaioli.dev/province?regione=${encodeURIComponent(newRegione)}`);
                 const data = await res.json();
                 setProvince(data);
-            } catch (err) {
-                console.error("Errore caricamento province", err);
+            } catch (error) {
+                console.error(error);
+                showMessage(getErrorMessage(error), "error");
             }
         }
     };
@@ -130,8 +154,9 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
                 const res = await fetch(`https://comuni-ita.nicolorebaioli.dev/comuni?provincia=${encodeURIComponent(newProvincia)}`);
                 const data = await res.json();
                 setComuni(data);
-            } catch (err) {
-                console.error("Errore caricamento comuni", err);
+            } catch (error) {
+                console.error(error);
+                showMessage(getErrorMessage(error), "error");
             }
         }
     };

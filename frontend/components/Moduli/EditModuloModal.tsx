@@ -10,16 +10,15 @@ import {
     TextField,
     Box,
     MenuItem,
-    Snackbar,
-    Alert,
     FormControlLabel,
     Checkbox
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 
-import { ApiErrorData } from "@progetto/shared/validation/types";
 import { API_BASE_URL } from "@/lib/config";
 import { Modulo } from "@progetto/shared/validation/modulo.schema";
+import { getErrorMessage } from "@/utils/errorMessages";
+import { useSnackbar } from "../SnackbarContext";
 
 interface EditModuloModalProps {
     open: boolean;
@@ -49,17 +48,12 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
         };
     });
 
-    const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: 'success' | 'error' }>({
-        open: false,
-        message: '',
-        severity: 'success',
-    });
-
+    const { showMessage } = useSnackbar();
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
 
         if (!modulo?.id) {
-            setSnackbar({ open: true, message: "ID Modulo non valido", severity: "error" });
+            showMessage("ID Modulo non valido", "error");
             return;
         }
 
@@ -78,18 +72,12 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                 onSaveSuccess();
                 onClose();
             } else {
-                const errorData: ApiErrorData = await res.json();
-                const msg = errorData.issues
-                    ? errorData.issues.map((i) => `${i.path?.join('.')}: ${i.message}`).join(", ")
-                    : (errorData.error || "Errore durante l'aggiornamento");
-                throw new Error(msg);
+                const errorData = await res.json();
+                throw Error(errorData.message)
             }
-        } catch (err: unknown) {
-            setSnackbar({
-                open: true,
-                message: err instanceof Error ? err.message : "Errore di rete",
-                severity: "error"
-            });
+        } catch (error: unknown) {
+            console.error(error);
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setLoading(false);
         }
@@ -150,16 +138,6 @@ export default function EditModuloModal({ open, onClose, modulo, onSaveSuccess }
                     </DialogActions>
                 </form>
             </Dialog>
-
-            <Snackbar
-                open={snackbar.open}
-                autoHideDuration={6000}
-                onClose={() => setSnackbar({ ...snackbar, open: false })}
-            >
-                <Alert onClose={() => setSnackbar({ ...snackbar, open: false })} severity={snackbar.severity} variant="filled">
-                    {snackbar.message}
-                </Alert>
-            </Snackbar>
         </>
     );
 }
