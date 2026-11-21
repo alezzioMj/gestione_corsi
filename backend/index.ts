@@ -4,12 +4,12 @@ import cors from "cors";
 const app = express();
 
 const corsOptions = {
-  origin: '*', //'https://gestione-corsi-ronr.vercel.app', // o '*' se vuoi testare, ma meglio specifico
+  origin: '*', 
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  optionsSuccessStatus: 204 // Cruciale per alcuni browser vecchi o specifici
+  optionsSuccessStatus: 204
 };
 
-app.use(cors(corsOptions)); // Abilita CORS per tutte le origini
+app.use(cors(corsOptions));
 app.use(express.json());
 
 import clienteRouter from "./routes/clienteRouter";

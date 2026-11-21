@@ -54,28 +54,22 @@ const getModulo = async (req: express.Request, res: express.Response) => {
 };
 
 const createModulo = async (req: express.Request, res: express.Response) => {
-  try {
-    const { titolo, n_ore, competenza, descrizione, multiplo, created_by } = req.body;
 
-    const modulo = await prisma.modulo.create({
-      data: {
-        titolo,
-        n_ore: n_ore ? Number(n_ore) : 4,
-        competenza,
-        descrizione,
-        multiplo: Boolean(multiplo === true || multiplo === "true"),
-        created_by
-      }
-    });
+  const { titolo, n_ore, competenza, descrizione, multiplo, created_by } = req.body;
 
-    res.status(201).json(modulo);
-  } catch (err: any) {
-    console.error("Errore nella creazione del modulo:", err);
-    if (err.code === "P2002") {
-      return res.status(400).json({ error: "Il modulo esiste già" });
+  const modulo = await prisma.modulo.create({
+    data: {
+      titolo,
+      n_ore: n_ore ? Number(n_ore) : 4,
+      competenza,
+      descrizione,
+      multiplo: Boolean(multiplo === true || multiplo === "true"),
+      created_by
     }
-    res.status(500).json({ error: "Errore creazione modulo", details: err.message });
-  }
+  });
+
+  res.status(201).json(modulo);
+
 };
 
 const updateModulo = async (req: express.Request, res: express.Response) => {
