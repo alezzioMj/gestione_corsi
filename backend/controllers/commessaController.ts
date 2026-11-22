@@ -1,11 +1,19 @@
 import express from 'express';
 import { prisma } from '../prisma';
+import { buildInclude, IncludeMap } from './utility.ts/include';
+import { CreateCommessa, UpdateCommessa } from '@progetto/shared/validation/commessa.schema';
+
+const INCLUDE_MAP = {
+    corsi: true,
+    cliente: true
+} as IncludeMap
 
 const getCommesse = async (req: express.Request, res: express.Response) => {
     try {
+        const include = buildInclude(req, INCLUDE_MAP);
         const commesse = await prisma.commessa.findMany({
             orderBy: { scadenza: "asc" },
-            include: { cliente: true }
+            include
         });
 
         res.json(commesse);
@@ -24,7 +32,7 @@ const createCommessa = async (req: express.Request, res: express.Response) => {
         scadenza,
         cliente_id,
         stato
-    } = req.body;
+    } : CreateCommessa = req.body;
 
     try {
         const commessa = await prisma.commessa.create({
@@ -58,7 +66,7 @@ const updateCommessa = async (req: express.Request, res: express.Response) => {
         scadenza,
         cliente_id,
         stato
-    } = req.body;
+    } : UpdateCommessa = req.body;
 
     try {
         const commessa = await prisma.commessa.update({
