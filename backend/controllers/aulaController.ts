@@ -1,9 +1,22 @@
 import { prisma } from "../prisma";
 import express from "express";
 
+const ALLOWED = ['sede'];
+
 const getAule = async (req: express.Request, res: express.Response) => {
   try {
-    const aule = await prisma.aula.findMany();
+    const include = Object.fromEntries(
+      String(req.query.include ?? '')
+        .split(',')
+        .filter((r) => ALLOWED.includes(r))
+        .map((r) => [r, true])
+    );
+
+    const aule = await prisma.aula.findMany(
+      {
+        include
+      }
+    );
     res.json(aule);
   } catch (error) {
     console.error("Errore nel recupero delle aule:", error);
@@ -14,8 +27,16 @@ const getAule = async (req: express.Request, res: express.Response) => {
 const getAula = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);
+    const include = Object.fromEntries(
+      String(req.query.include ?? '')
+        .split(',')
+        .filter((r) => ALLOWED.includes(r))
+        .map((r) => [r, true])
+    );
+    
     const aula = await prisma.aula.findUnique({
       where: { id },
+      include
     });
 
     if (!aula) {

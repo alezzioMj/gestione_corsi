@@ -1,6 +1,5 @@
 import z from "zod";
-import { SedeWithRelationsSchema } from "./sede.schema";
-import { sedeClienteSchema, SedeClienteWithRelationsSchema } from "./sedecliente.schema";
+import { SedeClienteWithRelationsSchema } from "./sedecliente.schema";
 
 export const clienteSchema = z.object({
     id: z.number(),

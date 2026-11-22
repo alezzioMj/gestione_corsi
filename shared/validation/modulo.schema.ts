@@ -4,7 +4,7 @@ export const moduloSchema = z.object({
   id: z.number(),
   titolo: z.string().min(1).max(150),
 
-  n_ore: z.number().int().positive(),
+  n_ore: z.coerce.number().int().positive(),
 
   competenza: z.enum([
     "Pratica",
@@ -12,7 +12,7 @@ export const moduloSchema = z.object({
     "Trasversale"
   ]),
 
-  multiplo: z.boolean(),
+  multiplo: z.enum(["true", "false"]).transform((v) => v === "true"),
 
   descrizione: z.string().optional(),
 
