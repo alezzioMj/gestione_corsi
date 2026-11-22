@@ -1,6 +1,7 @@
 
 import { z } from "zod";
 import { moduloSchema } from "./modulo.schema";
+import { programmaModuloSchema } from "./join.schema";
 
 export const programmaSchema = z.object({
     id: z.number(),
@@ -14,14 +15,6 @@ export const programmaSchema = z.object({
     created_by: z.string().max(100).nullable().optional(),
 });
 
-export const programmaModuloSchema = z.object({
-    id: z.number(),
-    programma_id: z.number(),
-    modulo_id: z.number(),
-    ordine: z.number().int(),
-    obbligatorio: z.boolean().nullable(),
-    n_ripetizioni: z.number().int(),
-});
 
 export const programmaModuloWithRelationsSchema =
     programmaModuloSchema.extend({

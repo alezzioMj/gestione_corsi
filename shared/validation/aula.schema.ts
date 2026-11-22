@@ -1,5 +1,7 @@
-import { z } from "zod";
+import { keyof, z } from "zod";
 import { id } from "zod/locales";
+import { Sede, sedeSchema } from "./sede.schema";
+import { pick } from "zod/mini";
 
 export const aulaSchema = z.object({
     id: z.number(),
@@ -12,6 +14,14 @@ export const aulaSchema = z.object({
 export const createAulaSchema = aulaSchema.omit({id : true})
 
 export const updateAulaSchema = aulaSchema.partial();
+
+type AulaRelations = {
+  sede: Sede
+}
+
+export type AulaWithRelations<K extends keyof AulaRelations = never> = 
+Aula & Pick<AulaRelations, K>;
+
 
 export type Aula = z.infer<typeof aulaSchema>;
 export type CreateAula = z.infer<typeof createAulaSchema>;
