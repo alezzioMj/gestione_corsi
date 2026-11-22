@@ -7,7 +7,6 @@ import { corsoSchema, createCorsoSchema, updateCorsoSchema } from "@progetto/sha
 import {
   getCorsi,
   getCorso,
-  createCorsoCompleto,
   updateCorso,
   deleteCorso,
   getDocenti,
@@ -16,7 +15,8 @@ import {
   getSediByCorso,
   addSedeToCorso,
   deleteSedeFromCorso,
-  deleteSessioni
+  deleteSessioni,
+  createCorso
 } from "../controllers/corsoController";
 import { scheduleCorsoController } from "../controllers/scheduleCorsoController";
 import { getDocentiByModulo } from "../controllers/corsoController";
@@ -24,7 +24,7 @@ import { getDocentiByModulo } from "../controllers/corsoController";
 corsiRouter.get("/", getCorsi);
 corsiRouter.get("/:id", getCorso);
 
-corsiRouter.post("/", validate(createCorsoSchema), createCorsoCompleto);
+corsiRouter.post("/", validate(createCorsoSchema), createCorso);
 corsiRouter.put("/:id", validate(updateCorsoSchema), updateCorso);
 corsiRouter.delete("/:id", deleteCorso);
 
