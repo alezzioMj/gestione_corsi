@@ -1,16 +1,14 @@
 import { prisma } from "../prisma";
 import express from "express";
+import { buildInclude, IncludeMap } from "./utility.ts/include";
 
-const ALLOWED = ['sede'];
+const INCLUDE_MAP = {
+  sede: true
+} satisfies IncludeMap
 
 const getAule = async (req: express.Request, res: express.Response) => {
   try {
-    const include = Object.fromEntries(
-      String(req.query.include ?? '')
-        .split(',')
-        .filter((r) => ALLOWED.includes(r))
-        .map((r) => [r, true])
-    );
+    const include = buildInclude(req, INCLUDE_MAP)
 
     const aule = await prisma.aula.findMany(
       {
@@ -27,13 +25,9 @@ const getAule = async (req: express.Request, res: express.Response) => {
 const getAula = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);
-    const include = Object.fromEntries(
-      String(req.query.include ?? '')
-        .split(',')
-        .filter((r) => ALLOWED.includes(r))
-        .map((r) => [r, true])
-    );
-    
+    const include = buildInclude(req, INCLUDE_MAP)
+
+
     const aula = await prisma.aula.findUnique({
       where: { id },
       include
