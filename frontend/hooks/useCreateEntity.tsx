@@ -3,13 +3,14 @@ import useSWRMutation from "swr/mutation";
 import { postFetcher } from "@/lib/swr-config";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { getErrorMessage } from "@/utils/errorMessages";
+import { useCallback } from "react";
 
 
 export function useCreateEntity(endpoint: string) {
     const { trigger, isMutating } = useSWRMutation(endpoint, postFetcher);
     const { showMessage } = useSnackbar();
 
-    const create = async (body: object): Promise<boolean> => {
+    const create = useCallback(async (body: object): Promise<boolean> => {
         try {
             await trigger(body);
             return true;
@@ -18,7 +19,7 @@ export function useCreateEntity(endpoint: string) {
             showMessage(getErrorMessage(error), "error");
             return false;
         }
-    };
+    }, [trigger, showMessage]);
 
     return { submitting: isMutating, create };
 }
