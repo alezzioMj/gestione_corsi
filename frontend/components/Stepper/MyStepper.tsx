@@ -14,17 +14,17 @@ import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 
 import { CreateSede } from "@progetto/shared/validation/sede.schema";
-import { creaCorsoCompleto } from "@/lib/corsi/createCorsoRollback";
-import { messaggioErrore } from "@/lib/errors/errorMessage";
 import StepDocenti from "./StepDocenti";
 import StepReview from "./StepReview";
 import { useSnackbar } from "../SnackbarContext";
-import { ApiErrorBody, formSchema, FormType } from "@progetto/shared/validation/types";
+import { formSchema, FormType } from "@progetto/shared/validation/types";
 import { useState } from "react";
 import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
 import { DocenteWithRelations } from "@progetto/shared/validation/docente.schema";
 import { CommessaWithRelations } from "@progetto/shared/validation/commessa.schema";
 import StepForm from "./StepForm";
+import { getErrorMessage } from "@/utils/errorMessages";
+import { API_BASE_URL } from "@/lib/config";
 
 const StepProgrammazione = dynamic(
     () => import("./StepProgrammazione"),
@@ -33,30 +33,31 @@ const StepProgrammazione = dynamic(
 
 export default function MyStepper({ sedi, programmi, docenti, commesse }: {
     sedi: CreateSede[],
-    programmi: ProgrammaWithRelations[],
-    docenti: DocenteWithRelations[],
-    commesse: CommessaWithRelations[]
+    programmi: ProgrammaWithRelations<"corso" | "programma_modulo">[],
+    docenti: DocenteWithRelations<"docente_modulo">[],
+    commesse: CommessaWithRelations<"cliente">[]
 }) {
     const steps = ["Anagrafica corso", "Programmazione", "Docenti", "Conferma"];
 
     const { showMessage } = useSnackbar();
+
     const dynamicSchema = React.useMemo(() => {
         return formSchema.superRefine((data, ctx) => {
             const selectedProgram = programmi.find(p => p.id === data.programmi);
             if (!selectedProgram) return;
 
-            const requiredModuleIds = selectedProgram.moduli?.map(m => m.id) || [];
+            const requiredModuleIds = selectedProgram.programma_modulo?.map(m => m.id) || [];
 
             const coveredModuleIds = new Set<number>();
             data.docenti.forEach(cf => {
                 const docente = docenti.find(d => d.codice_fiscale === cf);
-                docente?.moduli?.forEach(dm => coveredModuleIds.add(dm.id));
+                docente?.docente_modulo?.forEach(dm => coveredModuleIds.add(dm.modulo_id));
             });
 
             const missingModuleIds = requiredModuleIds.filter(id => !coveredModuleIds.has(id));
 
             if (missingModuleIds.length > 0) {
-                const nomiModuliMancanti = selectedProgram.moduli
+                const nomiModuliMancanti = selectedProgram.programma_modulo
                     .filter(m => missingModuleIds.includes(m.id))
                     .map(m => m.modulo?.titolo)
                     .join(", ");
@@ -107,8 +108,12 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
         setIsSubmitting(true);
 
         try {
-            const corsoId = await creaCorsoCompleto({
-                corsoData: {
+            const response = await fetch(`${API_BASE_URL}/corsi`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
                     nome: data.nome,
                     commessa_id: data.commessa_id,
                     programma_id: data.programmi,
@@ -120,21 +125,30 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
                     pomeriggio_inizio: data.pomeriggio_inizio,
                     pomeriggio_fine: data.pomeriggio_fine,
                     note: data.note,
-                },
-                docenti: data.docenti,
-                sedi: data.sedi,
-                giorniDisponibili: data.giorni,
-                ordine: data.moduliOrdinati.map((uniqueKey, index) => ({
-                    modulo_id: Number(uniqueKey.split("-")[0]),
-                    ordine: index + 1,
-                })),
+
+                    docenti: data.docenti,
+                    sedi: data.sedi.map(Number),
+                    giorniDisponibili: data.giorni,
+
+                    ordine: data.moduliOrdinati.map((uniqueKey, index) => ({
+                        modulo_id: Number(uniqueKey.split("-")[0]),
+                        ordine: index + 1,
+                    })),
+                }),
             });
+
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || error.error || "Errore creazione corso");
+            }
+
+            const result = await response.json();
+            const corsoId = result.corso.id;
 
             showMessage("Corso creato con successo!", "success");
             router.push(`/sessioni?corsoId=${corsoId}`);
         } catch (error) {
-            const errorMessage = messaggioErrore(error as ApiErrorBody);
-            showMessage(errorMessage, "error");
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setIsSubmitting(false);
         }

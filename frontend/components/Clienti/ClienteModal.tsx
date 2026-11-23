@@ -22,7 +22,7 @@ interface ClientiModalProps {
     open: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    cliente?: ClienteWithRelations;
+    cliente?: ClienteWithRelations<"sedi">;
 }
 
 type ClienteForm = {
@@ -31,12 +31,12 @@ type ClienteForm = {
     sedi: SedeFormData[];
 };
 
-// Converts an existing customer into editable form data
-const creaForm = (cliente?: ClienteWithRelations): ClienteForm => ({
+const creaForm = (cliente?: ClienteWithRelations<"sedi">): ClienteForm => ({
     ragione_sociale: cliente?.ragione_sociale ?? "",
     partita_iva: cliente?.partita_iva ?? "",
     sedi: cliente?.sedi.map(sede => ({
         ...sede,
+        nome: sede.nome ?? "",
         contatti: sede.contatti.map(contatto => ({ ...contatto }))
     })) ?? []
 });

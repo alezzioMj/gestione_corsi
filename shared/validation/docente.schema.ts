@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { DOCENTE_COLORS } from "../constants/docente";
-import { docenteModuloSchema } from "./join.schema";
-import { moduloSchema } from "./modulo.schema";
+import type { CorsoDocenteWithRelations } from "./corso.schema";
+import type { Modulo } from "./modulo.schema";
 
 export const docenteSchema = z.object({
     codice_fiscale: z
@@ -73,20 +73,31 @@ export const docenteSchema = z.object({
     created_by: z.string().max(100).nullable(),
 });
 
-export const docenteWithRelationsSchema = docenteSchema.extend({
-    docente_modulo: z.array(docenteModuloSchema.extend({ modulo: moduloSchema })),
-});
-
 export const createDocenteSchema = docenteSchema.omit({
     created_at: true,
     created_by: true,
 });
 
-export const updateDocenteSchema = docenteSchema
-    .omit({ codice_fiscale: true, created_at: true, created_by: true })
+export const updateDocenteSchema = createDocenteSchema
+    .omit({ codice_fiscale: true })
     .partial();
 
+export type DocenteModulo = { docente_cf: string; modulo_id: number };
+
+type DocenteModuloRelations = { docente: Docente; modulo: Modulo };
+
+export type DocenteModuloWithRelations<K extends keyof DocenteModuloRelations = never> =
+    DocenteModulo & Pick<DocenteModuloRelations, K>;
+
+// Allineato a INCLUDE_MAP di docenteController
+type DocenteRelations = {
+    docente_modulo: DocenteModuloWithRelations<"modulo">[];
+    corso_docente: CorsoDocenteWithRelations<"corso">[];
+};
+
+export type DocenteWithRelations<K extends keyof DocenteRelations = never> =
+    Docente & Pick<DocenteRelations, K>;
+
 export type Docente = z.infer<typeof docenteSchema>;
-export type DocenteWithRelations = z.infer<typeof docenteWithRelationsSchema>;
 export type CreateDocente = z.infer<typeof createDocenteSchema>;
 export type UpdateDocente = z.infer<typeof updateDocenteSchema>;

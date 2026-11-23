@@ -25,7 +25,7 @@ interface DayCellModalProps {
   open: boolean;
   onClose: () => void;
   giorno: Date;
-  sessioni: SessioneWithRelations[];
+  sessioni: SessioneWithRelations<"aula" | "corso" | "docente" | "modulo">[];
   onDeleteSessione : ( sessioneId : number ) => void;
 }
 

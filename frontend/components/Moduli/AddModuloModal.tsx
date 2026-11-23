@@ -65,10 +65,7 @@ export default function AddModuloModal({ onModuloAdded }: AddModuloModalProps) {
             data.append("competenza", formData.competenza);
             data.append("n_ore", formData.n_ore.toString());
             data.append("descrizioneMateriale", formData.descrizioneMateriale);
-            if (formData.multiplo) {
-                data.append("multiplo", "true");
-            }
-               data.append("multiplo", "false");
+            data.append("multiplo", String(formData.multiplo));
             if (file) {
                 data.append("file", file);
             }

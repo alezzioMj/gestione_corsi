@@ -10,7 +10,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 
 interface ProgrammaCardProps {
-  programma: ProgrammaWithRelations;
+  programma: ProgrammaWithRelations<"corso" | "programma_modulo">;
   onProgrammaUpdated: () => void; // Callback per aggiornare la lista nel componente padre
   onDeleteProgramma: (programmaId: number) => void; // Callback per eliminare il programma
 }
@@ -67,8 +67,8 @@ export default function ProgrammaCard({ programma, onProgrammaUpdated, onDeleteP
             '&::-webkit-scrollbar': { height: '5px' },
             '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: '10px' },
           }}>
-            {programma.moduli && programma.moduli.length > 0 ? (
-              programma.moduli.map((pm) => (
+            {programma.programma_modulo && programma.programma_modulo.length > 0 ? (
+              programma.programma_modulo.map((pm) => (
                 <Chip
                   key={pm.id}
                   label={pm.modulo?.titolo || "Senza Titolo"}

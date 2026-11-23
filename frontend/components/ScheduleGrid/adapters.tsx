@@ -12,7 +12,7 @@ import { buildRows, makeHeader, toDateKey } from "./utils";
 
 export function sessioniToRows(
   corsi: Corso[],
-  sessioni: SessioneWithRelations[]
+  sessioni: SessioneWithRelations<"docente">[]
 ): CalendarRow[] {
   return corsi.map((c) => {
     const days: Record<string, DayView> = {};

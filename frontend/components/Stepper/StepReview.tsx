@@ -15,7 +15,7 @@ const giorniLabels: Record<number, string> = {
 export default function StepReview({ docenti, programmi, commesse }: {
     docenti: DocenteWithRelations[],
     programmi: ProgrammaWithRelations[],
-    commesse: CommessaWithRelations[]
+    commesse: CommessaWithRelations<"cliente">[]
 }) {
     const { getValues } = useFormContext<FormType>();
     const data = getValues();

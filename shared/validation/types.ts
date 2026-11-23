@@ -24,7 +24,7 @@ export default AppError;
 export const formSchema = z.object({
     nome: z.string().min(1, "Il nome del corso è obbligatorio"),
     commessa_id: z.number().int().positive("Seleziona una commessa"),
-    sedi: z.array(z.string()).min(1, "Seleziona almeno una sede"),
+    sedi: z.array(z.number().int().positive()).min(1, "Seleziona almeno una sede"),
     programmi: z.number().min(1, "Seleziona un programma"),
     docenti: z.array(z.string()).min(1, "Seleziona almeno un docente"),
     oreTotali: z.number().min(0, "Le ore totali non possono essere negative"),

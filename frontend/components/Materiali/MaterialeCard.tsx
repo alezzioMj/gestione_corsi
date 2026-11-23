@@ -11,10 +11,10 @@ import VideocamIcon from "@mui/icons-material/Videocam";
 import AudiotrackIcon from "@mui/icons-material/Audiotrack";
 import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
 import CloseIcon from "@mui/icons-material/Close";
-import { Materiale } from "@progetto/shared/validation/materiale.schema";
+import { MaterialeWithUrl } from "@progetto/shared/validation/materiale.schema";
 
 interface MaterialeCardProps {
-  materiale: Materiale;
+  materiale: MaterialeWithUrl;
   onDelete: (materiale_id: number) => void;
 }
 
@@ -45,7 +45,6 @@ export default function MaterialeCard({ materiale, onDelete }: MaterialeCardProp
           ? AudiotrackIcon
           : InsertDriveFileIcon;
 
-  // Clic sulla card: anteprima se disponibile, altrimenti apre il file.
   const handleClick = () => {
     if (hasPreview) setPreviewOpen(true);
     else window.open(materiale.url, "_blank", "noopener,noreferrer");

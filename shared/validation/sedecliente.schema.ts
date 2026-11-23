@@ -1,30 +1,37 @@
-import z from "zod"
-import { contattoSchema } from "./contatto.schema";
+import { z } from "zod";
+import type { Cliente } from "./cliente.schema";
+import type { Contatto } from "./contatto.schema";
+
+export const TIPI_SEDE_CLIENTE = ["LEGALE", "OPERATIVA"] as const;
 
 export const sedeClienteSchema = z.object({
     id: z.number(),
-    tipo: z.enum([
-        "LEGALE",
-        "OPERATIVA"
-    ]),
     cliente_id: z.number(),
-    nome: z.string(),
-    indirizzo: z.string(),
-    civico: z.string(),
-    cap: z.string(),
-    citta: z.string(),
-    provincia: z.string()
-})
-
-export const SedeClienteWithRelationsSchema = sedeClienteSchema.extend({
-    contatti: z.array(contattoSchema),
+    tipo: z.enum(TIPI_SEDE_CLIENTE),
+    nome: z.string().nullish(), // nome String? nel modello Prisma
+    indirizzo: z.string().min(1),
+    civico: z.string().min(1),
+    cap: z.string().min(1),
+    citta: z.string().min(1),
+    provincia: z.string().min(1),
 });
 
-export const createSedeClienteSchema = sedeClienteSchema.omit({ id: true })
+export const createSedeClienteSchema = sedeClienteSchema
+    .omit({ id: true })
+    .extend({ tipo: z.enum(TIPI_SEDE_CLIENTE).default("OPERATIVA") });
 
-export const updateSedeClienteSchema = sedeClienteSchema.partial()
+export const updateSedeClienteSchema = sedeClienteSchema
+    .omit({ id: true })
+    .partial();
 
-export type SedeCliente = z.infer<typeof sedeClienteSchema>
-export type SedeClienteWithRelations = z.infer<typeof SedeClienteWithRelationsSchema>;
-export type createSedeCliente = z.infer<typeof createSedeClienteSchema>
-export type updateSedeCliente = z.infer<typeof updateSedeClienteSchema>
+type SedeClienteRelations = {
+    contatti: Contatto[];
+    cliente: Cliente;
+};
+
+export type SedeClienteWithRelations<K extends keyof SedeClienteRelations = never> =
+    SedeCliente & Pick<SedeClienteRelations, K>;
+
+export type SedeCliente = z.infer<typeof sedeClienteSchema>;
+export type CreateSedeCliente = z.infer<typeof createSedeClienteSchema>;
+export type UpdateSedeCliente = z.infer<typeof updateSedeClienteSchema>;

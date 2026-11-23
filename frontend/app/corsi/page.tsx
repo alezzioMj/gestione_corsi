@@ -59,7 +59,7 @@ export default function CorsiPage() {
             }
             
             mutate();
-            showMessage("Corso eliminato con successo!");
+            showMessage("Corso eliminato con successo!", "success");
         } catch (error: unknown) {
             console.error("Errore nell'eliminazione del corso:", error);
             showMessage(getErrorMessage(error), "error");

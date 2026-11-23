@@ -7,7 +7,7 @@ import { API_ENDPOINTS } from "@/lib/api";
 import { fetcher } from "@/lib/swr-config";
 import { FolderOffOutlined } from "@mui/icons-material";
 import { Container, Box, Typography, Alert, Button } from "@mui/material";
-import { Materiale } from "@progetto/shared/validation/materiale.schema";
+import { Materiale, MaterialeWithUrl } from "@progetto/shared/validation/materiale.schema";
 import useSWR from "swr";
 import MaterialeCard from "@/components/Materiali/MaterialeCard";
 import { API_BASE_URL } from "@/lib/config";
@@ -17,7 +17,7 @@ import { getErrorMessage } from "@/utils/errorMessages";
 
 export default function Materiali() {
     const { data: materiali, isValidating, error, mutate } =
-        useSWR<Materiale[]>(API_ENDPOINTS.materiali, fetcher);
+        useSWR<MaterialeWithUrl[]>(API_ENDPOINTS.materiali, fetcher);
 
     const { confirm } = useConfirm();
     const { showMessage } = useSnackbar();

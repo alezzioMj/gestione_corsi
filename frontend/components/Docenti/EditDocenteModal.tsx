@@ -77,7 +77,7 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
             if (isItaly) {
                 try {
                     const resRegioni = await fetch("https://comuni-ita.nicolorebaioli.dev/regioni");
-                    
+
                     if (!resRegioni.ok) {
                         const errorData = await resRegioni.json();
                         throw Error(errorData.message);
@@ -314,7 +314,7 @@ export default function EditDocenteModal({ open, onClose, docente, onSaveSuccess
                             <ColorSwatchPicker
                                 value={formData.colore}
                                 onChange={(color) => {
-                                    setFormData({ ...formData, colore: color });
+                                    setFormData({ ...formData, colore: color as typeof formData.colore });
                                     setColoreError(false);
                                 }}
                             />

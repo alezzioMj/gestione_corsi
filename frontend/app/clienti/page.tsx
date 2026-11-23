@@ -17,13 +17,13 @@ import { getErrorMessage } from "@/utils/errorMessages";
 export default function ClientiPage() {
     const [open, setOpen] = useState(false);
     const [clienteSelezionato, setClienteSelezionato] =
-        useState<ClienteWithRelations | undefined>(undefined);
-    const { data, isLoading, error, mutate } = useSWR<ClienteWithRelations[]>(
-        `${API_BASE_URL}/clienti`,
+        useState<ClienteWithRelations<"sedi"> | undefined>(undefined);
+    const { data, isLoading, error, mutate } = useSWR<ClienteWithRelations<"sedi">[]>(
+        `${API_BASE_URL}/clienti?include=sedi`,
         fetcher
     );
     const [clienteDettaglio, setClienteDettaglio] =
-        useState<ClienteWithRelations | undefined>();
+        useState<ClienteWithRelations<"sedi"> | undefined>();
     const [drawerOpen, setDrawerOpen] = useState(false);
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();

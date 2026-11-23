@@ -88,7 +88,7 @@ export default function ProgrammiPage() {
                     description={"Inizia aggiungendo un nuovo programma"}
                 />) : (
                 <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
-                    {programmi.map((p: ProgrammaWithRelations) => (
+                    {programmi.map((p: ProgrammaWithRelations<"programma_modulo" | "corso">) => (
                         <Paper key={p.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                             <ProgrammaCard
                                 programma={p}

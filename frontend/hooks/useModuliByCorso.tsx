@@ -4,7 +4,7 @@ import { fetcher } from "@/lib/swr-config";
 import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
 
 export function useModuliByCorso(enabled: boolean, programmaId?: number | null) {
-    const { data: programmi = [], isLoading, error } = useSWR<ProgrammaWithRelations[]>(
+    const { data: programmi = [], isLoading, error } = useSWR<ProgrammaWithRelations<"programma_modulo">[]>(
         enabled ? "/programmi" : null,
         fetcher
     );
@@ -12,7 +12,7 @@ export function useModuliByCorso(enabled: boolean, programmaId?: number | null) 
     const programma = programmaId
     ? programmi.find((p) => p.id === programmaId)
     : undefined;
-    const moduli = programma?.moduli;
+    const moduli = programma?.programma_modulo;
 
     return { moduli, isLoading, error };
 }

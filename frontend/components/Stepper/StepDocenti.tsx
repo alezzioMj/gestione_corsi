@@ -29,7 +29,7 @@ import GIORNI_SETTIMANA from "@/lib/docenti/docenti";
 export default function StepDocenti({
   docenti,
 }: {
-  docenti: DocenteWithRelations[];
+  docenti: DocenteWithRelations<"docente_modulo">[];
 }) {
   const {
     control,
@@ -95,7 +95,7 @@ export default function StepDocenti({
                     <Box>
                       <Typography variant="body1">{d.nome} {d.cognome}</Typography>
                       <Typography variant="caption" sx={{ color: 'text.secondary', display: 'block' }}>
-                        Moduli: {d.moduli?.map(m => m.titolo).join(", ") || "Nessuno"}
+                        Moduli: {d.docente_modulo?.map(m => m.modulo.titolo).join(", ") || "Nessuno"}
                       </Typography>
                     </Box>
                   </MenuItem>

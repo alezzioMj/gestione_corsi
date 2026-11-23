@@ -1,5 +1,7 @@
 import { z } from "zod";
-import { clienteSchema } from "./cliente.schema";
+import type { Cliente } from "./cliente.schema";
+import type { Corso } from "./corso.schema";
+
 export const STATI_COMMESSA = ["APERTA", "IN_CORSO", "CHIUSA", "ANNULLATA"] as const;
 export type StatoCommessa = (typeof STATI_COMMESSA)[number];
 
@@ -20,12 +22,7 @@ export const commessaSchema = z.object({
     created_by: z.string().max(100).nullable(),
 });
 
-// Un solo livello: il cliente piatto (basta la ragione sociale)
-export const commessaWithRelationsSchema = commessaSchema.extend({
-    cliente: clienteSchema.nullable(),
-});
-
-// id, created_at e created_by li imposta il server; lo stato ha un default
+// il default di stato sta solo in create: nel partial() di update si riapplicherebbe (Zod 4)
 export const createCommessaSchema = commessaSchema
     .omit({ id: true, created_at: true, created_by: true })
     .extend({
@@ -41,7 +38,14 @@ export const updateCommessaSchema = commessaSchema
     .omit({ id: true, created_at: true, created_by: true })
     .partial();
 
+type CommessaRelations = {
+    corsi: Corso[];
+    cliente: Cliente | null; // cliente_id Int? nel modello Prisma
+};
+
+export type CommessaWithRelations<K extends keyof CommessaRelations = never> =
+    Commessa & Pick<CommessaRelations, K>;
+
 export type Commessa = z.infer<typeof commessaSchema>;
-export type CommessaWithRelations = z.infer<typeof commessaWithRelationsSchema>;
 export type CreateCommessa = z.infer<typeof createCommessaSchema>;
 export type UpdateCommessa = z.infer<typeof updateCommessaSchema>;

@@ -18,7 +18,7 @@ import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
 
 interface ClienteCardProps {
-    cliente: ClienteWithRelations;
+    cliente: ClienteWithRelations<"sedi">;
     onEdit: () => void;
     onDelete: () => void;
     onClick: () => void;

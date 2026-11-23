@@ -4,7 +4,6 @@ import {
     Chip,
     Divider,
     Drawer,
-    IconButton,
     Link,
     Paper,
     Stack,
@@ -16,14 +15,14 @@ import PhoneOutlinedIcon from "@mui/icons-material/PhoneOutlined";
 import LocationOnOutlinedIcon from "@mui/icons-material/LocationOnOutlined";
 import { ReactNode } from "react";
 import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
+import { Contatto } from "@progetto/shared/validation/contatto.schema";
+import { SedeClienteWithRelations } from "@progetto/shared/validation/sedecliente.schema";
 
-type Sede = ClienteWithRelations["sedi"][number];
-type Contatto = Sede["contatti"][number];
 
 interface ClienteDrawerProps {
     open: boolean;
     onClose: () => void;
-    cliente?: ClienteWithRelations;
+    cliente?: ClienteWithRelations<"sedi">;
 }
 
 // Riga con icona e testo, usata per email e telefono
@@ -66,8 +65,8 @@ function ContattoItem({ contatto }: { contatto: Contatto }) {
     );
 }
 
-function SedeCard({ sede }: { sede: Sede }) {
-    const via = [sede.indirizzo, sede.civico].filter(Boolean).join(", ");
+function SedeCard({ sede }: { sede: SedeClienteWithRelations<"contatti"> }) {
+    const via = [sede.indirizzo , sede.civico].filter(Boolean).join(", ");
     const localita = [sede.cap, sede.citta].filter(Boolean).join(" ")
         + (sede.provincia ? ` (${sede.provincia})` : "");
 

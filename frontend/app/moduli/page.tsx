@@ -46,7 +46,7 @@ export default function ModuliPage() {
                 throw new Error(errorData.message);
             }
             mutate();
-            showMessage("Modulo eliminato con successo!");
+            showMessage("Modulo eliminato con successo!", "success");
         } catch (error: unknown) {
             console.error(error);
             showMessage(getErrorMessage(error), "error");

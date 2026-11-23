@@ -1,6 +1,9 @@
 import { prisma } from "../prisma";
 import express from "express";
 import { buildInclude, IncludeMap } from "./utility.ts/include";
+import { connect } from "node:http2";
+import { SchedulingError } from "../services/availability.service";
+import { schedule } from "../services/scheduler.service";
 
 const INCLUDE_MAP = {
   programma: true,
@@ -61,38 +64,104 @@ const createCorso = async (req: express.Request, res: express.Response) => {
       mattina_fine,
       pomeriggio_inizio,
       pomeriggio_fine,
+      docenti,
+      sedi,
+      giorniDisponibili,
+      ordine,
     } = req.body;
 
-    const corso = await prisma.corso.create({
-      data: {
-        nome,
-        descrizione,
-        commessa_id,
-        programma_id,
-        n_ore,
-        inizio: toDate(inizio),
-        fine: toDate(fine),
-        mattina_inizio,
-        mattina_fine,
-        pomeriggio_inizio,
-        pomeriggio_fine,
-      },
-      include: buildInclude(req, INCLUDE_MAP),
+    if (!Array.isArray(giorniDisponibili) || !Array.isArray(ordine)) {
+      return res.status(400).json({
+        error: "Giorni disponibili e ordine dei moduli sono obbligatori",
+      });
+    }
+
+    const ordineNormalizzato = ordine.map((item: any, index: number) => ({
+      modulo_id: Number(
+        typeof item === "string" ? item.split("-")[0] : item.modulo_id
+      ),
+      ordine: index + 1,
+    }));
+
+    const result = await prisma.$transaction(async (tx) => {
+      const corso = await tx.corso.create({
+        data: {
+          nome,
+          descrizione,
+          commessa_id,
+          programma_id,
+          n_ore,
+          inizio: toDate(inizio),
+          fine: toDate(fine),
+          mattina_inizio,
+          mattina_fine,
+          pomeriggio_inizio,
+          pomeriggio_fine,
+
+          corso_docente: {
+            create: docenti.map((cf: string) => ({
+              docente: {
+                connect: {
+                  codice_fiscale: cf
+                }
+              }
+            }))
+          },
+
+          corso_sede: {
+            create: sedi.map((sedeId: number) => ({
+              sede: {
+                connect: {
+                  id: sedeId
+                }
+              }
+            }))
+          },
+        },
+      });
+
+      const sessioni = await schedule(
+        tx,
+        corso.id,
+        giorniDisponibili,
+        ordineNormalizzato
+      );
+
+      return { corso, sessioni };
     });
 
-    res.status(201).json(corso);
-  } catch (err: any) {
-    console.error({
-      message: "Errore nella creazione del corso",
-      error: err,
+    // La transazione è stata completata
+    return res.status(201).json({
+      message: "Corso creato e schedulato con successo",
+      corso: result.corso,
+      sessioni_create: result.sessioni.length,
+      sessioni: result.sessioni,
     });
+
+  } catch (err: any) {
+    if (err instanceof SchedulingError) {
+      return res.status(err.status).json({
+        code: err.code,
+        message: err.message,
+        details: err.details,
+      });
+    }
+
+    console.error("Errore nella creazione del corso:", err);
+
     if (err.code === "P2002") {
       return res.status(400).json({ error: "Il corso esiste già" });
     }
+
     if (err.code === "P2003") {
-      return res.status(400).json({ error: "La commessa o il programma selezionato non esiste" });
+      return res.status(400).json({
+        error: "La commessa, il programma o una relazione selezionata non esiste",
+      });
     }
-    res.status(500).json({ error: "Errore creazione corso" });
+
+    return res.status(500).json({
+      error: "Errore nella creazione e schedulazione del corso",
+    });
   }
 };
 
@@ -147,8 +216,6 @@ const updateCorso = async (req: express.Request, res: express.Response) => {
   }
 };
 
-// Attenzione: corso_docente, corso_sede e sessione sono onDelete: Cascade,
-// quindi eliminando il corso vengono eliminate anche le righe collegate.
 const deleteCorso = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);

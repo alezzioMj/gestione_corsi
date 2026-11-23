@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 export const CATEGORIE_MATERIALE = [
@@ -6,7 +5,7 @@ export const CATEGORIE_MATERIALE = [
     "DISPENSA",
     "VIDEO",
     "ESERCIZI",
-    "ALTRO"
+    "ALTRO",
 ] as const;
 
 export const MIME_CONSENTITI = [
@@ -26,22 +25,20 @@ export function tipoDaMime(mime: string): "pdf" | "immagine" | "video" | "altro"
     return "altro";
 }
 
-// Input metadati
+// Metadati modificabili
 export const materialeInputSchema = z.object({
     titolo: z.string().trim().min(1, "Il titolo è obbligatorio").max(255, "Titolo troppo lungo"),
-    descrizione: z.string().trim().max(2000, "Descrizione troppo lunga").nullable().optional(),
+    descrizione: z.string().trim().max(2000, "Descrizione troppo lunga").nullish(),
+    categoria: z.enum(CATEGORIE_MATERIALE),
+});
+
+// Il default sta solo in create: nel partial() di update si riapplicherebbe (Zod 4)
+export const createMaterialeSchema = materialeInputSchema.extend({
     categoria: z.enum(CATEGORIE_MATERIALE).default("ALTRO"),
 });
 
-// Creazione
-export const createMaterialeSchema = materialeInputSchema;
-
-// Aggiornamento
-export const updateMaterialeSchema = materialeInputSchema
-    .partial()
-    .extend({
-        id: z.number().int().positive(),
-    });
+// L'id arriva da req.params, non dal body
+export const updateMaterialeSchema = materialeInputSchema.partial();
 
 // Validazione file
 export const fileUploadSchema = z.object({
@@ -50,7 +47,7 @@ export const fileUploadSchema = z.object({
     originalname: z.string().min(1).max(255),
 });
 
-// Materiale restituito dal backend
+// Riga restituita dal backend (JSON: le date arrivano come stringhe ISO)
 export const materialeSchema = z.object({
     id: z.number().int(),
     titolo: z.string(),
@@ -59,14 +56,19 @@ export const materialeSchema = z.object({
     originalName: z.string(),
     mimeType: z.string(),
     sizeBytes: z.number(),
-    checksum: z.string(),
+    checksum: z.string().nullable(),
     storageKey: z.string(),
-    url: z.string(),
-    createdBy: z.string().nullable(),
+    uploadedById: z.string().nullable(),
     createdAt: z.iso.datetime(),
+});
+
+// getMateriali e getMateriale aggiungono l'URL firmato; getMaterialiMetadata no
+export const materialeWithUrlSchema = materialeSchema.extend({
+    url: z.string(),
 });
 
 export type MaterialeInput = z.infer<typeof materialeInputSchema>;
 export type CreateMateriale = z.infer<typeof createMaterialeSchema>;
 export type UpdateMateriale = z.infer<typeof updateMaterialeSchema>;
 export type Materiale = z.infer<typeof materialeSchema>;
+export type MaterialeWithUrl = z.infer<typeof materialeWithUrlSchema>;

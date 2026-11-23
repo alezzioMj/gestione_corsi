@@ -25,18 +25,18 @@ import {
     useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { Modulo } from "@progetto/shared/validation/modulo.schema";
 
-interface ModuloData {
+type ModuloData = Partial<
+    Pick<Modulo, "n_ore" | "competenza">
+> & Pick<Modulo, "id" | "titolo" | "multiplo"> & {
     uniqueId: string;
-    id: number;
-    titolo: string;
-    n_ore?: number;
-    competenza?: string;
-    multiplo?: boolean;
-}
+};
 
 interface SortableModuloItemProps {
-    modulo: ModuloData;
+    modulo: ModuloData & {
+        uniqueId: string;
+    };
     onAddInstance: (moduloId: number) => void;
     onRemoveInstance: (moduloId: string) => void;
 }
@@ -102,7 +102,7 @@ function SortableModuloItem({ modulo, onAddInstance, onRemoveInstance }: Sortabl
     );
 }
 
-export default function StepProgrammazione({ programmi }: { programmi: ProgrammaWithRelations[] }) {
+export default function StepProgrammazione({ programmi }: { programmi: ProgrammaWithRelations<"programma_modulo">[] }) {
     const { control, formState: { errors }, watch, setValue, getValues } = useFormContext<FormType>();
     const selectedProgramId = watch("programmi");
     const moduliOrdinati: string[] = watch("moduliOrdinati") || [];
