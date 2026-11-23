@@ -52,7 +52,7 @@ interface AddSessioneModalProps {
 }
 
 export default function AddSessioneModal({ onSessioneAdded }: AddSessioneModalProps) {
-    const { open, openModal, closeModal, formData, setField } = useModalForm(EMPTY)
+    const { open, openModal, closeModal, formData, setField, setFormData } = useModalForm(EMPTY)
     const { corsi, isLoading: corsiIsLoading, error: corsiError } = useCorsi(open);
     const { docenti, isLoading: docenteIsLoading, error: docenteError } = useDocentiByCorso(open, formData.corso_id, formData.modulo_id);
     const { sedi, isLoading: sediIsLoading, error: sediError } = useSediByCorso(open, formData.corso_id);
@@ -67,10 +67,6 @@ export default function AddSessioneModal({ onSessioneAdded }: AddSessioneModalPr
             showMessage("Errore nel recupero dei dati", "error");
         }
     }, [error, showMessage]);
-
-    useEffect(() => {
-        setField("aula_id", null);
-    }, [formData.corso_id]);
 
     const payload = { ...formData, priorita: 1 }
     const { submitting, create } = useCreateEntity(`${API_BASE_URL}/sessioni`);
@@ -111,6 +107,14 @@ export default function AddSessioneModal({ onSessioneAdded }: AddSessioneModalPr
                                     getOptionLabel={(c) => c.nome}
                                     onChange={(id) => {
                                         setField("corso_id", id);
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            corso_id: id,
+                                            modulo_id: null,
+                                            docente_cf: null,
+                                            sede_id: null,
+                                            aula_id: null,
+                                        }));
                                     }
                                     }
                                     required
@@ -145,7 +149,13 @@ export default function AddSessioneModal({ onSessioneAdded }: AddSessioneModalPr
                                     getOptionId={(s) => s.id}
                                     value={formData.sede_id}
                                     getOptionLabel={(s) => s.nome}
-                                    onChange={(id) => setField("sede_id", id)}
+                                    onChange={(id) => {
+                                        setFormData(prev => ({
+                                            ...prev,
+                                            sede_id: id,
+                                            aula_id: null,
+                                        }));
+                                    }}
                                     disabled={!formData.corso_id || sediIsLoading}
                                     required
                                 />
