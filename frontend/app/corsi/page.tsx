@@ -7,7 +7,6 @@ import { WorkOffOutlined } from "@mui/icons-material";
 import useSWR from "swr";
 
 import { fetcher } from "@/lib/swr-config";
-import { API_ENDPOINTS } from "@/lib/api";
 import { useConfirm } from "@/components/ConfirmContext";
 import { useDeleteEntity } from "@/hooks/useDeleteEntity";
 import { useEntityDialog } from "@/hooks/useEntityDialog";
@@ -18,7 +17,7 @@ import CorsoInfoDialog from "@/components/Corsi/CorsoModal";
 import { CorsoItem } from "@/components/Corsi/Corso";
 
 export default function CorsiPage() {
-    const { data: corsi, error, mutate } = useSWR<CorsoItem>('corsi?include=commessa,programma,corso_docente,corso_sede', fetcher);
+    const { data: corsi, error, mutate } = useSWR<CorsoItem[]>('corsi?include=commessa,programma,corso_docente,corso_sede', fetcher);
     const { remove } = useDeleteEntity("/corsi");
     const { confirm } = useConfirm();
     const info = useEntityDialog<CorsoItem>();
