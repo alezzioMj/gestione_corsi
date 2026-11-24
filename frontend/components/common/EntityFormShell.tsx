@@ -1,11 +1,10 @@
-// components/EntityDialog.tsx
 import React from "react";
 import {
     Button, Dialog, DialogTitle, DialogContent, DialogActions,
     CircularProgress, Box,
 } from "@mui/material";
 
-type DialogSize = "sm" | "md" | "lg";
+type DialogSize = "xs" | "sm" | "md" | "lg";
 
 interface EntityDialogProps {
     open: boolean;
@@ -14,7 +13,7 @@ interface EntityDialogProps {
     children: React.ReactNode;
 }
 
-/** Solo il contenitore: dimensione e apertura. Lo stato sta nei figli. */
+/** Solo contenitore: lo stato sta nei figli, che MUI smonta alla chiusura. */
 export function EntityDialog({ open, onClose, size = "md", children }: EntityDialogProps) {
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth={size}>
@@ -24,17 +23,17 @@ export function EntityDialog({ open, onClose, size = "md", children }: EntityDia
 }
 
 interface EntityFormShellProps {
-    isEdit: boolean;
-    entityLabel: string;
+    title: string;
+    submitLabel?: string;
     submitting: boolean;
-    canSubmit: boolean;
+    canSubmit?: boolean;
     onSubmit: () => void | Promise<void>;
     onClose: () => void;
     children: React.ReactNode;
 }
 
 export function EntityFormShell({
-    isEdit, entityLabel, submitting, canSubmit, onSubmit, onClose, children,
+    title, submitLabel = "Salva", submitting, canSubmit = true, onSubmit, onClose, children,
 }: EntityFormShellProps) {
     return (
         <form
@@ -43,21 +42,21 @@ export function EntityFormShell({
                 onSubmit();
             }}
         >
-            <DialogTitle>{isEdit ? `Modifica ${entityLabel}` : `Nuovo ${entityLabel}`}</DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
             <DialogContent dividers>
                 <Box sx={{ display: "flex", flexDirection: "column", gap: 2.5, mt: 1 }}>
                     {children}
                 </Box>
             </DialogContent>
             <DialogActions sx={{ p: 2.5 }}>
-                <Button onClick={onClose} color="inherit">Annulla</Button>
+                <Button onClick={onClose} color="inherit" disabled={submitting}>Annulla</Button>
                 <Button
                     type="submit"
                     variant="contained"
                     disabled={submitting || !canSubmit}
                     sx={{ minWidth: "120px" }}
                 >
-                    {submitting ? <CircularProgress size={24} color="inherit" /> : isEdit ? "Salva Modifiche" : "Crea"}
+                    {submitting ? <CircularProgress size={24} color="inherit" /> : submitLabel}
                 </Button>
             </DialogActions>
         </form>

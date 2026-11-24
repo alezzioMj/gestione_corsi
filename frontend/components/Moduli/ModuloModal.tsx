@@ -108,8 +108,8 @@ function ModuloForm({ modulo, onClose, onSuccess }: ModuloFormProps) {
 
     return (
         <EntityFormShell
-            isEdit={!!modulo}
-            entityLabel="Modulo Formativo"
+            title={modulo ? "Modifica Modulo" : "Nuovo Modulo"}
+            submitLabel={modulo ? "Salva Modifiche" : "Crea Modulo"}
             submitting={creating || updating}
             canSubmit={!!formData.titolo && !!formData.competenza}
             onSubmit={handleSubmit}
