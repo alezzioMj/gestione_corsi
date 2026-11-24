@@ -1,49 +1,42 @@
 "use client";
 
 import DocenteCard from "@/components/Docenti/DocenteCard";
-import { Box, Typography, Container, Alert, Button, Paper } from "@mui/material";
+import { Box, Typography, Container, Paper, Button } from "@mui/material";
 import { Docente } from "@progetto/shared/validation/docente.schema";
-import AddDocenteModal from "@/components/Docenti/AddDocenteModal";
-import DelayedLoading from "@/components/DelayedLoading";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { useConfirm } from "@/components/ConfirmContext";
-import { useSnackbar } from "@/components/SnackbarContext";
 import EmptyState from "@/components/EmptyState";
 import { PersonOffOutlined } from "@mui/icons-material";
-import { API_ENDPOINTS } from "@/lib/api";
-import { API_BASE_URL } from "@/lib/config";
-import { getErrorMessage } from "@/utils/errorMessages";
+import { useDeleteEntity } from "@/hooks/useDeleteEntity";
+import { useEntityDialog } from "@/hooks/useEntityDialog";
+import AsyncContent from "@/components/AsyncContent";
+import DocenteModal from "@/components/Docenti/DocenteModal";
+import AddIcon from "@mui/icons-material/Add"
 
 export default function DocentiPage() {
-    const { data: docenti, error, isValidating, mutate } = useSWR(API_ENDPOINTS.docenti, fetcher);
+    const { data: docenti, error, mutate } = useSWR<Docente[]>("/docenti", fetcher);
+    const { remove } = useDeleteEntity("/docenti");
     const { confirm } = useConfirm();
-    const { showMessage } = useSnackbar();
+    const dialog = useEntityDialog<Docente>();
 
-    const handleDeleteDocente = async (codice_fiscale: string) => {
-        const ok = await confirm({
+    const handleDeleteDocente = async (docente_cf: string) => {
+        const confirmed = await confirm({
             title: "Elimina docente",
             message: "Sei sicuro di voler eliminare questo docente?",
             cancelText: "Annulla",
             confirmText: "Elimina",
             confirmColor: "error",
-        }
-        )
-        if (!ok) return;
-        try {
-            const res = await fetch(`${API_BASE_URL}/docenti/${codice_fiscale}`, {
-                method: "DELETE",
-            });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message);
-            }
-            mutate();
-            showMessage("Docente eliminato con successo!");
-        } catch (error: unknown) {
-            console.error(error);
-            showMessage(getErrorMessage(error), "error");
-        }
+        });
+        if (!confirmed) return;
+
+        const deleted = await remove(docente_cf);
+        if (deleted) mutate();
+    };
+
+    const handleSuccess = () => {
+        mutate();
+        dialog.close();
     };
 
     return (
@@ -59,48 +52,56 @@ export default function DocentiPage() {
                     gap: 2,
                 }}>
                     <Typography variant="h4">Docenti</Typography>
-                    <AddDocenteModal />
+                    <Button variant="contained" startIcon={<AddIcon />} onClick={dialog.openCreate}>
+                        Crea Nuovo Docente
+                    </Button>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     {" Gestione dell'anagrafica docenti e dei relativi contatti. "}
                 </Typography>
             </Box>
 
-            {error && (
-                <Alert
-                    severity="error"
-                    sx={{ mb: 4 }}
-                    action={
-                        <Button color="inherit" size="small" onClick={() => mutate()}>
-                            Riprova
-                        </Button>
-                    }
-                >
-                    {error.message}
-                </Alert>
-            )}
-
-            {isValidating ? (
-                <DelayedLoading />
-            ) : !docenti || docenti.length === 0 ? (
-                <EmptyState
-                    icon={PersonOffOutlined}
-                    title={"Nessun docente trovato"}
-                    description={"Inizia aggiungendo un nuovo docente"}
-                />
-            ) : (
-                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
-                    {docenti.map((d: Docente) => (
-                        <Paper key={d.codice_fiscale} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-                            <DocenteCard
-                                docente={d}
-                                onDocenteUpdated={() => mutate()} // Passa la funzione di refresh
-                                onDeleteDocente={handleDeleteDocente} // Passa la funzione di eliminazione
-                            />
-                        </Paper>
-                    ))}
-                </Box>
-            )}
+            <AsyncContent
+                data={docenti}
+                error={error}
+                onRetry={() => mutate()}
+                empty={
+                    <EmptyState
+                        icon={PersonOffOutlined}
+                        title="Nessun docente trovato"
+                        description="Inizia aggiungendo un nuovo docente"
+                    />
+                }
+            >
+                {(list) => (
+                    <Box
+                        sx={{
+                            width: "100%",
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))",
+                            gap: 3,
+                        }}
+                    >
+                        {
+                            list.map((d) => (
+                                <Paper key={d.codice_fiscale} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                    <DocenteCard
+                                        docente={d}
+                                        onEdit={() => mutate()} // Passa la funzione di refresh
+                                        onDelete={handleDeleteDocente} // Passa la funzione di eliminazione
+                                    />
+                                </Paper>
+                            ))
+                        }
+                    </Box>
+                )}
+            </AsyncContent>
+            <DocenteModal
+                open={dialog.open}
+                docente={dialog.entity}
+                onClose={dialog.close}
+                onSuccess={handleSuccess}
+            />
         </Container>
     );
 }

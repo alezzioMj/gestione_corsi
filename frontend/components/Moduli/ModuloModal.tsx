@@ -15,7 +15,7 @@ import {
     type CreateModulo,
     type Modulo,
 } from "@progetto/shared/validation/modulo.schema";
-import FileDropzone from "../common/FileDropZone";
+import FileDropzone from "../common/FileDropzone";
 
 type ModuloFormData = Omit<CreateModulo, "competenza" | "file"> & {
     competenza: Competenza | "";
