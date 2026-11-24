@@ -2,7 +2,7 @@
 
 import { z } from "zod";
 import type { DocenteModuloWithRelations } from "./docente.schema";
-import type { Materiale } from "./materiale.schema";
+import { fileUploadSchema, type Materiale } from "./materiale.schema";
 import type { ProgrammaModuloWithRelations } from "./programma.schema";
 
 export const COMPETENZE = ["Teorica", "Trasversale", "Pratica"] as const;

@@ -1,112 +1,99 @@
-'use client'
+"use client";
 
-import EmptyState from "@/components/EmptyState";
-import AddMaterialeModal from "@/components/Materiali/AddMaterialeModal";
-import DelayedLoading from "@/components/DelayedLoading";
-import { API_ENDPOINTS } from "@/lib/api";
-import { fetcher } from "@/lib/swr-config";
+import { Container, Box, Typography, Button } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import { FolderOffOutlined } from "@mui/icons-material";
-import { Container, Box, Typography, Alert, Button } from "@mui/material";
-import { Materiale, MaterialeWithUrl } from "@progetto/shared/validation/materiale.schema";
 import useSWR from "swr";
-import MaterialeCard from "@/components/Materiali/MaterialeCard";
-import { API_BASE_URL } from "@/lib/config";
+
+import type { MaterialeWithUrl } from "@progetto/shared/validation/materiale.schema";
+import { fetcher } from "@/lib/swr-config";
 import { useConfirm } from "@/components/ConfirmContext";
-import { useSnackbar } from "@/components/SnackbarContext";
-import { getErrorMessage } from "@/utils/errorMessages";
+import { useDeleteEntity } from "@/hooks/useDeleteEntity";
+import { useEntityDialog } from "@/hooks/useEntityDialog";
+import AsyncContent from "@/components/AsyncContent";
+import EmptyState from "@/components/EmptyState";
+import MaterialeCard from "@/components/Materiali/MaterialeCard";
+import MaterialeModal from "@/components/Materiali/MaterialeModal";
 
-export default function Materiali() {
-    const { data: materiali, isValidating, error, mutate } =
-        useSWR<MaterialeWithUrl[]>(API_ENDPOINTS.materiali, fetcher);
-
+export default function MaterialiPage() {
+    const { data: materiali, error, mutate } = useSWR<MaterialeWithUrl[]>("/materiali", fetcher);
+    const { remove } = useDeleteEntity("/materiali");
     const { confirm } = useConfirm();
-    const { showMessage } = useSnackbar();
+    const dialog = useEntityDialog<null>(); // solo creazione: serve solo open/close
 
-    async function onDelete(materiale_id: number) {
-        const ok = await confirm({
+    const handleDelete = async (materialeId: number) => {
+        const confirmed = await confirm({
             title: "Elimina materiale",
-            message: "Sei sicuro di eliminre questo materiale?",
+            message: "Sei sicuro di voler eliminare questo materiale?",
+            cancelText: "Annulla",
+            confirmText: "Elimina",
             confirmColor: "error",
         });
+        if (!confirmed) return;
 
-        if (ok) {
-            try {
-                const res = await fetch(`${API_BASE_URL}/materiali/${materiale_id}`,
-                    {
-                        method: "DELETE"
-                    }
-                );
-                if (!res.ok) {
-                    const errorData = await res.json();
-                    throw new Error(errorData.message);
-                }
-                mutate();
-                showMessage("Materiale eliminato con successo!");
-            }
-            catch(error : unknown){
-                console.error(error);
-                showMessage(getErrorMessage(error), "error");
-            }
-        }
-    }
+        const deleted = await remove(materialeId);
+        if (deleted) mutate();
+    };
 
-    if (isValidating) return <DelayedLoading />;
+    const handleSuccess = () => {
+        mutate();
+        dialog.close();
+    };
 
     return (
-        <Container>
+        <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
             <Box sx={{ mb: 4 }}>
-                <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 2,
+                    }}
+                >
                     <Typography variant="h4">Materiali</Typography>
-                    <AddMaterialeModal onMaterialeAdded={() => mutate()} />
+                    <Button variant="contained" startIcon={<AddIcon />} onClick={dialog.openCreate}>
+                        Aggiungi materiale
+                    </Button>
                 </Box>
-                <Typography variant="body2" color="text.secondary">
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Gestione e caricamento del materiale formativo.
                 </Typography>
             </Box>
 
-            {error && (
-                <Alert
-                    severity="error"
-                    sx={{ mb: 4 }}
-                    action={
-                        <Button color="inherit" size="small" onClick={() => mutate}>
-                            Riprova
-                        </Button>
-                    }
-                >
-                    {error.message}
-                </Alert>
-            )}
+            <AsyncContent
+                data={materiali}
+                error={error}
+                onRetry={() => mutate()}
+                empty={
+                    <EmptyState
+                        icon={FolderOffOutlined}
+                        title="Nessun materiale trovato"
+                        description="Inizia aggiungendo materiale"
+                    />
+                }
+            >
+                {(list) => (
+                    <Box
+                        sx={{
+                            display: "grid",
+                            gap: 2,
+                            gridTemplateColumns: {
+                                xs: "1fr",
+                                sm: "repeat(2, 1fr)",
+                                md: "repeat(3, 1fr)",
+                            },
+                        }}
+                    >
+                        {list.map((m) => (
+                            <MaterialeCard key={m.id} materiale={m} onDelete={handleDelete} />
+                        ))}
+                    </Box>
+                )}
+            </AsyncContent>
 
-            {!error && (!materiali || materiali.length === 0) ? (
-                <EmptyState
-                    icon={FolderOffOutlined}
-                    title="Nessun materiale trovato"
-                    description="Inizia aggiungendo materiale"
-                />
-            ) : (
-                <Box
-                    sx={{
-                        display: 'grid',
-                        gap: 2,
-                        gridTemplateColumns: {
-                            xs: '1fr',
-                            sm: 'repeat(2, 1fr)',
-                            md: 'repeat(3, 1fr)',
-                        },
-                    }}
-                >
-                    {materiali?.map((m) => (
-                        <MaterialeCard materiale={m} onDelete={onDelete} key={m.id} />
-                    ))}
-                </Box>
-            )}
+            <MaterialeModal open={dialog.open} onClose={dialog.close} onSuccess={handleSuccess} />
         </Container>
     );
 }

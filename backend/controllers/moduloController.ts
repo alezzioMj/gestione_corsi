@@ -10,15 +10,12 @@ const INCLUDE_MAP = {
   programma_modulo: { include: { programma: true } },
 } satisfies IncludeMap;
 
-// n_ore e multiplo sono nullable nel database: li restituisco sempre valorizzati
 const normalizza = <T extends { n_ore: number | null; multiplo: boolean | null }>(m: T) => ({
   ...m,
   n_ore: m.n_ore ?? 4,
   multiplo: m.multiplo ?? false,
 });
 
-// Dai form multipart i booleani arrivano come stringhe ("true"/"false").
-// undefined = campo non inviato = Prisma lo ignora.
 const toBool = (v: any) => (v === undefined ? undefined : v === true || v === "true");
 const toNumber = (v: any) => (v === undefined || v === null || v === "" ? undefined : Number(v));
 

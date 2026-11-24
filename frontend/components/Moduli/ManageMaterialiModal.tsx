@@ -20,6 +20,7 @@ import {
 } from "@mui/material";
 
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import AttachmentIcon from "@mui/icons-material/Attachment";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
@@ -35,6 +36,7 @@ import { useConfirm } from "../ConfirmContext";
 import { getErrorMessage } from "@/utils/errorMessages";
 
 import useSWR from "swr";
+import { useDeleteEntity } from "@/hooks/useDeleteEntity";
 
 // Tipi
 
@@ -101,13 +103,30 @@ export default function ManageMaterialiModal({
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [loading, setLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const { remove, submitting: removing } = useDeleteEntity(
+        `/moduli/${modulo.id}/materiali`
+    );
+
 
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
 
-    // Recupero materiali associati
+
+    const handleRemove = async (ma: ModuloMaterialeAssociation) => {
+        const confirmed = await confirm({
+            title: "Rimuovi materiale",
+            message: `Vuoi rimuovere "${ma.materiale?.titolo ?? "questo materiale"}" dal modulo? Il file resterà nell'archivio dei materiali.`,
+            cancelText: "Annulla",
+            confirmText: "Rimuovi",
+            confirmColor: "error",
+        });
+        if (!confirmed) return;
+
+        const removed = await remove(ma.materiale_id);
+        if (removed) await mutate();
+    };
 
     const {
         data: materialiAssociati = [],
@@ -351,6 +370,16 @@ export default function ManageMaterialiModal({
                                 materialiAssociati.map(ma => (
                                     <ListItem
                                         key={ma.materiale_id}
+                                        secondaryAction={
+                                            <Button
+                                                color="error"
+                                                aria-label={`Rimuovi ${ma.materiale?.titolo ?? "materiale"}`}
+                                                disabled={removing || loading}
+                                                onClick={() => handleRemove(ma)}
+                                            >
+                                                <DeleteIcon fontSize="small" />
+                                            </Button>
+                                        }
                                     >
                                         <ListItemText
                                             primary={ma.materiale?.titolo}

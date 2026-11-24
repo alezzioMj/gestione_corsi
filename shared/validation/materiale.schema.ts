@@ -37,17 +37,14 @@ export const createMaterialeSchema = materialeInputSchema.extend({
     categoria: z.enum(CATEGORIE_MATERIALE).default("ALTRO"),
 });
 
-// L'id arriva da req.params, non dal body
 export const updateMaterialeSchema = materialeInputSchema.partial();
 
-// Validazione file
 export const fileUploadSchema = z.object({
     mimetype: z.enum(MIME_CONSENTITI, { error: "Tipo di file non consentito" }),
     size: z.number().max(MAX_FILE_BYTES, "File troppo grande"),
     originalname: z.string().min(1).max(255),
 });
 
-// Riga restituita dal backend (JSON: le date arrivano come stringhe ISO)
 export const materialeSchema = z.object({
     id: z.number().int(),
     titolo: z.string(),
