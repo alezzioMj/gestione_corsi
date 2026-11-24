@@ -13,7 +13,6 @@ interface EntityDialogProps {
     children: React.ReactNode;
 }
 
-/** Solo contenitore: lo stato sta nei figli, che MUI smonta alla chiusura. */
 export function EntityDialog({ open, onClose, size = "md", children }: EntityDialogProps) {
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth={size}>
