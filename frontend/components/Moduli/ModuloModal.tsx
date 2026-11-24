@@ -1,13 +1,10 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import {
-    Button, TextField, Box, Typography, Divider, MenuItem,
-    FormControlLabel, Checkbox, IconButton
-} from "@mui/material";
+    TextField, Typography, Divider, MenuItem,
+    FormControlLabel, Checkbox} from "@mui/material";
 
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CloseIcon from "@mui/icons-material/Close";
 import { useCreateEntity } from "@/hooks/useCreateEntity";
 import { useUpdateEntity } from "@/hooks/useUpdateEntity";
 import { EntityDialog, EntityFormShell } from "@/components/common/EntityFormShell";
@@ -18,6 +15,7 @@ import {
     type CreateModulo,
     type Modulo,
 } from "@progetto/shared/validation/modulo.schema";
+import FileDropzone from "../common/FileDropZone";
 
 type ModuloFormData = Omit<CreateModulo, "competenza" | "file"> & {
     competenza: Competenza | "";
@@ -73,25 +71,11 @@ interface ModuloFormProps {
 function ModuloForm({ modulo, onClose, onSuccess }: ModuloFormProps) {
     const [formData, setFormData] = useState<ModuloFormData>(() => toFormData(modulo));
     const [files, setFiles] = useState<File[]>([]);
-    const fileInputRef = useRef<HTMLInputElement>(null);
 
     const { submitting: creating, create } = useCreateEntity<FormData, Modulo>("/moduli");
     const { submitting: updating, update } = useUpdateEntity<FormData, Modulo>("/moduli");
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const selected = Array.from(e.target.files ?? []);
-        setFiles((prev) => {
-            // evita duplicati (stesso nome e dimensione)
-            const fresh = selected.filter(
-                (f) => !prev.some((p) => p.name === f.name && p.size === f.size)
-            );
-            return [...prev, ...fresh];
-        });
-        e.target.value = ""; // permette di riselezionare lo stesso file
-    };
 
-    const removeFile = (index: number) =>
-        setFiles((prev) => prev.filter((_, i) => i !== index));
 
     const handleSubmit = async () => {
         const data = new FormData();
@@ -167,63 +151,12 @@ function ModuloForm({ modulo, onClose, onSuccess }: ModuloFormProps) {
                 onChange={(e) => setFormData({ ...formData, descrizioneMateriale: e.target.value })}
             />
 
-            <Box
-                sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    border: "2px dashed",
-                    borderColor: "divider",
-                    p: 3,
-                    textAlign: "center",
-                    borderRadius: 2,
-                    bgcolor: "action.hover",
-                    transition: "background-color 0.2s",
-                    "&:hover": { bgcolor: "action.selected" },
-                }}
-            >
-                <input
-                    type="file"
-                    hidden
-                    multiple
-                    ref={fileInputRef}
-                    onChange={handleFileChange}
-                    accept=".pdf,.ppt,.pptx,.zip,.docx"
-                />
-                <Button
-                    variant="outlined"
-                    startIcon={<CloudUploadIcon />}
-                    onClick={() => fileInputRef.current?.click()}
-                    sx={{ mb: 1 }}
-                >
-                    Seleziona File
-                </Button>
-
-                {files.length === 0 ? (
-                    <Typography variant="caption" color="text.secondary">
-                        {modulo
-                            ? "Lascia vuoto per mantenere il materiale attuale"
-                            : "Puoi caricare più file (PDF, PPT, DOCX, ZIP)"}
-                    </Typography>
-                ) : (
-                    <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 0.5 }}>
-                        {files.map((f, i) => (
-                            <Box
-                                key={`${f.name}-${f.size}`}
-                                sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}
-                            >
-                                <Typography variant="body2" noWrap sx={{ color: "success.main", fontWeight: "bold" }}>
-                                    {f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)
-                                </Typography>
-                                <IconButton size="small" aria-label={`Rimuovi ${f.name}`} onClick={() => removeFile(i)}>
-                                    <CloseIcon fontSize="small" />
-                                </IconButton>
-                            </Box>
-                        ))}
-                    </Box>
-                )}
-            </Box>
+            <FileDropzone
+                files={files}
+                onChange={setFiles}
+                multiple
+                hint={modulo ? "Lascia vuoto per mantenere il materiale attuale" : undefined}
+            />
         </EntityFormShell>
     );
 }
