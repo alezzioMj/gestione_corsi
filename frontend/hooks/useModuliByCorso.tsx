@@ -5,7 +5,7 @@ import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.sc
 
 export function useModuliByCorso(enabled: boolean, programmaId?: number | null) {
     const { data: programmi = [], isLoading, error } = useSWR<ProgrammaWithRelations<"programma_modulo">[]>(
-        enabled ? "/programmi" : null,
+        enabled ? "/programmi?include=programma_modulo" : null,
         fetcher
     );
 
