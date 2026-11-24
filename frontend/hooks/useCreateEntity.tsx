@@ -5,21 +5,23 @@ import { useSnackbar } from "@/components/SnackbarContext";
 import { getErrorMessage } from "@/utils/errorMessages";
 import { useCallback } from "react";
 
+export function useCreateEntity<TBody extends object, TResult>(endpoint: string, successMessage?: string) {
+    const { trigger: rawTrigger, isMutating } = useSWRMutation(endpoint, postFetcher<TBody, TResult>);
+    const trigger = rawTrigger as unknown as (body: TBody) => Promise<TResult | null>;
 
-export function useCreateEntity(endpoint: string) {
-    const { trigger, isMutating } = useSWRMutation(endpoint, postFetcher);
     const { showMessage } = useSnackbar();
 
-    const create = useCallback(async (body: object): Promise<boolean> => {
+    const create = useCallback(async (body: TBody): Promise<boolean> => {
         try {
             await trigger(body);
+            showMessage(successMessage ?? "Creazione andata a buon fine!", "success");
             return true;
         } catch (error) {
             console.error(error);
             showMessage(getErrorMessage(error), "error");
             return false;
         }
-    }, [trigger, showMessage]);
+    }, [trigger, showMessage, successMessage]);
 
     return { submitting: isMutating, create };
 }
