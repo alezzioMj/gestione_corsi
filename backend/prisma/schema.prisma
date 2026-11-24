@@ -87,11 +87,11 @@ model commessa {
 
   scadenza DateTime? @db.Date
 
-  corsi    corso[]
+  corsi corso[]
 
   cliente_id Int?
-  cliente    cliente? @relation(fields: [cliente_id], references: [id])
-  stato stato_commessa @default(APERTA)
+  cliente    cliente?       @relation(fields: [cliente_id], references: [id])
+  stato      stato_commessa @default(APERTA)
 
   created_at DateTime @default(now()) @db.Timestamp(6)
   created_by String?  @db.VarChar(100)

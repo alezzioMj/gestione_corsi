@@ -1,7 +1,7 @@
 import express from "express";
 const moduloRouter = express.Router();
 import { validate } from "../middlewares/validate";
-import { moduloSchema } from "@progetto/shared/validation/modulo.schema";
+import { createModuloSchema, moduloSchema, updateModuloSchema } from "@progetto/shared/validation/modulo.schema";
 import multer from "multer";
 import {
     getModuli,
@@ -16,13 +16,13 @@ import {
     getProgrammiByModulo,
     uploadMaterialeToModulo
 } from '../controllers/moduloController';
-const storage = multer.memoryStorage(); // <--- IMPORTANTE: salva in RAM temporaneamente
+const storage = multer.memoryStorage(); 
 const upload = multer({ storage: storage });
 
 moduloRouter.get('/', getModuli);
 moduloRouter.get('/:id', getModulo);
-moduloRouter.post('/', upload.none(), validate(moduloSchema), createModulo);
-moduloRouter.put('/:id', upload.none(), validate(moduloSchema), updateModulo);
+moduloRouter.post('/', upload.none(), validate(createModuloSchema), createModulo);
+moduloRouter.put('/:id', upload.none(), validate(updateModuloSchema), updateModulo);
 moduloRouter.delete('/:id', deleteModulo);
 
 //DOCENTI

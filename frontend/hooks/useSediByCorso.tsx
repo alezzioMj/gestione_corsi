@@ -2,7 +2,7 @@
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
-import { Sede } from "@progetto/shared/validation/types";
+import { Sede } from "@progetto/shared/validation/sede.schema";
 
 type SedeCorsoRow = {
     corso_id: number;

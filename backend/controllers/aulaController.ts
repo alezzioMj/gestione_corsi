@@ -1,9 +1,20 @@
 import { prisma } from "../prisma";
 import express from "express";
+import { buildInclude, IncludeMap } from "./utility.ts/include";
+
+const INCLUDE_MAP = {
+  sede: true
+} satisfies IncludeMap
 
 const getAule = async (req: express.Request, res: express.Response) => {
   try {
-    const aule = await prisma.aula.findMany();
+    const include = buildInclude(req, INCLUDE_MAP)
+
+    const aule = await prisma.aula.findMany(
+      {
+        include
+      }
+    );
     res.json(aule);
   } catch (error) {
     console.error("Errore nel recupero delle aule:", error);
@@ -14,8 +25,11 @@ const getAule = async (req: express.Request, res: express.Response) => {
 const getAula = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);
+    const include = buildInclude(req, INCLUDE_MAP)
+
     const aula = await prisma.aula.findUnique({
       where: { id },
+      include
     });
 
     if (!aula) {
@@ -44,7 +58,8 @@ const createAula = async (req: express.Request, res: express.Response) => {
         sede_id,
         capienza,
         descrizione
-      }
+      },
+      include: buildInclude(req, INCLUDE_MAP)
     });
 
     res.status(201).json(aula);
@@ -54,7 +69,10 @@ const createAula = async (req: express.Request, res: express.Response) => {
       error: err,
     });
     if (err.code === "P2002") {
-      return res.status(400).json({ error: "L'aula esiste già" });
+      return res.status(400).json({ error: "L'aula esiste già in questa sede" });
+    }
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "La sede selezionata non esiste" });
     }
     res.status(500).json({ error: "Errore creazione aula" });
   }
@@ -77,7 +95,8 @@ const updateAula = async (req: express.Request, res: express.Response) => {
         sede_id,
         capienza,
         descrizione
-      }
+      },
+      include: buildInclude(req, INCLUDE_MAP)
     });
 
     res.json(aula);
@@ -86,10 +105,21 @@ const updateAula = async (req: express.Request, res: express.Response) => {
       message: "Errore nell'aggiornamento dell'aula",
       error: err,
     });
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Aula non trovata" });
+    }
+    if (err.code === "P2002") {
+      return res.status(400).json({ error: "L'aula esiste già in questa sede" });
+    }
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "La sede selezionata non esiste" });
+    }
     res.status(500).json({ error: "Errore aggiornamento aula" });
   }
 };
 
+// aula -> sessione e indisponibilita non hanno cascade: se ci sono righe collegate
+// Prisma risponde con P2003 (restrict).
 const deleteAula = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);
@@ -102,6 +132,12 @@ const deleteAula = async (req: express.Request, res: express.Response) => {
       message: "Errore nella cancellazione dell'aula",
       error: err,
     });
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Aula non trovata" });
+    }
+    if (err.code === "P2003") {
+      return res.status(409).json({ error: "Impossibile eliminare l'aula: ha sessioni o indisponibilità collegate" });
+    }
     res.status(500).json({ error: "Errore cancellazione aula" });
   }
 };

@@ -1,5 +1,6 @@
 import { Box, Typography } from "@mui/material";
-import { Docente, Indisponibilita } from "@progetto/shared/validation/types";
+import { Docente } from "@progetto/shared/validation/docente.schema";
+import { Indisponibilita } from "@progetto/shared/validation/indisponibilita.schema";
 import { CalendarRow, DayView, SlotView } from "./types";
 
 // ---------- helper condivisi ----------

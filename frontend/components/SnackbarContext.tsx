@@ -1,5 +1,5 @@
 "use client";
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, ReactNode, useCallback } from "react";
 import { Snackbar, Alert, AlertColor } from "@mui/material";
 
 type SnackbarContextType = {
@@ -13,11 +13,11 @@ export function SnackbarProvider({ children }: { children: ReactNode }) {
   const [message, setMessage] = useState("");
   const [severity, setSeverity] = useState<AlertColor>("info");
 
-  const showMessage = (msg: string, sev: AlertColor = "info") => {
+  const showMessage = useCallback((msg: string, sev: AlertColor = "info") => {
     setMessage(msg);
     setSeverity(sev);
     setOpen(true);
-  };
+  }, []);
 
   return (
     <SnackbarContext.Provider value={{ showMessage }}>

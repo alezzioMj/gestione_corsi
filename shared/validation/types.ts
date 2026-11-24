@@ -1,138 +1,42 @@
-// c:\Users\aless\Desktop\gestione_corsi\backend\src\types.ts
-import { corsoSchema } from '../validation/corso.schema';
-import { aulaSchema } from '../validation/aula.schema';
-import { docenteSchema } from '../validation/docente.schema';
-import { sedeSchema } from '../validation/sede.schema';
-import { programmaSchema } from './programma.schema';
 import { z } from 'zod';
-import { moduloSchema } from './modulo.schema';
-import { sessioneSchema } from './sessione.schema';
-import { materialeSchema } from './materiale.schema';
-import { indisponibilitaSchema } from './indisponibilita.schema';
-import { clienteSchema } from './cliente.schema';
-import { sedeClienteSchema } from './sedecliente.schema';
-import { contattoSchema } from './contatto.schema';
-import { commessaSchema } from './commessa.schema';
+import { Docente } from './docente.schema';
+import { Programma } from './programma.schema';
 
-// Schema per l'INVIO (Input dal form/frontend)
-export type CorsoFormInput = z.infer<typeof corsoSchema>;
-export type AulaFormInput = z.infer<typeof aulaSchema>;
-export type DocenteFormInput = z.infer<typeof docenteSchema>;
-export type SedeFormInput = z.infer<typeof sedeSchema>;
-export type ProgrammaFormInput = z.infer<typeof programmaSchema>;
+class AppError extends Error {
+  statusCode: number;
+  status: "fail" | "error";
+  isOperational: boolean;
+  code?: string;
 
-// Schema esteso per il FETCH (Dati che arrivano dal Database)
-export const corsoDbSchema = corsoSchema.extend({
-    id: z.number(),
-    createdAt: z.date().optional()
-});
-
-export const programmaDbSchema = programmaSchema.extend({
-    id: z.number(),
-    createdAt: z.date().optional()
-});
-
-export const aulaDbSchema = aulaSchema.extend({
-    id: z.number(),
-    createdAt: z.date().optional(),
-});
-
-export const docenteDbSchema = docenteSchema.extend({
-    // Se il docente usa il CF come ID, non serve aggiungere id: z.number()
-    createdAt: z.date().optional()
-});
-
-export const sedeDbSchema = sedeSchema.extend({
-    id: z.number(),
-    createdAt: z.date().optional(),
-});
-
-export const moduloDbSchema = moduloSchema.extend(
-    {
-        id: z.number(),
-        createdAt: z.date().optional()
-    }
-)
-
-export const sessioneDbSchema = sessioneSchema.extend({
-    id: z.number().int().positive()
+  constructor(message: string, statusCode: number, code?: string) {
+    super(message);
+    this.statusCode = statusCode;
+    this.status = `${statusCode}`.startsWith("4")
+      ? "fail"
+      : "error";
+    this.isOperational = true;
+    this.message = message;
+  }
 }
-)
-// Forma delle risposte di errore dalle API
-export const apiErrorSchema = z.object({
-    error: z.string().optional(),
-    issues: z.array(z.object({
-        message: z.string(),
-        path: z.array(z.string()).optional(),
-    })).optional(),
+
+export default AppError;
+
+export const formSchema = z.object({
+    nome: z.string().min(1, "Il nome del corso è obbligatorio"),
+    commessa_id: z.number().int().positive("Seleziona una commessa"),
+    sedi: z.array(z.number().int().positive()).min(1, "Seleziona almeno una sede"),
+    programmi: z.number().min(1, "Seleziona un programma"),
+    docenti: z.array(z.string()).min(1, "Seleziona almeno un docente"),
+    oreTotali: z.number().min(0, "Le ore totali non possono essere negative"),
+    moduliOrdinati: z.array(z.string()).min(1, "L'ordine dei moduli è obbligatorio"),
+    dataInizio: z.string().min(1, "Data inizio obbligatoria"),
+    dataFine: z.string().min(1, "Data fine obbligatoria"),
+    giorni: z.array(z.number()).min(1, "Seleziona almeno un giorno di lezione"),
+    mattina_inizio: z.string().min(1, "Orario obbligatorio"),
+    mattina_fine: z.string().min(1, "Orario obbligatorio"),
+    pomeriggio_inizio: z.string().min(1, "Orario obbligatorio"),
+    pomeriggio_fine: z.string().min(1, "Orario obbligatorio"),
+    note: z.string().optional(),
 });
 
-export type ApiErrorData = z.infer<typeof apiErrorSchema>;
-
-// Esportazione dei tipi derivati dagli schemi DB
-
-export type Cliente = z.infer<typeof clienteSchema>
-export type Corso = z.infer<typeof corsoDbSchema>;
-export type CommessaSchema = z.infer<typeof commessaSchema>;
-export type Contatto = z.infer<typeof contattoSchema>
-export type Programma = z.infer<typeof programmaDbSchema>;
-export type Aula = z.infer<typeof aulaDbSchema>;
-export type Docente = z.infer<typeof docenteDbSchema>;
-export type Sede = z.infer<typeof sedeDbSchema>;
-export type SedeCliente = z.infer<typeof sedeClienteSchema>
-export type Modulo = z.infer<typeof moduloDbSchema>;
-export type Materiale = z.infer<typeof materialeSchema>;
-export type Indisponibilita = z.infer<typeof indisponibilitaSchema>
-
-export const SedeWithRelations = sedeClienteSchema.extend({
-    contatti: z.array(contattoSchema),
-});
-
-export type SedeWithRelations = z.infer<typeof SedeWithRelations>;
-
-export const ClienteWithRelations = clienteSchema.extend({
-    sedi: z.array(SedeWithRelations),
-});
-
-export const ClienteUpdateSchema = ClienteWithRelations.omit({
-    id: true,
-    agente_id: true
-}).extend({
-    sedi: z.array(
-        ClienteWithRelations.shape.sedi.element.omit({
-            cliente_id: true,
-            id: true
-        }).extend({
-            id: z.number().int().positive().optional(),
-
-            contatti: z.array(
-                ClienteWithRelations.shape.sedi.element.shape.contatti.element
-                    .omit({
-                        sede_id: true,
-                        id: true
-                    })
-                    .extend({
-                        id: z.number().int().positive().optional()
-                    })
-            )
-        })
-    )
-});
-
-export type ClienteWithRelations = z.infer<typeof ClienteWithRelations>;
-
-export const SessioneWithRelations = sessioneDbSchema.extend({
-    corso: corsoDbSchema,
-    docente: docenteDbSchema,
-    modulo: moduloSchema,
-    aula: aulaDbSchema,
-    sede: sedeDbSchema,
-});
-
-export type SessioneWithRelations = z.infer<typeof SessioneWithRelations>;
-
-export interface ApiErrorBody {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-}
+export type FormType = z.infer<typeof formSchema>;

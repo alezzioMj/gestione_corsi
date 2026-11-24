@@ -15,7 +15,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 
-import { Indisponibilita } from "@progetto/shared/validation/types";
+import { Indisponibilita } from "@progetto/shared/validation/indisponibilita.schema";
 import { toDateKey } from "./utils";
 
 // Il tipo condiviso potrebbe non avere l'id: serve per eliminare

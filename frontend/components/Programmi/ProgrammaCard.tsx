@@ -1,76 +1,68 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { Card, CardContent, Typography, Box, Divider, Chip, Button } from "@mui/material";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
-import { ProgrammaConModuli } from "@/validation/corso-form.schema";
-import AddModuloProgrammaModal from "./AddModuloProgrammaModal";
-import EditProgrammaModal from "./EditProgrammaModal"; // Importa il modal di modifica
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
+import type { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
+import CardActionsBar from "../common/CardActionsBar";
+import ModuliAssociationDialog from "../common/ModuliAssociationDialog";
+
+type ProgrammaCardData = ProgrammaWithRelations<"corso" | "programma_modulo">;
 
 interface ProgrammaCardProps {
-  programma: ProgrammaConModuli;
-  onProgrammaUpdated: () => void; // Callback per aggiornare la lista nel componente padre
-  onDeleteProgramma: (programmaId: number) => void; // Callback per eliminare il programma
+  programma: ProgrammaCardData;
+  onEdit: (programma: ProgrammaCardData) => void;
+  onDelete: (programmaId: number) => void;
+  onModuliUpdated: () => void;
 }
 
-export default function ProgrammaCard({ programma, onProgrammaUpdated, onDeleteProgramma }: ProgrammaCardProps) {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+export default function ProgrammaCard({ programma, onEdit, onDelete, onModuliUpdated }: ProgrammaCardProps) {
+  const [moduliOpen, setModuliOpen] = useState(false);
 
   return (
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column", boxShadow: 2 }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-          <Typography variant="h6" component="div" color="primary">
-            {programma.titolo}
-          </Typography>
-        </Box>
+      <CardContent sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+        <Typography variant="h6" component="div" color="primary" sx={{ mb: 2 }}>
+          {programma.titolo}
+        </Typography>
 
         <Divider sx={{ my: 1.5 }} />
 
-        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 'bold' }}>
-            Durata Totale: {programma.durata_totale} ore
-          </Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Ore Pratiche: {programma.ore_pratiche}
-          </Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Ore Teoriche: {programma.ore_teoriche}
-          </Typography>
-        </Box>
-        <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Ore Trasversali: {programma.ore_trasversali}
-          </Typography>
-        </Box>
+        <Typography variant="body2" color="text.secondary" sx={{ fontWeight: "bold", mb: 1 }}>
+          Durata Totale: {programma.durata_totale} ore
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Ore Pratiche: {programma.ore_pratiche}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Ore Teoriche: {programma.ore_teoriche}
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+          Ore Trasversali: {programma.ore_trasversali}
+        </Typography>
 
         <Divider sx={{ my: 1.5 }} />
 
-        {/* Carosello Moduli Orizzontale */}
         <Box sx={{ mb: 2 }}>
           <Box sx={{ display: "flex", alignItems: "center", mb: 1, gap: 1 }}>
             <MenuBookIcon fontSize="small" color="action" />
-            <Typography variant="subtitle2" >Moduli associati:</Typography>
+            <Typography variant="subtitle2">Moduli associati:</Typography>
           </Box>
 
-          <Box sx={{
-            display: 'flex',
-            gap: 1,
-            overflowX: 'auto',
-            pb: 1,
-            '&::-webkit-scrollbar': { height: '5px' },
-            '&::-webkit-scrollbar-thumb': { backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: '10px' },
-          }}>
-            {programma.programma_modulo && programma.programma_modulo.length > 0 ? (
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              overflowX: "auto",
+              pb: 1,
+              "&::-webkit-scrollbar": { height: "5px" },
+              "&::-webkit-scrollbar-thumb": { backgroundColor: "rgba(0,0,0,0.1)", borderRadius: "10px" },
+            }}
+          >
+            {programma.programma_modulo.length > 0 ? (
               programma.programma_modulo.map((pm) => (
                 <Chip
-                  key={pm.modulo_id}
+                  key={pm.id}
                   label={pm.modulo?.titolo || "Senza Titolo"}
                   size="small"
                   variant="outlined"
@@ -84,24 +76,26 @@ export default function ProgrammaCard({ programma, onProgrammaUpdated, onDeleteP
           </Box>
         </Box>
 
-        <Box sx={{ mt: 'auto', display: "flex", justifyContent: "flex-end", gap: 1 }}>
-          <AddModuloProgrammaModal programma={programma} />
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<EditIcon />}
-            onClick={() => setIsEditModalOpen(true)} // Apre il modal di modifica
-          >
-            Modifica
+        <CardActionsBar onEdit={() => onEdit(programma)} onDelete={() => onDelete(programma.id)}>
+          <Button variant="contained" size="small" onClick={() => setModuliOpen(true)}>
+            Configura Moduli
           </Button>
-          <Button variant="outlined" color="error" size="small" startIcon={<DeleteIcon />} onClick={() => onDeleteProgramma(programma.id)}>
-            Elimina
-          </Button>
-        </Box>
+        </CardActionsBar>
       </CardContent>
-      {programma && (
-        <EditProgrammaModal open={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} programma={programma} onSaveSuccess={onProgrammaUpdated} />
-      )}
+
+      <ModuliAssociationDialog
+        open={moduliOpen}
+        onClose={() => setModuliOpen(false)}
+        onSuccess={() => {
+          setModuliOpen(false);
+          onModuliUpdated();
+        }}
+        title={`Configura moduli: ${programma.titolo}`}
+        associationsEndpoint={`/programmi/${programma.id}/moduli`}
+        saveEndpoint={`/programmi/${programma.id}/moduli_bulk`}
+        extractIds={(d) => d.map((pm) => pm.modulo_id)}
+        sortable
+      />
     </Card>
   );
 }

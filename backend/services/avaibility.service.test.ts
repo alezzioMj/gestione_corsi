@@ -18,18 +18,18 @@ describe("checkDocenteDisponibileMemoria", () => {
             },
         ] as any;
 
-        expect(() =>
-            checkDocenteDisponibileMemoria(
-                "RSSMRA85M01H501U",
-                new Date("2026-01-10T00:00:00.000Z"),
-                "10:30",
-                "12:00",
-                2,
-                sessioniEsistenti,
-                []
-            )
-        ).toThrow("Il docente è già occupato in questo slot");
-    });
+    expect(() =>
+      checkDocenteDisponibileMemoria(
+        "RSSMRA85M01H501U",
+        new Date("2026-01-10T00:00:00.000Z"),
+        "10:30",
+        "12:00",
+        2,
+        sessioniEsistenti,
+        []
+      )
+    ).toThrow("Il docente è già occupato in questo slot");
+  });
 });
 
 describe("checkAulaDisponibileMemoria", () => {
@@ -43,16 +43,16 @@ describe("checkAulaDisponibileMemoria", () => {
             },
         ];
 
-        expect(() =>
-            checkAulaDisponibileMemoria(
-                1,
-                2,
-                new Date("2026-01-10T00:00:00.000Z"),
-                "10:30",
-                "12:00",
-                sessioniEsistenti,
-                []
-            )
-        ).toThrow("L'aula è già occupata in questo slot");
-    });
+    expect(() =>
+      checkAulaDisponibileMemoria(
+        1,
+        1,
+        new Date("2026-01-10T00:00:00.000Z"),
+        "10:30",
+        "12:00",
+        sessioniEsistenti,
+        []
+      )
+    ).toThrow("L'aula è già occupata in questo slot");
+  });
 });

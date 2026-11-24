@@ -14,19 +14,20 @@ import {
     TextField
 } from "@mui/material";
 
-import { CommessaSchema } from "@progetto/shared/validation/types";
+import { Commessa } from "@progetto/shared/validation/commessa.schema";
 
-import { useEffect, useState, type FormEvent } from "react";
+import { useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import { useSnackbar } from "../SnackbarContext";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface CommesseModalProps {
     open: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    commessa?: CommessaSchema;
+    commessa?: Commessa;
 }
 
 type ClienteOption = {
@@ -51,7 +52,7 @@ const STATI = [
     { value: "ANNULLATA", label: "Annullata" }
 ];
 
-const creaForm = (commessa?: CommessaSchema): CommessaForm => {
+const creaForm = (commessa?: Commessa): CommessaForm => {
     console.log(commessa?.codice_commessa);
     return ({
         codice_commessa: commessa?.codice_commessa ?? "",
@@ -129,31 +130,16 @@ export default function CommesseModal({
 
             if (!res.ok) {
                 const data = await res.json().catch(() => null);
-
-                throw new Error(
-                    data?.error ||
-                    data?.message ||
-                    "Errore durante il salvataggio della commessa"
-                );
+                throw new Error(data.error);
             }
 
-            showMessage(
-                isEdit
-                    ? "Commessa modificata con successo"
-                    : "Commessa creata con successo"
-            );
+            showMessage("Commessa creata con successo", "success");
 
             onSuccess();
 
-        } catch (err) {
-            console.error("Errore nel salvataggio della commessa:", err);
-
-            showMessage(
-                err instanceof Error
-                    ? err.message
-                    : "Errore durante il salvataggio della commessa",
-                "error"
-            );
+        } catch (error) {
+            console.error(error);            
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setSubmitting(false);
         }

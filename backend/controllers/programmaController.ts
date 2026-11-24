@@ -1,20 +1,18 @@
 import { prisma } from "../prisma";
 import express from "express";
+import { buildInclude, IncludeMap } from "./utility.ts/include";
 
+const INCLUDE_MAP = {
+  programma_modulo: { include: { modulo: true }, orderBy: { ordine: "asc" } },
+  corso: true,
+} satisfies IncludeMap;
 
 const getProgrammi = async (req: express.Request, res: express.Response) => {
   try {
+    const include = buildInclude(req, INCLUDE_MAP);
+
     const programmi = await prisma.programma.findMany({
-      include: {
-        programma_modulo: {
-          include: {
-            modulo: true
-          },
-          orderBy: {
-            ordine: 'asc'
-          }
-        }
-      }
+      include,
     });
     res.json(programmi);
   } catch (error) {
@@ -26,18 +24,11 @@ const getProgrammi = async (req: express.Request, res: express.Response) => {
 const getProgramma = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);
+    const include = buildInclude(req, INCLUDE_MAP);
+
     const programma = await prisma.programma.findUnique({
       where: { id },
-      include: {
-        programma_modulo: {
-          include: {
-            modulo: true
-          },
-          orderBy: {
-            ordine: 'asc'
-          }
-        }
-      }
+      include,
     });
 
     if (!programma) {
@@ -59,7 +50,7 @@ const createProgramma = async (req: express.Request, res: express.Response) => {
       durata_totale,
       ore_pratiche,
       ore_teoriche,
-      ore_trasversali
+      ore_trasversali,
     } = req.body;
 
     const programma = await prisma.programma.create({
@@ -69,8 +60,9 @@ const createProgramma = async (req: express.Request, res: express.Response) => {
         durata_totale,
         ore_pratiche,
         ore_teoriche,
-        ore_trasversali
-      }
+        ore_trasversali,
+      },
+      include: buildInclude(req, INCLUDE_MAP),
     });
 
     res.status(201).json(programma);
@@ -79,9 +71,6 @@ const createProgramma = async (req: express.Request, res: express.Response) => {
       message: "Errore nella creazione del programma",
       error: err,
     });
-    if (err.code === "P2002") {
-      return res.status(400).json({ error: "Il programma esiste già" });
-    }
     res.status(500).json({ error: "Errore creazione programma" });
   }
 };
@@ -92,14 +81,23 @@ const updateProgramma = async (req: express.Request, res: express.Response) => {
     const {
       titolo,
       descrizione,
+      durata_totale,
+      ore_pratiche,
+      ore_teoriche,
+      ore_trasversali,
     } = req.body;
 
     const programma = await prisma.programma.update({
       where: { id },
       data: {
         titolo,
-        descrizione
-      }
+        descrizione,
+        durata_totale,
+        ore_pratiche,
+        ore_teoriche,
+        ore_trasversali,
+      },
+      include: buildInclude(req, INCLUDE_MAP),
     });
 
     res.json(programma);
@@ -108,10 +106,14 @@ const updateProgramma = async (req: express.Request, res: express.Response) => {
       message: "Errore nell'aggiornamento del programma",
       error: err,
     });
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Programma non trovato" });
+    }
     res.status(500).json({ error: "Errore aggiornamento programma" });
   }
 };
 
+// programma_modulo è in cascade; corso.programma no (NoAction): se esistono corsi collegati, P2003.
 const deleteProgramma = async (req: express.Request, res: express.Response) => {
   try {
     const id = Number(req.params.id);
@@ -124,6 +126,12 @@ const deleteProgramma = async (req: express.Request, res: express.Response) => {
       message: "Errore nella cancellazione del programma",
       error: err,
     });
+    if (err.code === "P2025") {
+      return res.status(404).json({ error: "Programma non trovato" });
+    }
+    if (err.code === "P2003") {
+      return res.status(409).json({ error: "Impossibile eliminare il programma: è usato da uno o più corsi" });
+    }
     res.status(500).json({ error: "Errore cancellazione programma" });
   }
 };
@@ -133,19 +141,11 @@ const getModuliByProgramma = async (req: express.Request, res: express.Response)
     const programma_id = Number(req.params.id);
     const moduli = await prisma.programma_modulo.findMany({
       where: { programma_id },
-      include: {
-        modulo: true
-      },
-      orderBy: {
-        ordine: 'asc'
-      }
-    })
+      include: { modulo: true },
+      orderBy: { ordine: "asc" },
+    });
 
-    if (moduli.length === 0) {
-      return res.status(404).send("Nessun modulo trovato per questo programma");
-    }
-    res.json(moduli)
-
+    res.json(moduli);
   } catch (err: any) {
     console.error({
       message: "Errore nella ricerca dei moduli per questo programma",
@@ -153,109 +153,121 @@ const getModuliByProgramma = async (req: express.Request, res: express.Response)
     });
     res.status(500).json({ error: "Errore ricerca moduli" });
   }
-}
+};
 
 const addModuloToProgramma = async (req: express.Request, res: express.Response) => {
   try {
     const programma_id = Number(req.params.id);
     const { modulo_id, obbligatorio } = req.body;
 
-    // Trova l'ordine massimo attuale e aggiungi 1
+    // ordine massimo attuale + 1
     const maxOrdine = await prisma.programma_modulo.findFirst({
       where: { programma_id },
-      orderBy: { ordine: 'desc' },
-      select: { ordine: true }
+      orderBy: { ordine: "desc" },
+      select: { ordine: true },
     });
-
-    const nuovoOrdine = (maxOrdine?.ordine || 0) + 1;
 
     const relazione = await prisma.programma_modulo.create({
       data: {
         programma_id,
         modulo_id,
         obbligatorio: obbligatorio ?? true,
-        ordine: nuovoOrdine
+        ordine: (maxOrdine?.ordine ?? 0) + 1,
       },
-      include: {
-        modulo: true
-      }
+      include: { modulo: true },
     });
 
     res.status(201).json(relazione);
   } catch (err: any) {
-    console.error("Errore assegnazione modulo al programma", err);
+    console.error({
+      message: "Errore nell'assegnazione del modulo al programma",
+      error: err,
+    });
+    // @@unique([programma_id, ordine]): due richieste in parallelo possono calcolare lo stesso ordine
+    if (err.code === "P2002") {
+      return res.status(409).json({ error: "Conflitto sull'ordine dei moduli, riprova" });
+    }
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "Il programma o il modulo non esiste" });
+    }
     res.status(500).json({ error: "Errore assegnazione modulo" });
   }
 };
 
-export const addModuloToProgrammaBulk = async (
-  req: express.Request,
-  res: express.Response
-) => {
+// Sostituisce l'intero elenco dei moduli del programma, nell'ordine ricevuto
+const addModuloToProgrammaBulk = async (req: express.Request, res: express.Response) => {
   try {
     const programma_id = Number(req.params.id);
     const { moduli_ids } = req.body;
 
-    const relazione = await prisma.$transaction([
-      prisma.programma_modulo.deleteMany({
-        where: { programma_id },
-      }),
+    if (!moduli_ids || !Array.isArray(moduli_ids)) {
+      return res.status(400).json({ error: "Formato dati non valido. Previsto array moduli_ids" });
+    }
 
+    const result = await prisma.$transaction([
+      prisma.programma_modulo.deleteMany({ where: { programma_id } }),
       prisma.programma_modulo.createMany({
         data: moduli_ids.map((id: number, index: number) => ({
           programma_id,
           modulo_id: id,
           ordine: index + 1,
         })),
-        skipDuplicates: true,
       }),
     ]);
 
-    res.status(201).json(relazione);
+    res.status(201).json(result);
   } catch (err: any) {
-    console.error(
-      "Errore assegnazione moduli al programma",
-      err
-    );
-
-    res.status(500).json({
-      error: "Errore assegnazione moduli",
+    console.error({
+      message: "Errore nell'assegnazione dei moduli al programma",
+      error: err,
     });
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "Il programma o uno dei moduli non esiste" });
+    }
+    res.status(500).json({ error: "Errore assegnazione moduli" });
   }
 };
 
-
+// Elimina e riordina nella stessa transazione. Spostare gli ordini in avanti
+// (1, 3, 4 -> 1, 2, 3) non viola mai @@unique([programma_id, ordine]).
 const deleteModuloFromProgramma = async (req: express.Request, res: express.Response) => {
   try {
     const programma_id = Number(req.params.id);
     const programma_modulo_id = Number(req.params.programma_modulo_id);
-    
-    // Elimina usando l'ID della relazione
-    const relazione = await prisma.programma_modulo.delete({
-      where: {
-        id: programma_modulo_id,
-      },
+
+    const eliminato = await prisma.$transaction(async (tx) => {
+      const { count } = await tx.programma_modulo.deleteMany({
+        where: { id: programma_modulo_id, programma_id },
+      });
+      if (count === 0) return false;
+
+      const rimanenti = await tx.programma_modulo.findMany({
+        where: { programma_id },
+        orderBy: { ordine: "asc" },
+      });
+
+      for (const [index, m] of rimanenti.entries()) {
+        if (m.ordine !== index + 1) {
+          await tx.programma_modulo.update({
+            where: { id: m.id },
+            data: { ordine: index + 1 },
+          });
+        }
+      }
+      return true;
     });
 
-    // Riordinare gli ordini rimanenti
-    const moduliRimanenti = await prisma.programma_modulo.findMany({
-      where: { programma_id },
-      orderBy: { ordine: 'asc' }
-    });
+    if (!eliminato) {
+      return res.status(404).json({ error: "Modulo non presente in questo programma" });
+    }
 
-    await prisma.$transaction(
-      moduliRimanenti.map((m, index) =>
-        prisma.programma_modulo.update({
-          where: { id: m.id },
-          data: { ordine: index + 1 }
-        })
-      )
-    );
-
-    return res.status(200).json(relazione);
+    res.status(204).send();
   } catch (err: any) {
-    console.error("Errore cancellazione modulo dal programma", err);
-    return res.status(500).json({ error: "Errore cancellazione modulo" });
+    console.error({
+      message: "Errore nella cancellazione del modulo dal programma",
+      error: err,
+    });
+    res.status(500).json({ error: "Errore cancellazione modulo" });
   }
 };
 
@@ -268,15 +280,14 @@ const createCompleteProgramma = async (req: express.Request, res: express.Respon
       ore_pratiche,
       ore_teoriche,
       ore_trasversali,
-      moduli_ids, // Array of module IDs in desired order
+      moduli_ids, // id dei moduli nell'ordine desiderato
     } = req.body;
 
-    if (!titolo || !moduli_ids || moduli_ids.length === 0) {
-      return res.status(400).json({ error: "Titolo e almeno un modulo sono obbligatori." });
+    if (!titolo || !Array.isArray(moduli_ids) || moduli_ids.length === 0) {
+      return res.status(400).json({ error: "Titolo e almeno un modulo sono obbligatori" });
     }
 
-      
-    const newProgramma = await prisma.programma.create({
+    const programma = await prisma.programma.create({
       data: {
         titolo,
         descrizione,
@@ -285,31 +296,27 @@ const createCompleteProgramma = async (req: express.Request, res: express.Respon
         ore_teoriche: Number(ore_teoriche),
         ore_trasversali: Number(ore_trasversali),
         programma_modulo: {
-          create: moduli_ids.map((moduloId: number, index: number) => ({
-            modulo_id: moduloId,
-            ordine: index + 1, // Assign order based on array index
+          create: moduli_ids.map((modulo_id: number, index: number) => ({
+            modulo_id,
+            ordine: index + 1,
           })),
         },
       },
-      include: {
-        programma_modulo: {
-          include: {
-            modulo: true
-          }
-        }
-      },
+      include: { programma_modulo: { include: { modulo: true } } },
     });
 
-    res.status(201).json(newProgramma);
+    res.status(201).json(programma);
   } catch (err: any) {
-    if (err.code === "P2002") {
-      return res.status(400).json({ error: "Un programma con questo titolo esiste già." });
+    console.error({
+      message: "Errore nella creazione del programma completo",
+      error: err,
+    });
+    if (err.code === "P2003") {
+      return res.status(400).json({ error: "Uno dei moduli selezionati non esiste" });
     }
     res.status(500).json({ error: "Errore creazione programma" });
   }
 };
-
-
 
 export {
   getProgrammi,
@@ -319,6 +326,7 @@ export {
   deleteProgramma,
   getModuliByProgramma,
   addModuloToProgramma,
+  addModuloToProgrammaBulk,
   deleteModuloFromProgramma,
-  createCompleteProgramma
+  createCompleteProgramma,
 };

@@ -3,17 +3,19 @@
 import { Box, Typography, Grid, List, ListItem, ListItemText, Divider, Paper } from "@mui/material";
 import { useFormContext } from "react-hook-form";
 
-import { FormType, DocenteConModuli, ProgrammaConModuli } from "@/validation/corso-form.schema";
-import { CommessaOption } from "./StepForm";
+import { FormType } from "@progetto/shared/validation/types";
+import { DocenteWithRelations } from "@progetto/shared/validation/docente.schema";
+import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
+import { CommessaWithRelations } from "@progetto/shared/validation/commessa.schema";
 
 const giorniLabels: Record<number, string> = {
     1: "Lunedì", 2: "Martedì", 3: "Mercoledì", 4: "Giovedì", 5: "Venerdì", 6: "Sabato", 7: "Domenica"
 };
 
 export default function StepReview({ docenti, programmi, commesse }: {
-    docenti: DocenteConModuli[],
-    programmi: ProgrammaConModuli[],
-    commesse: CommessaOption[]
+    docenti: DocenteWithRelations[],
+    programmi: ProgrammaWithRelations[],
+    commesse: CommessaWithRelations<"cliente">[]
 }) {
     const { getValues } = useFormContext<FormType>();
     const data = getValues();

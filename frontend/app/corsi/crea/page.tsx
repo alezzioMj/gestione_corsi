@@ -11,7 +11,7 @@ async function getSedi() {
 }
 
 async function getProgrammi() {
-    const res = await fetch(`${API_BASE_URL}/programmi`, { cache: "no-store" });
+    const res = await fetch(`${API_BASE_URL}/programmi?include=corso,programma_modulo`, { cache: "no-store" });
     if (!res.ok) {
         throw new Error(`Errore durante il recupero dei programmi: ${res.statusText}`);
     }
@@ -27,7 +27,7 @@ async function getCommesse() {
 }
 
 async function getDocenti() {
-    const url = `${API_BASE_URL}/docenti`;
+    const url = `${API_BASE_URL}/docenti?include=docente_modulo`;
     console.log("DEBUG: Tentativo di fetch su:", url); // Questo apparirà nel terminale di VS Code, non nel browser!
     
     const res = await fetch(url, { cache: "no-store" });

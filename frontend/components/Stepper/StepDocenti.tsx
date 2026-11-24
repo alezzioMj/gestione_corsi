@@ -22,13 +22,14 @@ import { LocalizationProvider } from "@mui/x-date-pickers/LocalizationProvider";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 
-import { FormType, DocenteConModuli } from "@/validation/corso-form.schema";
+import { FormType } from "@progetto/shared/validation/types";
+import { DocenteWithRelations } from "@progetto/shared/validation/docente.schema";
 import GIORNI_SETTIMANA from "@/lib/docenti/docenti";
 
 export default function StepDocenti({
   docenti,
 }: {
-  docenti: DocenteConModuli[];
+  docenti: DocenteWithRelations<"docente_modulo">[];
 }) {
   const {
     control,

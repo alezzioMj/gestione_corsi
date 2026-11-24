@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.docenteSchema = void 0;
+exports.updateDocenteSchema = exports.createDocenteSchema = exports.docenteSchema = void 0;
 const zod_1 = require("zod");
 const docente_1 = require("../constants/docente");
 exports.docenteSchema = zod_1.z.object({
@@ -51,4 +51,7 @@ exports.docenteSchema = zod_1.z.object({
         .string()
         .min(1, "Il contratto è obbligatorio")
         .max(255),
+    created_at: zod_1.z.coerce.date
 });
+exports.createDocenteSchema = exports.docenteSchema.omit({ created_at: true });
+exports.updateDocenteSchema = exports.docenteSchema.partial().required({ codice_fiscale: true });

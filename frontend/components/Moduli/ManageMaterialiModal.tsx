@@ -1,58 +1,194 @@
+
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
-    Button, Dialog, DialogTitle, DialogContent, DialogActions,
-    List, ListItem, ListItemText, IconButton, Typography,
-    Box, CircularProgress, TextField, Divider, Snackbar, Alert,
+    Button,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    List,
+    ListItem,
+    ListItemText,
+    Typography,
+    Box,
+    CircularProgress,
+    TextField,
+    Divider,
     MenuItem
 } from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
+
 import AddIcon from "@mui/icons-material/Add";
+import DeleteIcon from "@mui/icons-material/Delete";
 import AttachmentIcon from "@mui/icons-material/Attachment";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 
-import { ApiErrorData } from "@progetto/shared/validation/types";
-import { Modulo } from "@progetto/shared/validation/types";
+import { Modulo } from "@progetto/shared/validation/modulo.schema";
+import {
+    CATEGORIE_MATERIALE,
+    Materiale
+} from "@progetto/shared/validation/materiale.schema";
+
 import { API_BASE_URL } from "@/lib/config";
-import { CATEGORIE_MATERIALE, Materiale } from "@progetto/shared/validation/materiale.schema";
-import useSWR from "swr";
-import { fetcher } from "@/lib/swr-config";
 import { useSnackbar } from "../SnackbarContext";
 import { useConfirm } from "../ConfirmContext";
+import { getErrorMessage } from "@/utils/errorMessages";
+
+import useSWR from "swr";
+import { useDeleteEntity } from "@/hooks/useDeleteEntity";
+
+// Tipi
 
 interface ModuloMaterialeAssociation {
     materiale_id: string;
     modulo_id: number;
-    materiale: Materiale; // Nested material object
+    materiale: Materiale;
 }
 
-const EMPTY_FORM = { titolo: "", categoria: "", descrizione: "" };
+const EMPTY_FORM = {
+    titolo: "",
+    categoria: "",
+    descrizione: ""
+};
 
-export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
+// Gestione sicura delle risposte HTTP
+
+async function getResponseError(res: Response): Promise<string> {
+    const contentType = res.headers.get("content-type");
+
+    if (contentType?.includes("application/json")) {
+        const data = await res.json().catch(() => null);
+
+        return (
+            data?.message ||
+            data?.error ||
+            `Errore HTTP ${res.status}`
+        );
+    }
+
+    const text = await res.text().catch(() => "");
+
+    return text || `Errore HTTP ${res.status}`;
+}
+
+// Fetcher SWR
+
+async function fetchMateriali(
+    url: string
+): Promise<ModuloMaterialeAssociation[]> {
+    const res = await fetch(url);
+
+    if (!res.ok) {
+        throw new Error(await getResponseError(res));
+    }
+
+    const data = await res.json().catch(() => null);
+
+    if (!Array.isArray(data)) {
+        throw new Error("Risposta non valida dal server");
+    }
+
+    return data;
+}
+
+// Componente
+
+export default function ManageMaterialiModal({
+    modulo
+}: {
+    modulo: Modulo
+}) {
     const [open, setOpen] = useState(false);
     const [formData, setFormData] = useState(EMPTY_FORM);
     const [loading, setLoading] = useState(false);
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const { remove, submitting: removing } = useDeleteEntity(
+        `/moduli/${modulo.id}/materiali`
+    );
+
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+
     const { showMessage } = useSnackbar();
     const { confirm } = useConfirm();
-    const { data: materialiAssociati, isLoading, error, mutate } = useSWR(`${API_BASE_URL}/moduli/${modulo.id}/materiali`, fetcher);
+
+
+    const handleRemove = async (ma: ModuloMaterialeAssociation) => {
+        const confirmed = await confirm({
+            title: "Rimuovi materiale",
+            message: `Vuoi rimuovere "${ma.materiale?.titolo ?? "questo materiale"}" dal modulo? Il file resterà nell'archivio dei materiali.`,
+            cancelText: "Annulla",
+            confirmText: "Rimuovi",
+            confirmColor: "error",
+        });
+        if (!confirmed) return;
+
+        const removed = await remove(ma.materiale_id);
+        if (removed) await mutate();
+    };
+
+    const {
+        data: materialiAssociati = [],
+        isLoading: isLoadingMateriali,
+        error,
+        mutate
+    } = useSWR<ModuloMaterialeAssociation[]>(
+        open
+            ? `${API_BASE_URL}/moduli/${modulo.id}/materiali`
+            : null,
+        fetchMateriali,
+        {
+            fallbackData: []
+        }
+    );
+
+    // Reset form e file
+
+    const resetForm = () => {
+        setFormData(EMPTY_FORM);
+        setSelectedFile(null);
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = "";
+        }
+    };
+
+    // Upload e associazione materiale
 
     const handleUpload = async () => {
         if (!selectedFile) return;
+
         setLoading(true);
+
         try {
-            const resMateriali = await fetch(`${API_BASE_URL}/materiali/metadata`, {
-                method: "GET"
-            });
+            // Recupero metadati esistenti
+
+            const resMateriali = await fetch(
+                `${API_BASE_URL}/materiali/metadata`
+            );
+
             if (!resMateriali.ok) {
-                const errorData: ApiErrorData | null = await resMateriali.json().catch(() => null);
-                const msg = errorData?.issues
-                    ? errorData.issues.map((i) => i.message).join(", ")
-                    : errorData?.error || "Impossibile ottenere gli hashcode"
-                throw new Error(msg);
+                throw new Error(
+                    await getResponseError(resMateriali)
+                );
             }
-            const materiali: Materiale[] = await resMateriali.json();
+
+            const materiali: Materiale[] = await resMateriali
+                .json()
+                .catch(() => {
+                    throw new Error(
+                        "Risposta non valida dal server"
+                    );
+                });
+
+            if (!Array.isArray(materiali)) {
+                throw new Error(
+                    "Formato dei metadati non valido"
+                );
+            }
+
+            // Calcolo checksum SHA-256
 
             const arrayBuffer = await selectedFile.arrayBuffer();
 
@@ -60,132 +196,191 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                 "SHA-256",
                 arrayBuffer
             );
-            const checksum = Array.from(new Uint8Array(hashBuffer))
+
+            const checksum = Array.from(
+                new Uint8Array(hashBuffer)
+            )
                 .map(b => b.toString(16).padStart(2, "0"))
                 .join("");
-            console.log("Checksum calcolato:", checksum);
 
-            console.log("Materiali:", materiali.map(m => ({
-                id: m.id,
-                titolo: m.titolo,
-                checksum: m.checksum
-            })));
+            // Verifica duplicati
+
             const materialeDuplicato = materiali.find(
                 m => m.checksum === checksum
-            )
+            );
 
             if (materialeDuplicato) {
                 const ok = await confirm({
                     message: `Il materiale è già presente come ${materialeDuplicato.titolo}. Desideri aggiungere questo materiale al modulo?`,
                     confirmColor: "primary"
-                }
-                );
-                if (ok) {
-                    const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/materiali`, {
+                });
+
+                if (!ok) return;
+
+                const res = await fetch(
+                    `${API_BASE_URL}/moduli/${modulo.id}/materiali`,
+                    {
                         method: "POST",
                         headers: {
-                            'Content-Type': 'application/json'
+                            "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
                             materiale_id: materialeDuplicato.id
-                        }),
-                    });
-                    if (!res.ok) {
-                        const errorData: ApiErrorData | null = await res.json().catch(() => null);
-                        const msg = errorData?.issues
-                            ? errorData.issues.map((i) => i.message).join(", ")
-                            : errorData?.error || "Impossibile associare il materiale";
-                        throw new Error(msg);
+                        })
                     }
-                    mutate();
+                );
+
+                if (!res.ok) {
+                    throw new Error(
+                        await getResponseError(res)
+                    );
                 }
+
+                await mutate();
+
+                resetForm();
+
+                showMessage(
+                    "Materiale associato correttamente",
+                    "success"
+                );
+
                 return;
             }
 
+            // Creazione nuovo materiale
+
             const dataMateriale = new FormData();
-            dataMateriale.append("titolo", formData.titolo.trim());
-            dataMateriale.append("descrizione", formData.descrizione.trim());
-            dataMateriale.append("categoria", formData.categoria);
-            dataMateriale.append("file", selectedFile);
 
+            dataMateriale.append(
+                "titolo",
+                formData.titolo.trim()
+            );
 
-            const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/completo`, {
-                method: "POST",
-                body: dataMateriale,
-            });
+            dataMateriale.append(
+                "descrizione",
+                formData.descrizione.trim()
+            );
+
+            dataMateriale.append(
+                "categoria",
+                formData.categoria
+            );
+
+            dataMateriale.append(
+                "file",
+                selectedFile
+            );
+
+            const res = await fetch(
+                `${API_BASE_URL}/moduli/${modulo.id}/completo`,
+                {
+                    method: "POST",
+                    body: dataMateriale
+                }
+            );
 
             if (!res.ok) {
-                const errorData: ApiErrorData | null = await res.json().catch(() => null);
-                const msg = errorData?.issues
-                    ? errorData.issues.map((i) => i.message).join(", ")
-                    : errorData?.error ||
-                    (res.status === 413
-                        ? "Il file è troppo grande"
-                        : "Impossibile caricare il file");
-                throw new Error(msg);
+                throw new Error(
+                    await getResponseError(res)
+                );
             }
-            mutate();
-        } catch (error: unknown) {
-            console.error("Errore durante l'upload:", error);
+
+            await mutate();
+
+            resetForm();
+
             showMessage(
-                "Errore sconosciuto durante l'upload",
+                "Materiale caricato correttamente",
+                "success"
+            );
+
+        } catch (error: unknown) {
+            console.error(error);
+
+            showMessage(
+                getErrorMessage(error),
                 "error"
             );
+
         } finally {
             setLoading(false);
         }
     };
-    /*
-    const handleRemove = async (materiale_id: number) => {
-        setLoading(true);
-        try {
-            const res = await fetch(`${API_BASE_URL}/moduli/${modulo.id}/materiali/${materiale_id}`, {
-                method: "DELETE",
-            });
-            if (res.ok) {
-                fetchData();
-                setSnackbar({ open: true, message: "Materiale rimosso con successo!", severity: "success" });
-            } else {
-                const errorData = await res.json();
-                const msg = errorData.message || `Errore nella rimozione: ${res.statusText}`;
-                throw new Error(msg);
-            }
-        } catch (error: unknown) {
-            console.error("Errore nella rimozione:", error);
-            setSnackbar({
-                open: true,
-                message: error instanceof Error ? error.message : "Errore sconosciuto durante la rimozione",
-                severity: "error"
-            });
-        } finally {
-            setLoading(false);
-        }
-    };
-    */
+
+    // Rendering
+
     return (
         <>
-            <Button variant="contained" size="small" startIcon={<AttachmentIcon />} onClick={() => setOpen(true)}>
+            <Button
+                variant="contained"
+                size="small"
+                startIcon={<AttachmentIcon />}
+                onClick={() => setOpen(true)}
+            >
                 Materiali
             </Button>
-            <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
-                <DialogTitle>Gestione Materiali: {modulo.titolo}</DialogTitle>
+
+            <Dialog
+                open={open}
+                onClose={() => setOpen(false)}
+                fullWidth
+                maxWidth="md"
+            >
+                <DialogTitle>
+                    Gestione Materiali: {modulo.titolo}
+                </DialogTitle>
+
                 <DialogContent dividers>
-                    {/* Lista Materiali Associati in alto */}
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+
+                    {/* Materiali associati */}
+
+                    <Typography
+                        variant="subtitle2"
+                        gutterBottom
+                        sx={{
+                            fontWeight: "bold",
+                            color: "primary.main"
+                        }}
+                    >
                         MATERIALI GIÀ ASSOCIATI
                     </Typography>
 
-                    {loading && materialiAssociati.length === 0 ? (
-                        <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}><CircularProgress size={24} /></Box>
+                    {isLoadingMateriali ? (
+                        <Box
+                            sx={{
+                                display: "flex",
+                                justifyContent: "center",
+                                p: 3
+                            }}
+                        >
+                            <CircularProgress size={24} />
+                        </Box>
+                    ) : error ? (
+                        <Typography
+                            color="error"
+                            variant="body2"
+                        >
+                            Errore nel recupero dei materiali:{" "}
+                            {getErrorMessage(error)}
+                        </Typography>
                     ) : (
                         <List dense sx={{ mb: 2 }}>
-                            {materialiAssociati?.length > 0 ? (
-                                materialiAssociati.map((ma: ModuloMaterialeAssociation) => (
-                                    <ListItem key={ma.materiale_id} secondaryAction={
-                                        <IconButton edge="end" color="error" onClick={() => /*handleRemove(ma.materiale_id)*/ null} disabled={loading}>
-                                            <DeleteIcon />
-                                        </IconButton>
-                                    }>
+                            {materialiAssociati.length > 0 ? (
+                                materialiAssociati.map(ma => (
+                                    <ListItem
+                                        key={ma.materiale_id}
+                                        secondaryAction={
+                                            <Button
+                                                color="error"
+                                                aria-label={`Rimuovi ${ma.materiale?.titolo ?? "materiale"}`}
+                                                disabled={removing || loading}
+                                                onClick={() => handleRemove(ma)}
+                                            >
+                                                <DeleteIcon fontSize="small" />
+                                            </Button>
+                                        }
+                                    >
                                         <ListItemText
                                             primary={ma.materiale?.titolo}
                                             secondary={ma.materiale?.descrizione}
@@ -193,7 +388,14 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                                     </ListItem>
                                 ))
                             ) : (
-                                <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
+                                <Typography
+                                    variant="body2"
+                                    color="text.secondary"
+                                    sx={{
+                                        py: 2,
+                                        textAlign: "center"
+                                    }}
+                                >
                                     Nessun materiale associato.
                                 </Typography>
                             )}
@@ -202,23 +404,56 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
 
                     <Divider sx={{ my: 2 }} />
 
-                    {/* Form di Upload in basso */}
-                    <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                    {/* Form upload */}
+
+                    <Typography
+                        variant="subtitle2"
+                        gutterBottom
+                        sx={{
+                            fontWeight: "bold",
+                            color: "primary.main"
+                        }}
+                    >
                         CARICA NUOVO MATERIALE
                     </Typography>
-                    <Box sx={{ mt: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+
+                    <Box
+                        sx={{
+                            mt: 2,
+                            display: "flex",
+                            flexDirection: "column",
+                            gap: 2
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                flexDirection: "column",
+                                alignItems: "center",
+                                gap: 2
+                            }}
+                        >
                             <TextField
                                 select
                                 required
                                 label="Tipo di materiale"
                                 fullWidth
                                 value={formData.categoria}
-                                onChange={(e) => setFormData({ ...formData, categoria: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        categoria: e.target.value
+                                    })
+                                }
                                 helperText="Seleziona il tipo di materiale caricato"
                             >
-                                {CATEGORIE_MATERIALE.map((type) => (
-                                    <MenuItem value={type} key={type}>{type}</MenuItem>
+                                {CATEGORIE_MATERIALE.map(type => (
+                                    <MenuItem
+                                        value={type}
+                                        key={type}
+                                    >
+                                        {type}
+                                    </MenuItem>
                                 ))}
                             </TextField>
 
@@ -228,14 +463,24 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                                 placeholder="Esempio: Slide della prima lezione"
                                 fullWidth
                                 value={formData.titolo}
-                                onChange={(e) => setFormData({ ...formData, titolo: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        titolo: e.target.value
+                                    })
+                                }
                             />
 
                             <TextField
                                 label="Descrizione"
                                 fullWidth
                                 value={formData.descrizione}
-                                onChange={(e) => setFormData({ ...formData, descrizione: e.target.value })}
+                                onChange={(e) =>
+                                    setFormData({
+                                        ...formData,
+                                        descrizione: e.target.value
+                                    })
+                                }
                             />
 
                             <Divider sx={{ my: 1 }} />
@@ -248,27 +493,63 @@ export default function ManageMaterialiModal({ modulo }: { modulo: Modulo }) {
                                 sx={{ flexShrink: 0 }}
                             >
                                 Seleziona File
+
                                 <input
+                                    ref={fileInputRef}
                                     type="file"
                                     hidden
-                                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                                    onChange={(e) =>
+                                        setSelectedFile(
+                                            e.target.files?.[0] || null
+                                        )
+                                    }
                                 />
                             </Button>
-                            <Typography variant="body2" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {selectedFile ? selectedFile.name : "Nessun file selezionato"}
+
+                            <Typography
+                                variant="body2"
+                                sx={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap"
+                                }}
+                            >
+                                {selectedFile
+                                    ? selectedFile.name
+                                    : "Nessun file selezionato"}
                             </Typography>
                         </Box>
+
                         <Button
                             variant="contained"
                             onClick={handleUpload}
-                            disabled={loading || !selectedFile}
-                            startIcon={<AddIcon />}
+                            disabled={
+                                loading ||
+                                !selectedFile ||
+                                !formData.titolo.trim() ||
+                                !formData.categoria
+                            }
+                            startIcon={
+                                loading
+                                    ? <CircularProgress size={18} color="inherit" />
+                                    : <AddIcon />
+                            }
                         >
-                            Carica e Associa
+                            {loading
+                                ? "Caricamento..."
+                                : "Carica e Associa"}
                         </Button>
                     </Box>
                 </DialogContent>
-                <DialogActions><Button onClick={() => setOpen(false)}>Chiudi</Button></DialogActions>
+
+                <DialogActions>
+                    <Button
+                        onClick={() => setOpen(false)}
+                        disabled={loading}
+                    >
+                        Chiudi
+                    </Button>
+                </DialogActions>
             </Dialog>
         </>
     );

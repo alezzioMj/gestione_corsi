@@ -4,39 +4,24 @@ import React, { useState } from "react";
 import { Card, CardContent, Typography, Box, Divider, Avatar, Button } from "@mui/material";
 import EmailIcon from "@mui/icons-material/Email";
 import BadgeIcon from "@mui/icons-material/Badge";
-import { Docente } from "@progetto/shared/validation/types";
-import AddModuloModal from "./AddModuloModal";
-import EditDocenteModal from "./EditDocenteModal"; // Importa il componente EditDocenteModal
-import EditIcon from "@mui/icons-material/Edit"; // Importa l'icona di modifica
-import DeleteIcon from '@mui/icons-material/Delete'; // Importa l'icona di eliminazione
+import type { Docente } from "@progetto/shared/validation/docente.schema";
+import CardActionsBar from "../common/CardActionsBar";
+import ModuliAssociationDialog from "../common/ModuliAssociationDialog";
 
 interface DocenteCardProps {
   docente: Docente;
-  onDocenteUpdated: () => void; // Callback per aggiornare la lista dei docenti nel componente padre
-  onDeleteDocente: (codice_fiscale: string) => void; // Callback per gestire l'eliminazione
+  onEdit: (docente: Docente) => void;
+  onDelete: (docente_cf: string) => void;
 }
 
-export default function DocenteCard({ docente, onDocenteUpdated, onDeleteDocente }: DocenteCardProps) {
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  const handleOpenEditModal = () => {
-    setIsEditModalOpen(true);
-  };
-
-  const handleCloseEditModal = () => {
-    setIsEditModalOpen(false);
-  };
-
-  const handleEditSuccess = () => {
-    onDocenteUpdated(); // Aggiorna la lista dei docenti nel componente padre
-    handleCloseEditModal();
-  };
+export default function DocenteCard({ docente, onEdit, onDelete }: DocenteCardProps) {
+  const [moduliOpen, setModuliOpen] = useState(false);
 
   return (
     <Card sx={{ height: "100%", display: "flex", flexDirection: "column", boxShadow: 2 }}>
-      <CardContent>
-        <Box sx={{ display: 'flex', alignItems: 'center', mb: 2, gap: 2 }}>
-          <Avatar sx={{ bgcolor: 'primary.main' }}>
+      <CardContent sx={{ display: "flex", flexDirection: "column", flexGrow: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", mb: 2, gap: 2 }}>
+          <Avatar sx={{ bgcolor: "primary.main" }}>
             {docente.nome[0]}{docente.cognome[0]}
           </Avatar>
           <Typography variant="h6" component="div" color="primary">
@@ -60,26 +45,25 @@ export default function DocenteCard({ docente, onDocenteUpdated, onDeleteDocente
           </Typography>
         </Box>
 
-        <Box sx={{ mt: 2, display: "flex", justifyContent: "flex-end", gap: 1 }}>
-          <AddModuloModal docente={docente} />
-          <Button variant="outlined" size="small" startIcon={<EditIcon />} onClick={handleOpenEditModal}>
-            Modifica
+        <CardActionsBar
+          onEdit={() => onEdit(docente)}
+          onDelete={() => onDelete(docente.codice_fiscale)}
+        >
+          <Button variant="contained" size="small" onClick={() => setModuliOpen(true)}>
+            Associa moduli
           </Button>
-          <Button variant="outlined" color="error" size="small" startIcon={<DeleteIcon />} onClick={() => onDeleteDocente(docente.codice_fiscale)}>
-            Elimina
-          </Button>
-        </Box>
+        </CardActionsBar>
       </CardContent>
 
-      {docente && ( // Renderizza il modale solo se il docente è presente
-        <EditDocenteModal
-          key={docente.codice_fiscale}
-          open={isEditModalOpen}
-          onClose={handleCloseEditModal}
-          docente={docente}
-          onSaveSuccess={handleEditSuccess}
-        />
-      )}
+      <ModuliAssociationDialog
+        open={moduliOpen}
+        onClose={() => setModuliOpen(false)}
+        onSuccess={() => setModuliOpen(false)}
+        title={`Moduli di ${docente.nome} ${docente.cognome}`}
+        associationsEndpoint={`/docenti/${docente.codice_fiscale}/moduli`}
+        saveEndpoint={`/docenti/${docente.codice_fiscale}/moduli_bulk`}
+        extractIds={(d: { modulo_id: number }[]) => d.map((x) => x.modulo_id)}
+      />
     </Card>
   );
 }

@@ -2,12 +2,11 @@ import express from "express";
 const corsiRouter = express.Router();
 
 import { validate } from "../middlewares/validate";
-import { corsoSchema } from "@progetto/shared/validation/corso.schema";
+import { corsoSchema, createCorsoSchema, updateCorsoSchema } from "@progetto/shared/validation/corso.schema";
 
 import {
   getCorsi,
   getCorso,
-  createCorsoCompleto,
   updateCorso,
   deleteCorso,
   getDocenti,
@@ -16,7 +15,8 @@ import {
   getSediByCorso,
   addSedeToCorso,
   deleteSedeFromCorso,
-  deleteSessioni
+  deleteSessioni,
+  createCorso
 } from "../controllers/corsoController";
 import { scheduleCorsoController } from "../controllers/scheduleCorsoController";
 import { getDocentiByModulo } from "../controllers/corsoController";
@@ -24,8 +24,8 @@ import { getDocentiByModulo } from "../controllers/corsoController";
 corsiRouter.get("/", getCorsi);
 corsiRouter.get("/:id", getCorso);
 
-corsiRouter.post("/", validate(corsoSchema), createCorsoCompleto);
-corsiRouter.put("/:id", validate(corsoSchema), updateCorso);
+corsiRouter.post("/", validate(createCorsoSchema), createCorso);
+corsiRouter.put("/:id", validate(updateCorsoSchema), updateCorso);
 corsiRouter.delete("/:id", deleteCorso);
 
 // DOCENTI

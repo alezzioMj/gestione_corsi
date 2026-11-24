@@ -1,27 +1,22 @@
-"use client";
-
-import React, { useState } from "react";
-import { Card, CardContent, Typography, Box, Divider, Button, Chip } from "@mui/material";
+import { Card, CardContent, Typography, Box, Divider, Button, Chip, CardActions } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import Stack from "@mui/material/Stack";
 
-import { Modulo } from "@progetto/shared/validation/types";
+import { Modulo } from "@progetto/shared/validation/modulo.schema";
 
 import ManageMaterialiModal from "./ManageMaterialiModal";
-import EditModuloModal from "./EditModuloModal";
 
 interface ModuloCardProps {
+    deleting: boolean;
     modulo: Modulo;
-    onModuloUpdated: () => void;
     onDeleteModulo: (moduloId: number) => void;
+    openModal: (modulo: Modulo) => void;
 }
 
-export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: ModuloCardProps) {
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
+export default function ModuloCard({ modulo, deleting, openModal, onDeleteModulo }: ModuloCardProps) {
     return (
-        <Card sx={{width: "100%", height: "100%", display: "flex", flexDirection: "column", boxShadow: 2 }}>
+        <Card sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", boxShadow: 2 }}>
             <CardContent sx={{ flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
                 <Typography variant="h6" color="primary" gutterBottom>
                     {modulo.titolo}
@@ -51,39 +46,29 @@ export default function ModuloCard({ modulo, onModuloUpdated, onDeleteModulo }: 
                     useFlexGap
                     sx={{ flexWrap: 'wrap', marginTop: 2 }}
                 >
-                    <ManageMaterialiModal modulo={modulo} />
-                    <Button
-                        variant="outlined"
-                        size="small"
-                        startIcon={<EditIcon />}
-                        onClick={() => setIsEditModalOpen(true)}
-                    >
-                        Modifica
-                    </Button>
-                    <Button
-                        variant="outlined"
-                        color="error"
-                        size="small"
-                        startIcon={<DeleteIcon />}
-                        onClick={() => onDeleteModulo(modulo.id)}
-                    >
-                        Elimina
-                    </Button>
                 </Stack>
             </CardContent>
-
-            {/* Modal di Modifica Modulo */}
-            {
-                modulo && (
-                    <EditModuloModal
-                        key={modulo.id}
-                        open={isEditModalOpen}
-                        onClose={() => setIsEditModalOpen(false)}
-                        modulo={modulo}
-                        onSaveSuccess={onModuloUpdated}
-                    />
-                )
-            }
+            <CardActions>
+                <ManageMaterialiModal modulo={modulo} />
+                <Button
+                    variant="outlined"
+                    disabled={deleting}
+                    color="error"
+                    size="small"
+                    startIcon={<DeleteIcon />}
+                    onClick={() => onDeleteModulo(modulo.id)}
+                >
+                    Elimina
+                </Button>
+                <Button
+                    variant="outlined"
+                    size="small"
+                    startIcon={<EditIcon />}
+                    onClick={() => openModal(modulo)}
+                >
+                    Modifica
+                </Button>
+            </CardActions>
         </Card >
     );
 }

@@ -11,21 +11,18 @@ import {
     Typography
 } from "@mui/material";
 
-import {
-    ClienteWithRelations,
-    Contatto
-} from "@progetto/shared/validation/types";
-
+import { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema"
 import { useState } from "react";
 import { API_BASE_URL } from "@/lib/config";
 import SedeForm, { SedeFormData, ContattoForm } from "./SedeForm";
 import { useSnackbar } from "../SnackbarContext";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 interface ClientiModalProps {
     open: boolean;
     onClose: () => void;
     onSuccess: () => void;
-    cliente?: ClienteWithRelations;
+    cliente?: ClienteWithRelations<"sedi">;
 }
 
 type ClienteForm = {
@@ -34,12 +31,12 @@ type ClienteForm = {
     sedi: SedeFormData[];
 };
 
-// Converts an existing customer into editable form data
-const creaForm = (cliente?: ClienteWithRelations): ClienteForm => ({
+const creaForm = (cliente?: ClienteWithRelations<"sedi">): ClienteForm => ({
     ragione_sociale: cliente?.ragione_sociale ?? "",
     partita_iva: cliente?.partita_iva ?? "",
     sedi: cliente?.sedi.map(sede => ({
         ...sede,
+        nome: sede.nome ?? "",
         contatti: sede.contatti.map(contatto => ({ ...contatto }))
     })) ?? []
 });
@@ -50,12 +47,10 @@ export default function ClientiModal({
     onSuccess,
     cliente
 }: ClientiModalProps) {
-
     const isEdit = Boolean(cliente);
-
     const [submitting, setSubmitting] = useState(false);
-
     const [form, setForm] = useState<ClienteForm>(() => creaForm(cliente));
+    const { showMessage } = useSnackbar();
 
     const nuovaSede = (): SedeFormData => ({
         tipo: "OPERATIVA",
@@ -193,16 +188,15 @@ export default function ClientiModal({
             });
 
             if (!res.ok) {
-                const data = await res.json();
-                throw new Error(
-                    data.error || "Errore durante il salvataggio del cliente"
-                );
+                const errorData = await res.json();
+                throw new Error(errorData.message);
             }
 
             onSuccess();
 
         } catch (error) {
             console.error(error);
+            showMessage(getErrorMessage(error), "error");
         } finally {
             setSubmitting(false);
         }

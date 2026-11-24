@@ -4,12 +4,12 @@ import cors from "cors";
 const app = express();
 
 const corsOptions = {
-  origin: '*', //'https://gestione-corsi-ronr.vercel.app', // o '*' se vuoi testare, ma meglio specifico
+  origin: '*', 
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-  optionsSuccessStatus: 204 // Cruciale per alcuni browser vecchi o specifici
+  optionsSuccessStatus: 204
 };
 
-app.use(cors(corsOptions)); // Abilita CORS per tutte le origini
+app.use(cors(corsOptions));
 app.use(express.json());
 
 import clienteRouter from "./routes/clienteRouter";
@@ -23,6 +23,7 @@ import programmaRouter from "./routes/programmaRouter";
 import corsoRouter from "./routes/corsoRouter"
 import indisponibilitaRouter from "./routes/indisponibilitaRouter";
 import sessioneRouter from "./routes/sessioneRouter";
+import globalErrorHandler from "./middlewares/errorHandler";
 
 app.use('/clienti', clienteRouter);
 app.use('/commesse', commessaRouter);
@@ -37,6 +38,8 @@ app.use('/indisponibilita', indisponibilitaRouter);
 app.use('/sessioni', sessioneRouter);
 
 const PORT = process.env.PORT || 3001;
+
+app.use(globalErrorHandler);
 
 app.listen(PORT, () => {
   console.log(`Server avviato sulla porta ${PORT}`);

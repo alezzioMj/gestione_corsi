@@ -1,11 +1,11 @@
 // hooks/useAuleBySede.ts
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr-config";
-import { ProgrammaConModuli } from "@/validation/corso-form.schema";
+import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
 
 export function useModuliByCorso(enabled: boolean, programmaId?: number | null) {
-    const { data: programmi = [], isLoading, error } = useSWR<ProgrammaConModuli[]>(
-        enabled ? "/programmi" : null,
+    const { data: programmi = [], isLoading, error } = useSWR<ProgrammaWithRelations<"programma_modulo">[]>(
+        enabled ? "/programmi?include=programma_modulo" : null,
         fetcher
     );
 

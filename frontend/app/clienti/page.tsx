@@ -1,36 +1,54 @@
-'use client'
+"use client";
 
 import { Box, Button, Container, Typography, Grid } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
-import ClientiModal from "@/components/Clienti/ClienteModal";
-import { useState } from "react";
-import { API_BASE_URL } from "@/lib/config";
-import { fetcher } from "@/lib/swr-config";
+import PersonOffOutlinedIcon from "@mui/icons-material/PersonOffOutlined";
 import useSWR from "swr";
-import ClienteCard from "@/components/Clienti/ClienteCard";
-import { ClienteWithRelations } from "@progetto/shared/validation/types";
-import ClienteDrawer from "@/components/Clienti/ClienteDrawer";
-import { useSnackbar } from "@/components/SnackbarContext";
+
+import type { ClienteWithRelations } from "@progetto/shared/validation/cliente.schema";
+import { fetcher } from "@/lib/swr-config";
 import { useConfirm } from "@/components/ConfirmContext";
+import { useDeleteEntity } from "@/hooks/useDeleteEntity";
+import { useEntityDialog } from "@/hooks/useEntityDialog";
+import AsyncContent from "@/components/AsyncContent";
+import EmptyState from "@/components/EmptyState";
+import ClientiModal from "@/components/Clienti/ClienteModal";
+import ClienteCard from "@/components/Clienti/ClienteCard";
+import ClienteDrawer from "@/components/Clienti/ClienteDrawer";
+
+type ClienteItem = ClienteWithRelations<"sedi">;
 
 export default function ClientiPage() {
-    const [open, setOpen] = useState(false);
-    const [clienteSelezionato, setClienteSelezionato] =
-        useState<ClienteWithRelations | undefined>(undefined);
-    const { data, isLoading, error, mutate } = useSWR<ClienteWithRelations[]>(
-        `${API_BASE_URL}/clienti`,
-        fetcher
-    );
-    const [clienteDettaglio, setClienteDettaglio] =
-        useState<ClienteWithRelations | undefined>();
-    const [drawerOpen, setDrawerOpen] = useState(false);
-    const { showMessage } = useSnackbar();
+    const { data, error, mutate } = useSWR<ClienteItem[]>("/clienti?include=sedi", fetcher);
+    const { remove } = useDeleteEntity("/clienti");
     const { confirm } = useConfirm();
+    const dialog = useEntityDialog<ClienteItem>();
+    const drawer = useEntityDialog<ClienteItem>();
+
+    // Dati aggiornati dalla lista; se il cliente non c'è più, resta l'ultima copia
+    const clienteDettaglio = data?.find((c) => c.id === drawer.entity?.id) ?? drawer.entity;
+
+    const handleDelete = async (cliente: ClienteItem) => {
+        const confirmed = await confirm({
+            title: "Elimina cliente",
+            message: `Sei sicuro di voler eliminare ${cliente.ragione_sociale}?`,
+            cancelText: "Annulla",
+            confirmText: "Elimina",
+            confirmColor: "error",
+        });
+        if (!confirmed) return;
+
+        const deleted = await remove(cliente.id);
+        if (deleted) mutate();
+    };
+
+    const handleSuccess = () => {
+        mutate();
+        dialog.close();
+    };
 
     return (
         <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
-
-            {/* Header */}
             <Box sx={{ mb: 4 }}>
                 <Box
                     sx={{
@@ -38,125 +56,59 @@ export default function ClientiPage() {
                         justifyContent: "space-between",
                         alignItems: "center",
                         flexWrap: "wrap",
-                        gap: 2
+                        gap: 2,
                     }}
                 >
-                    <Typography variant="h4">
-                        Clienti
-                    </Typography>
-
-                    <Button
-                        variant="contained"
-                        startIcon={<AddIcon />}
-                        onClick={() => {
-                            setClienteSelezionato(undefined);
-                            setOpen(true);
-                        }}
-                    >
+                    <Typography variant="h4">Clienti</Typography>
+                    <Button variant="contained" startIcon={<AddIcon />} onClick={dialog.openCreate}>
                         Aggiungi cliente
                     </Button>
                 </Box>
-
-                <Typography>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
                     Gestione dei clienti
                 </Typography>
             </Box>
 
-            {/* Modal */}
+            <AsyncContent
+                data={data}
+                error={error}
+                onRetry={() => mutate()}
+                empty={
+                    <EmptyState
+                        icon={PersonOffOutlinedIcon}
+                        title="Nessun cliente presente"
+                        description="Inizia aggiungendo un nuovo cliente"
+                    />
+                }
+            >
+                {(clienti) => (
+                    <Grid container spacing={2}>
+                        {clienti.map((cliente) => (
+                            <Grid key={cliente.id} size={{ xs: 12, sm: 6, md: 4, lg: 3 }}>
+                                <ClienteCard
+                                    cliente={cliente}
+                                    onEdit={() => dialog.openEdit(cliente)}
+                                    onDelete={() => handleDelete(cliente)}
+                                    onClick={() => drawer.openEdit(cliente)}
+                                />
+                            </Grid>
+                        ))}
+                    </Grid>
+                )}
+            </AsyncContent>
+
             <ClientiModal
-                key={clienteSelezionato?.id ?? "nuovo"}
-                open={open}
-                onClose={() => setOpen(false)}
-                onSuccess={() => {
-                    setOpen(false);
-                    setClienteSelezionato(undefined);
-                    mutate();
-                }}
-                cliente={clienteSelezionato}
+                key={dialog.entity?.id ?? "new"}
+                open={dialog.open}
+                cliente={dialog.entity ?? undefined}
+                onClose={dialog.close}
+                onSuccess={handleSuccess}
             />
 
-            {/* Loading */}
-            {isLoading && (
-                <Typography color="text.secondary">
-                    Caricamento clienti...
-                </Typography>
-            )}
-
-            {/* Error */}
-            {error && (
-                <Typography color="error">
-                    Errore durante il caricamento dei clienti.
-                </Typography>
-            )}
-
-            {/* Clienti */}
-            {data && (
-                <Grid container spacing={2}>
-                    {data.map((cliente) => (
-                        <Grid
-                            key={cliente.id}
-                            size={{ xs: 12, sm: 6, md: 4, lg: 3 }}
-                        >
-                            <ClienteCard
-                                cliente={cliente}
-                                onEdit={() => {
-                                    setClienteSelezionato(cliente);
-                                    setOpen(true);
-                                }}
-                                onDelete={async () => {
-                                    const confirmed = await confirm({
-                                        title: "Elimina cliente",
-                                        message: `Sei sicuro di voler eliminare ${cliente.ragione_sociale}?`,
-                                        confirmText: "Elimina",
-                                        cancelText: "Annulla",
-                                        confirmColor: "error"
-                                    });
-
-                                    if (!confirmed) return;
-
-                                    try {
-                                        const response = await fetch(
-                                            `${API_BASE_URL}/clienti/${cliente.id}`,
-                                            { method: "DELETE" }
-                                        );
-
-                                        const result = await response.json();
-
-                                        if (!response.ok) {
-                                            showMessage(
-                                                result.message || "Errore durante l'eliminazione del cliente.",
-                                                "error"
-                                            );
-                                            return;
-                                        }
-
-                                        showMessage("Cliente eliminato correttamente.", "success");
-                                        mutate();
-
-                                    } catch {
-                                        showMessage("Errore di connessione al server.", "error");
-                                    }
-                                }}
-                                onClick={() => {
-                                    setClienteDettaglio(cliente);
-                                    setDrawerOpen(true);
-                                }}
-                            />
-                        </Grid>
-                    ))}
-                </Grid>
-            )}
-
-            {/* Nessun cliente */}
-            {data?.length === 0 && !isLoading && (
-                <Typography color="text.secondary">
-                    Nessun cliente presente.
-                </Typography>
-            )}
             <ClienteDrawer
-                open={drawerOpen}
-                onClose={() => setDrawerOpen(false)}
-                cliente={clienteDettaglio}
+                open={drawer.open}
+                onClose={drawer.close}
+                cliente={clienteDettaglio ?? undefined}
             />
         </Container>
     );

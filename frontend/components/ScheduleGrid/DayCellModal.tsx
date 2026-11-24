@@ -19,13 +19,13 @@ import MeetingRoomIcon from "@mui/icons-material/MeetingRoom";
 import EventBusyIcon from "@mui/icons-material/EventBusy";
 import { ExtensionOutlined } from "@mui/icons-material";
 
-import { SessioneWithRelations } from "@progetto/shared/validation/types";
+import { SessioneWithRelations } from "@progetto/shared/validation/sessione.schema";
 
 interface DayCellModalProps {
   open: boolean;
   onClose: () => void;
   giorno: Date;
-  sessioni: SessioneWithRelations[];
+  sessioni: SessioneWithRelations<"aula" | "corso" | "docente" | "modulo">[];
   onDeleteSessione : ( sessioneId : number ) => void;
 }
 
@@ -140,9 +140,9 @@ export default function DayCellModal({ open, onClose, giorno, sessioni, onDelete
                   <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.3 }}>
                     {sessione.corso?.nome ?? `Corso #${sessione.corso_id}`}
                   </Typography>
-                  {sessione.corso?.cliente && (
+                  {sessione.corso.commessa.cliente && (
                     <Typography variant="body2" color="text.secondary" sx={{ mb: 0.75 }}>
-                      {sessione.corso.cliente}
+                      {sessione.corso.commessa.cliente.ragione_sociale}
                     </Typography>
                   )}
 

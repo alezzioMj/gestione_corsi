@@ -15,9 +15,12 @@ import {
     TextField,
     Typography
 } from "@mui/material";
-import { Aula, Docente, Sede } from "@progetto/shared/validation/types";
+import { Aula } from "@progetto/shared/validation/aula.schema";
+import { Docente } from "@progetto/shared/validation/docente.schema";
+import { Sede } from "@progetto/shared/validation/sede.schema";
 import { useState } from "react";
 import useSWR from "swr";
+import { getErrorMessage } from "@/utils/errorMessages";
 
 type Oggetto = "DOCENTE" | "SEDE" | "AULA" | "";
 
@@ -42,19 +45,19 @@ export default function IndisponibilitaPage() {
 
     const {
         data: docenti,
-        isLoading: docentiLoading,
+        isValidating: docentiLoading,
         error: docentiError
     } = useSWR<Docente[]>(`${API_BASE_URL}/docenti`, fetcher);
 
     const {
         data: sedi,
-        isLoading: sediLoading,
+        isValidating: sediLoading,
         error: sediError
     } = useSWR<Sede[]>(`${API_BASE_URL}/sedi`, fetcher);
 
     const {
         data: aule,
-        isLoading: auleLoading,
+        isValidating: auleLoading,
         error: auleError
     } = useSWR<Aula[]>(`${API_BASE_URL}/aule`, fetcher);
 
@@ -81,9 +84,7 @@ export default function IndisponibilitaPage() {
 
             if (!res.ok) {
                 const error = await res.json();
-                throw new Error(
-                    error.error || error.message || "Errore nell'invio dei dati."
-                );
+                throw new Error(error.message);
             }
 
             showMessage("Indisponibilità aggiunta correttamente.", "success");
@@ -93,13 +94,7 @@ export default function IndisponibilitaPage() {
 
         } catch (error: unknown) {
             console.error("Errore:", error);
-
-            showMessage(
-                error instanceof Error
-                    ? error.message
-                    : "Errore di rete durante l'invio.",
-                "error"
-            );
+            showMessage(getErrorMessage(error), "error")
         } finally {
             setSubmitting(false);
         }
@@ -150,7 +145,7 @@ export default function IndisponibilitaPage() {
                 </Typography>
 
                 <Typography variant="subtitle2" color="primary">
-                    Informazioni sull'indisponibilità
+                    {"Informazioni sull'indisponibilità"}
                 </Typography>
 
                 <Box sx={{
