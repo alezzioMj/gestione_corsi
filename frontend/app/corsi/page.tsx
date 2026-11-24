@@ -150,7 +150,7 @@ export default function CorsiPage() {
                                 <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }} onClick={() => handleOpenInfo(corso.id)} startIcon={<InfoIcon />}>
                                     Info
                                 </Button>
-                                <Link href={`/sessioni?corsoId=${corso.id}`} style={{ textDecoration: 'none' }}>
+                                <Link href={`/calendario`} style={{ textDecoration: 'none' }}>
                                     <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }}>
                                         Visualizza Sessioni
                                     </Button>

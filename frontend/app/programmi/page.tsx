@@ -1,104 +1,110 @@
 "use client";
 
-import useSWR from "swr";
-import {
-    Box,
-    Typography,
-    Container,
-    Button,
-    Paper,
-    Alert,
-} from "@mui/material";
+import { Box, Typography, Container, Button } from "@mui/material";
+import AddIcon from "@mui/icons-material/Add";
 import { FolderOffOutlined } from "@mui/icons-material";
+import useSWR from "swr";
 
-import AddProgrammaModal from "@/components/Programmi/AddProgrammaModal";
-import EmptyState from "@/components/EmptyState";
-import ProgrammaCard from "@/components/Programmi/ProgrammaCard";
-import DelayedLoading from "@/components/DelayedLoading";
-import { useConfirm } from "@/components/ConfirmContext";
-import { useSnackbar } from "@/components/SnackbarContext";
-
-import { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema"
+import type { ProgrammaWithRelations } from "@progetto/shared/validation/programma.schema";
 import { fetcher } from "@/lib/swr-config";
 import { API_ENDPOINTS } from "@/lib/api";
-import { API_BASE_URL } from "@/lib/config";
-import { getErrorMessage } from "@/utils/errorMessages";
+import { useConfirm } from "@/components/ConfirmContext";
+import { useDeleteEntity } from "@/hooks/useDeleteEntity";
+import { useEntityDialog } from "@/hooks/useEntityDialog";
+import AsyncContent from "@/components/AsyncContent";
+import EmptyState from "@/components/EmptyState";
+import ProgrammaCard from "@/components/Programmi/ProgrammaCard";
+import ProgrammaModal from "@/components/Programmi/ProgrammaModal";
+
+type ProgrammaItem = ProgrammaWithRelations<"programma_modulo" | "corso">;
 
 export default function ProgrammiPage() {
-    const { data: programmi, isValidating, error, mutate } = useSWR(API_ENDPOINTS.programmi, fetcher);
+    const { data: programmi, error, mutate } = useSWR<ProgrammaItem[]>('/programmi?include=corso,programma_modulo', fetcher);
+    const { remove } = useDeleteEntity("/programmi");
     const { confirm } = useConfirm();
-    const { showMessage } = useSnackbar();
+    const dialog = useEntityDialog<ProgrammaItem>();
 
     const handleDeleteProgramma = async (programmaId: number) => {
-        const ok = await confirm({
+        const confirmed = await confirm({
             title: "Elimina programma",
             message: "Sei sicuro di voler eliminare questo programma?",
             cancelText: "Annulla",
             confirmText: "Elimina",
             confirmColor: "error",
-        }
-        )
-        if (!ok) return;
-        try {
-            const res = await fetch(`${API_BASE_URL}/programmi/${programmaId}`, {
-                method: "DELETE",
-            });
-            if (!res.ok) {
-                const errorData = await res.json();
-                throw new Error(errorData.message);
-            }
-            mutate();
-            showMessage("Programma eliminato con successo!");
-        } catch (error: unknown) {
-            console.error(error);
-            showMessage(getErrorMessage(error), "error");
-        }
+        });
+        if (!confirmed) return;
+
+        const deleted = await remove(programmaId);
+        if (deleted) mutate();
+    };
+
+    const handleSuccess = () => {
+        mutate();
+        dialog.close();
     };
 
     return (
         <Container disableGutters maxWidth={false} sx={{ py: 2, px: 3 }}>
-            <Box sx={{
-                mb: 4
-            }}>
-                <Box sx={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: 2,
-                }}>
+            <Box sx={{ mb: 4 }}>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        alignItems: "center",
+                        flexWrap: "wrap",
+                        gap: 2,
+                    }}
+                >
                     <Typography variant="h4">Programmi</Typography>
-                    <AddProgrammaModal onProgrammaAdded={() => mutate()} />
+                    <Button variant="contained" startIcon={<AddIcon />} onClick={dialog.openCreate}>
+                        Crea Nuovo Programma
+                    </Button>
                 </Box>
                 <Typography variant="body2" color="text.secondary" sx={{ mb: 4 }}>
-                    {" Gestione dei programmi didattici e dei relativi moduli "}
+                    Gestione dei programmi didattici e dei relativi moduli
                 </Typography>
             </Box>
-            {error && (
-                <Alert severity="error" sx={{ mb: 4 }} action={<Button color="inherit" size="small" onClick={() => mutate}>Riprova</Button>}>
-                    {error.message}
-                </Alert>
-            )}
-            {isValidating ? (
-                <DelayedLoading />
-            ) : (!programmi || programmi.length === 0) ? (
-                <EmptyState
-                    icon={FolderOffOutlined}
-                    title={"Nessun programma trovato"}
-                    description={"Inizia aggiungendo un nuovo programma"}
-                />) : (
-                <Box sx={{ width: "100%", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))", gap: 3 }}>
-                    {programmi.map((p: ProgrammaWithRelations<"programma_modulo" | "corso">) => (
-                        <Paper key={p.id} variant="outlined" sx={{ p: 2, display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+
+            <AsyncContent
+                data={programmi}
+                error={error}
+                onRetry={() => mutate()}
+                empty={
+                    <EmptyState
+                        icon={FolderOffOutlined}
+                        title="Nessun programma trovato"
+                        description="Inizia aggiungendo un nuovo programma"
+                    />
+                }
+            >
+                {(list) => (
+                    <Box
+                        sx={{
+                            width: "100%",
+                            display: "grid",
+                            gridTemplateColumns: "repeat(auto-fill, minmax(450px, 1fr))",
+                            gap: 3,
+                        }}
+                    >
+                        {list.map((p) => (
                             <ProgrammaCard
+                                key={p.id}
                                 programma={p}
-                                onProgrammaUpdated={() => mutate()}
-                                onDeleteProgramma={handleDeleteProgramma}
+                                onEdit={dialog.openEdit}
+                                onDelete={handleDeleteProgramma}
+                                onModuliUpdated={() => mutate()}
                             />
-                        </Paper>
-                    ))}
-                </Box>
-            )}
+                        ))}
+                    </Box>
+                )}
+            </AsyncContent>
+
+            <ProgrammaModal
+                open={dialog.open}
+                programma={dialog.entity}
+                onClose={dialog.close}
+                onSuccess={handleSuccess}
+            />
         </Container>
     );
 }

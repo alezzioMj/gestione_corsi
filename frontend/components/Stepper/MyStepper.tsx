@@ -146,7 +146,7 @@ export default function MyStepper({ sedi, programmi, docenti, commesse }: {
             const corsoId = result.corso.id;
 
             showMessage("Corso creato con successo!", "success");
-            router.push(`/sessioni?corsoId=${corsoId}`);
+            router.push(`/calendario`);
         } catch (error) {
             showMessage(getErrorMessage(error), "error");
         } finally {
