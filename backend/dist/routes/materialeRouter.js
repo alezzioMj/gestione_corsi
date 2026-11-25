@@ -15,7 +15,7 @@ materialeRouter.get('/', materialeController_1.getMateriali);
 materialeRouter.get('/metadata', materialeController_1.getMaterialiMetadata);
 materialeRouter.get('/:id', materialeController_1.getMateriale);
 materialeRouter.post("/", upload.single("file"), materialeController_1.createMateriale);
-materialeRouter.put('/:id', upload.single('file'), (0, validate_1.validate)(materiale_schema_1.materialeSchema), materialeController_1.updateMateriale);
+materialeRouter.put('/:id', upload.single('file'), (0, validate_1.validate)(materiale_schema_1.createMaterialeSchema), materialeController_1.updateMateriale);
 materialeRouter.delete('/:id', materialeController_1.deleteMateriale);
 //MODULI
 materialeRouter.get('/:id/moduli', materialeController_1.getModuliByMateriale);

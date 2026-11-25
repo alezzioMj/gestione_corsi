@@ -10,8 +10,8 @@ const docente_schema_1 = require("@progetto/shared/validation/docente.schema");
 const docenteController_1 = require("../controllers/docenteController");
 docenteRouter.get('/', docenteController_1.getDocenti);
 docenteRouter.get('/:codice_fiscale', docenteController_1.getDocente);
-docenteRouter.post('/', (0, validate_1.validate)(docente_schema_1.docenteSchema), docenteController_1.createDocente);
-docenteRouter.put('/:codice_fiscale', (0, validate_1.validate)(docente_schema_1.docenteSchema), docenteController_1.updateDocente);
+docenteRouter.post('/', (0, validate_1.validate)(docente_schema_1.createDocenteSchema), docenteController_1.createDocente);
+docenteRouter.put('/:codice_fiscale', (0, validate_1.validate)(docente_schema_1.updateDocenteSchema), docenteController_1.updateDocente);
 docenteRouter.delete('/:codice_fiscale', docenteController_1.deleteDocente);
 //CORSI
 docenteRouter.get('/:codice_fiscale/corsi', docenteController_1.getCorsiByDocente);

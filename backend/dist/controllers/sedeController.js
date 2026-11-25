@@ -2,9 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAuleBySede = exports.getCorsiBySede = exports.deleteSede = exports.updateSede = exports.createSede = exports.getSede = exports.getSedi = void 0;
 const prisma_1 = require("../prisma");
+const include_1 = require("./utility.ts/include");
+const INCLUDE_MAP = {
+    aula: true,
+    corso_sede: { include: { corso: true } },
+};
 const getSedi = async (req, res) => {
     try {
-        const sedi = await prisma_1.prisma.sede.findMany();
+        const include = (0, include_1.buildInclude)(req, INCLUDE_MAP);
+        const sedi = await prisma_1.prisma.sede.findMany({
+            include,
+        });
         res.json(sedi);
     }
     catch (error) {
@@ -16,22 +24,17 @@ exports.getSedi = getSedi;
 const getSede = async (req, res) => {
     try {
         const id = Number(req.params.id);
-        // Trova la sede usando Prisma
+        const include = (0, include_1.buildInclude)(req, INCLUDE_MAP);
         const sede = await prisma_1.prisma.sede.findUnique({
             where: { id },
-            include: {
-                aula: true,
-            },
+            include,
         });
-        // Se la sede non viene trovata ritorna un 404
         if (!sede) {
             return res.status(404).send("Sede non trovata");
         }
-        // Restituisci i dati della sede
         res.json(sede);
     }
     catch (error) {
-        // Gestione errori Prisma o runtime
         console.error("Errore nel recupero della sede:", error);
         res.status(500).send("Errore del server");
     }
@@ -48,8 +51,9 @@ const createSede = async (req, res) => {
                 cap,
                 citta,
                 provincia,
-                descrizione
-            }
+                descrizione,
+            },
+            include: (0, include_1.buildInclude)(req, INCLUDE_MAP),
         });
         res.status(201).json(sede);
     }
@@ -58,8 +62,9 @@ const createSede = async (req, res) => {
             message: "Errore nella creazione della sede",
             error: err,
         });
-        if (err.code === "P2002") {
-            return res.status(400).json({ error: "La sede esiste già" });
+        // cap è Char(5) e provincia Char(2)
+        if (err.code === "P2000") {
+            return res.status(400).json({ error: "Valore troppo lungo (cap: 5 caratteri, provincia: 2)" });
         }
         res.status(500).json({ error: "Errore creazione sede" });
     }
@@ -79,7 +84,8 @@ const updateSede = async (req, res) => {
                 citta,
                 provincia,
                 descrizione,
-            }
+            },
+            include: (0, include_1.buildInclude)(req, INCLUDE_MAP),
         });
         res.json(sede);
     }
@@ -88,10 +94,17 @@ const updateSede = async (req, res) => {
             message: "Errore nell'aggiornamento della sede",
             error: err,
         });
+        if (err.code === "P2025") {
+            return res.status(404).json({ error: "Sede non trovata" });
+        }
+        if (err.code === "P2000") {
+            return res.status(400).json({ error: "Valore troppo lungo (cap: 5 caratteri, provincia: 2)" });
+        }
         res.status(500).json({ error: "Errore aggiornamento sede" });
     }
 };
 exports.updateSede = updateSede;
+// corso_sede è in cascade; aula, indisponibilita e sessione no: con righe collegate, P2003.
 const deleteSede = async (req, res) => {
     try {
         const id = Number(req.params.id);
@@ -105,6 +118,12 @@ const deleteSede = async (req, res) => {
             message: "Errore nella cancellazione della sede",
             error: err,
         });
+        if (err.code === "P2025") {
+            return res.status(404).json({ error: "Sede non trovata" });
+        }
+        if (err.code === "P2003") {
+            return res.status(409).json({ error: "Impossibile eliminare la sede: ha aule, indisponibilità o sessioni collegate" });
+        }
         res.status(500).json({ error: "Errore cancellazione sede" });
     }
 };
@@ -113,18 +132,17 @@ const getCorsiBySede = async (req, res) => {
     try {
         const sede_id = Number(req.params.id);
         const corsi = await prisma_1.prisma.corso_sede.findMany({
-            where: {
-                sede_id,
-            },
-            include: {
-                corso: true,
-            },
+            where: { sede_id },
+            include: { corso: true },
         });
-        res.status(200).json(corsi);
+        res.json(corsi);
     }
     catch (err) {
-        console.error("Errore nel recupero corsi per sede", err);
-        res.status(500).json({ error: "Errore server" });
+        console.error({
+            message: "Errore nel recupero dei corsi per sede",
+            error: err,
+        });
+        res.status(500).json({ error: "Errore recupero corsi sede" });
     }
 };
 exports.getCorsiBySede = getCorsiBySede;
@@ -132,18 +150,16 @@ const getAuleBySede = async (req, res) => {
     try {
         const sede_id = Number(req.params.id);
         const aule = await prisma_1.prisma.aula.findMany({
-            where: {
-                sede_id,
-            },
+            where: { sede_id },
         });
-        if (aule.length === 0) {
-            return res.status(404).send("Nessuna aula trovata per questa sede");
-        }
-        res.status(200).json(aule);
+        res.json(aule);
     }
-    catch (error) {
-        console.error("Errore nel recupero delle aule per sede:", error);
-        res.status(500).send("Errore del server");
+    catch (err) {
+        console.error({
+            message: "Errore nel recupero delle aule per sede",
+            error: err,
+        });
+        res.status(500).json({ error: "Errore recupero aule sede" });
     }
 };
 exports.getAuleBySede = getAuleBySede;

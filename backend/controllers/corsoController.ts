@@ -121,10 +121,10 @@ const createCorso = async (req: express.Request, res: express.Response) => {
       });
 
       const sessioni = await schedule(
-        tx,
         corso.id,
         giorniDisponibili,
-        ordineNormalizzato
+        ordineNormalizzato,
+        tx,
       );
 
       return { corso, sessioni };

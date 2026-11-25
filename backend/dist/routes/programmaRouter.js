@@ -10,8 +10,8 @@ const programma_schema_1 = require("@progetto/shared/validation/programma.schema
 const programmaController_1 = require("../controllers/programmaController");
 programmaRouter.get('/', programmaController_1.getProgrammi);
 programmaRouter.get('/:id', programmaController_1.getProgramma);
-programmaRouter.post('/', (0, validate_1.validate)(programma_schema_1.programmaSchema), programmaController_1.createProgramma);
-programmaRouter.put('/:id', (0, validate_1.validate)(programma_schema_1.programmaSchema.partial()), programmaController_1.updateProgramma);
+programmaRouter.post('/', (0, validate_1.validate)(programma_schema_1.createProgrammaSchema), programmaController_1.createProgramma);
+programmaRouter.put('/:id', (0, validate_1.validate)(programma_schema_1.updateProgrammaSchema.partial()), programmaController_1.updateProgramma);
 programmaRouter.delete('/:id', programmaController_1.deleteProgramma);
 //MODULI
 programmaRouter.get("/:id/moduli", programmaController_1.getModuliByProgramma);

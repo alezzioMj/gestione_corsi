@@ -7,11 +7,11 @@ const express_1 = __importDefault(require("express"));
 const cors_1 = __importDefault(require("cors"));
 const app = (0, express_1.default)();
 const corsOptions = {
-    origin: '*', //'https://gestione-corsi-ronr.vercel.app', // o '*' se vuoi testare, ma meglio specifico
+    origin: '*',
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
-    optionsSuccessStatus: 204 // Cruciale per alcuni browser vecchi o specifici
+    optionsSuccessStatus: 204
 };
-app.use((0, cors_1.default)(corsOptions)); // Abilita CORS per tutte le origini
+app.use((0, cors_1.default)(corsOptions));
 app.use(express_1.default.json());
 const clienteRouter_1 = __importDefault(require("./routes/clienteRouter"));
 const commessaRouter_1 = __importDefault(require("./routes/commessaRouter"));
@@ -24,6 +24,7 @@ const programmaRouter_1 = __importDefault(require("./routes/programmaRouter"));
 const corsoRouter_1 = __importDefault(require("./routes/corsoRouter"));
 const indisponibilitaRouter_1 = __importDefault(require("./routes/indisponibilitaRouter"));
 const sessioneRouter_1 = __importDefault(require("./routes/sessioneRouter"));
+const errorHandler_1 = __importDefault(require("./middlewares/errorHandler"));
 app.use('/clienti', clienteRouter_1.default);
 app.use('/commesse', commessaRouter_1.default);
 app.use('/docenti', docenteRouter_1.default);
@@ -36,6 +37,7 @@ app.use('/corsi', corsoRouter_1.default);
 app.use('/indisponibilita', indisponibilitaRouter_1.default);
 app.use('/sessioni', sessioneRouter_1.default);
 const PORT = process.env.PORT || 3001;
+app.use(errorHandler_1.default);
 app.listen(PORT, () => {
     console.log(`Server avviato sulla porta ${PORT}`);
 });

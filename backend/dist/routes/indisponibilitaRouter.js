@@ -10,7 +10,7 @@ const indisponibilita_schema_1 = require("@progetto/shared/validation/indisponib
 const indisponibilitaController_1 = require("../controllers/indisponibilitaController");
 indisponibilitaRouter.get('/', indisponibilitaController_1.getIndisponibilita);
 indisponibilitaRouter.get('/:id', indisponibilitaController_1.getIndisponibilitaById);
-indisponibilitaRouter.post('/', (0, validate_1.validate)(indisponibilita_schema_1.indisponibilitaSchema), indisponibilitaController_1.createIndisponibilita);
-indisponibilitaRouter.put('/:id', (0, validate_1.validate)(indisponibilita_schema_1.indisponibilitaSchema), indisponibilitaController_1.updateIndisponibilita);
+indisponibilitaRouter.post('/', (0, validate_1.validate)(indisponibilita_schema_1.createIndisponibilitaSchema), indisponibilitaController_1.createIndisponibilita);
+indisponibilitaRouter.put('/:id', (0, validate_1.validate)(indisponibilita_schema_1.updateIndisponibilitaSchema), indisponibilitaController_1.updateIndisponibilita);
 indisponibilitaRouter.delete('/:id', indisponibilitaController_1.deleteIndisponibilita);
 exports.default = indisponibilitaRouter;

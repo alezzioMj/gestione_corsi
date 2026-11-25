@@ -9,12 +9,12 @@ const validate_1 = require("../middlewares/validate");
 const modulo_schema_1 = require("@progetto/shared/validation/modulo.schema");
 const multer_1 = __importDefault(require("multer"));
 const moduloController_1 = require("../controllers/moduloController");
-const storage = multer_1.default.memoryStorage(); // <--- IMPORTANTE: salva in RAM temporaneamente
+const storage = multer_1.default.memoryStorage();
 const upload = (0, multer_1.default)({ storage: storage });
 moduloRouter.get('/', moduloController_1.getModuli);
 moduloRouter.get('/:id', moduloController_1.getModulo);
-moduloRouter.post('/', upload.none(), (0, validate_1.validate)(modulo_schema_1.moduloSchema), moduloController_1.createModulo);
-moduloRouter.put('/:id', upload.none(), (0, validate_1.validate)(modulo_schema_1.moduloSchema), moduloController_1.updateModulo);
+moduloRouter.post('/', upload.none(), (0, validate_1.validate)(modulo_schema_1.createModuloSchema), moduloController_1.createModulo);
+moduloRouter.put('/:id', upload.none(), (0, validate_1.validate)(modulo_schema_1.updateModuloSchema), moduloController_1.updateModulo);
 moduloRouter.delete('/:id', moduloController_1.deleteModulo);
 //DOCENTI
 moduloRouter.get('/:id/docenti', moduloController_1.getDocentiByModulo);

@@ -2,11 +2,17 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteCommessa = exports.updateCommessa = exports.createCommessa = exports.getCommesse = void 0;
 const prisma_1 = require("../prisma");
+const include_1 = require("./utility.ts/include");
+const INCLUDE_MAP = {
+    corsi: true,
+    cliente: true
+};
 const getCommesse = async (req, res) => {
     try {
+        const include = (0, include_1.buildInclude)(req, INCLUDE_MAP);
         const commesse = await prisma_1.prisma.commessa.findMany({
             orderBy: { scadenza: "asc" },
-            include: { cliente: true }
+            include
         });
         res.json(commesse);
     }

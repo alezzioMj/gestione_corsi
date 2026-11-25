@@ -27,6 +27,6 @@ const availability_service_1 = require("../services/availability.service");
                 aula_id: 1,
             },
         ];
-        (0, vitest_1.expect)(() => (0, availability_service_1.checkAulaDisponibileMemoria)(1, 2, new Date("2026-01-10T00:00:00.000Z"), "10:30", "12:00", sessioniEsistenti, [])).toThrow("L'aula è già occupata in questo slot");
+        (0, vitest_1.expect)(() => (0, availability_service_1.checkAulaDisponibileMemoria)(1, 1, new Date("2026-01-10T00:00:00.000Z"), "10:30", "12:00", sessioniEsistenti, [])).toThrow("L'aula è già occupata in questo slot");
     });
 });

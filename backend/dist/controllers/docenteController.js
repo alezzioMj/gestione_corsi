@@ -2,16 +2,18 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteModuloFromDocente = exports.addModuliToDocenteBulk = exports.addModuloToDocente = exports.getModuliByDocente = exports.getCorsiByDocente = exports.deleteDocente = exports.updateDocente = exports.createDocente = exports.getDocente = exports.getDocenti = void 0;
 const prisma_1 = require("../prisma");
+const client_1 = require("@prisma/client");
+const include_1 = require("./utility.ts/include");
+const date_1 = require("./utility.ts/date");
+const INCLUDE_MAP = {
+    docente_modulo: { include: { modulo: true } },
+    corso_docente: { include: { corso: true } },
+};
 const getDocenti = async (req, res) => {
     try {
+        const include = (0, include_1.buildInclude)(req, INCLUDE_MAP);
         const docenti = await prisma_1.prisma.docente.findMany({
-            include: {
-                docente_modulo: {
-                    include: {
-                        modulo: true
-                    }
-                }
-            }
+            include,
         });
         res.json(docenti);
     }
@@ -24,19 +26,17 @@ exports.getDocenti = getDocenti;
 const getDocente = async (req, res) => {
     try {
         const { codice_fiscale } = req.params;
-        // Trova il docente usando Prisma
+        const include = (0, include_1.buildInclude)(req, INCLUDE_MAP);
         const docente = await prisma_1.prisma.docente.findUnique({
             where: { codice_fiscale },
+            include,
         });
-        // Se il docente non viene trovato ritorna un 404
         if (!docente) {
             return res.status(404).send("Docente non trovato");
         }
-        // Restituisci i dati del docente
         res.json(docente);
     }
     catch (error) {
-        // Gestione errori Prisma o runtime
         console.error("Errore nel recupero del docente:", error);
         res.status(500).send("Errore del server");
     }
@@ -44,14 +44,14 @@ const getDocente = async (req, res) => {
 exports.getDocente = getDocente;
 const createDocente = async (req, res) => {
     try {
-        const { codice_fiscale, colore, nome, cognome, datanascita, nazione, regione, provincia, comune, sesso, cellulare, mail, cv, contratto } = req.body;
+        const { codice_fiscale, colore, nome, cognome, datanascita, nazione, regione, provincia, comune, sesso, cellulare, mail, cv, contratto, } = req.body;
         const docente = await prisma_1.prisma.docente.create({
             data: {
                 codice_fiscale,
                 colore,
                 nome,
                 cognome,
-                datanascita,
+                datanascita: (0, date_1.toDate)(datanascita),
                 nazione,
                 regione,
                 provincia,
@@ -60,8 +60,9 @@ const createDocente = async (req, res) => {
                 cellulare,
                 mail,
                 cv,
-                contratto
-            }
+                contratto,
+            },
+            include: (0, include_1.buildInclude)(req, INCLUDE_MAP),
         });
         res.status(201).json(docente);
     }
@@ -73,6 +74,12 @@ const createDocente = async (req, res) => {
         if (err.code === "P2002") {
             return res.status(400).json({ error: "Il codice fiscale è già in uso" });
         }
+        if (err.code === "P2000") {
+            return res.status(400).json({ error: "Uno dei valori inseriti è troppo lungo" });
+        }
+        if (err instanceof client_1.Prisma.PrismaClientValidationError) {
+            return res.status(400).json({ error: "Dati del docente non validi" });
+        }
         res.status(500).json({ error: "Errore creazione docente" });
     }
 };
@@ -80,14 +87,14 @@ exports.createDocente = createDocente;
 const updateDocente = async (req, res) => {
     try {
         const { codice_fiscale } = req.params;
-        const { colore, nome, cognome, datanascita, nazione, regione, provincia, comune, sesso, cellulare, mail, cv, contratto } = req.body;
+        const { colore, nome, cognome, datanascita, nazione, regione, provincia, comune, sesso, cellulare, mail, cv, contratto, } = req.body;
         const docente = await prisma_1.prisma.docente.update({
             where: { codice_fiscale },
             data: {
                 colore,
                 nome,
                 cognome,
-                datanascita,
+                datanascita: (0, date_1.toDate)(datanascita),
                 nazione,
                 regione,
                 provincia,
@@ -96,8 +103,9 @@ const updateDocente = async (req, res) => {
                 cellulare,
                 mail,
                 cv,
-                contratto
-            }
+                contratto,
+            },
+            include: (0, include_1.buildInclude)(req, INCLUDE_MAP),
         });
         res.json(docente);
     }
@@ -106,10 +114,20 @@ const updateDocente = async (req, res) => {
             message: "Errore nell'aggiornamento del docente",
             error: err,
         });
+        if (err.code === "P2025") {
+            return res.status(404).json({ error: "Docente non trovato" });
+        }
+        if (err.code === "P2000") {
+            return res.status(400).json({ error: "Uno dei valori inseriti è troppo lungo" });
+        }
+        if (err instanceof client_1.Prisma.PrismaClientValidationError) {
+            return res.status(400).json({ error: "Dati del docente non validi" });
+        }
         res.status(500).json({ error: "Errore aggiornamento docente" });
     }
 };
 exports.updateDocente = updateDocente;
+// corso_docente e docente_modulo sono in cascade; indisponibilita no (P2003).
 const deleteDocente = async (req, res) => {
     try {
         const { codice_fiscale } = req.params;
@@ -123,6 +141,12 @@ const deleteDocente = async (req, res) => {
             message: "Errore nella cancellazione del docente",
             error: err,
         });
+        if (err.code === "P2025") {
+            return res.status(404).json({ error: "Docente non trovato" });
+        }
+        if (err.code === "P2003") {
+            return res.status(409).json({ error: "Impossibile eliminare il docente: ha indisponibilità collegate" });
+        }
         res.status(500).json({ error: "Errore cancellazione docente" });
     }
 };
@@ -132,16 +156,9 @@ const getCorsiByDocente = async (req, res) => {
         const { codice_fiscale } = req.params;
         const corsi = await prisma_1.prisma.corso_docente.findMany({
             where: { docente_cf: codice_fiscale },
-            include: {
-                corso: true,
-            },
+            include: { corso: true },
         });
-        if (corsi.length === 0) {
-            return res.status(404).send("Nessun corso trovato per questo docente");
-        }
-        // opzionale: ritorno solo i corsi puliti
-        const result = corsi.map((c) => c.corso);
-        res.json(result);
+        res.json(corsi.map((c) => c.corso));
     }
     catch (err) {
         console.error({
@@ -157,9 +174,7 @@ const getModuliByDocente = async (req, res) => {
         const { codice_fiscale } = req.params;
         const moduli = await prisma_1.prisma.docente_modulo.findMany({
             where: { docente_cf: codice_fiscale },
-            include: {
-                modulo: true
-            }
+            include: { modulo: true },
         });
         res.json(moduli);
     }
@@ -179,17 +194,27 @@ const addModuloToDocente = async (req, res) => {
         const relazione = await prisma_1.prisma.docente_modulo.create({
             data: {
                 docente_cf: codice_fiscale,
-                modulo_id
-            }
+                modulo_id,
+            },
         });
         res.status(201).json(relazione);
     }
     catch (err) {
-        console.error("Errore assegnazione modulo al docente", err);
+        console.error({
+            message: "Errore nell'assegnazione del modulo al docente",
+            error: err,
+        });
+        if (err.code === "P2002") {
+            return res.status(409).json({ error: "Il modulo è già assegnato al docente" });
+        }
+        if (err.code === "P2003") {
+            return res.status(400).json({ error: "Il docente o il modulo non esiste" });
+        }
         res.status(500).json({ error: "Errore assegnazione modulo" });
     }
 };
 exports.addModuloToDocente = addModuloToDocente;
+// Sostituisce l'intero elenco dei moduli del docente
 const addModuliToDocenteBulk = async (req, res) => {
     try {
         const { codice_fiscale } = req.params;
@@ -200,14 +225,20 @@ const addModuliToDocenteBulk = async (req, res) => {
         const result = await prisma_1.prisma.$transaction([
             prisma_1.prisma.docente_modulo.deleteMany({ where: { docente_cf: codice_fiscale } }),
             prisma_1.prisma.docente_modulo.createMany({
-                data: moduli_ids.map(id => ({ docente_cf: codice_fiscale, modulo_id: id })),
+                data: moduli_ids.map((id) => ({ docente_cf: codice_fiscale, modulo_id: id })),
                 skipDuplicates: true,
             }),
         ]);
         res.status(201).json(result);
     }
     catch (err) {
-        console.error("Errore assegnazione massiva moduli al docente", err);
+        console.error({
+            message: "Errore nell'assegnazione massiva dei moduli al docente",
+            error: err,
+        });
+        if (err.code === "P2003") {
+            return res.status(400).json({ error: "Il docente o uno dei moduli non esiste" });
+        }
         res.status(500).json({ error: "Errore assegnazione moduli" });
     }
 };
@@ -216,19 +247,22 @@ const deleteModuloFromDocente = async (req, res) => {
     try {
         const { codice_fiscale } = req.params;
         const modulo_id = Number(req.params.modulo_id);
-        const relazione = await prisma_1.prisma.docente_modulo.delete({
+        await prisma_1.prisma.docente_modulo.delete({
             where: {
-                docente_cf_modulo_id: {
-                    docente_cf: codice_fiscale,
-                    modulo_id,
-                },
+                docente_cf_modulo_id: { docente_cf: codice_fiscale, modulo_id },
             },
         });
-        return res.status(200).json(relazione);
+        res.status(204).send();
     }
     catch (err) {
-        console.error("Errore cancellazione modulo dal docente", err);
-        return res.status(500).json({ error: "Errore cancellazione docente" });
+        console.error({
+            message: "Errore nella cancellazione del modulo dal docente",
+            error: err,
+        });
+        if (err.code === "P2025") {
+            return res.status(404).json({ error: "Modulo non assegnato a questo docente" });
+        }
+        res.status(500).json({ error: "Errore cancellazione modulo" });
     }
 };
 exports.deleteModuloFromDocente = deleteModuloFromDocente;

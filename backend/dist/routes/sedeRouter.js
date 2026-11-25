@@ -10,8 +10,8 @@ const sede_schema_1 = require("@progetto/shared/validation/sede.schema");
 const sedeController_1 = require("../controllers/sedeController");
 sediRouter.get('/', sedeController_1.getSedi);
 sediRouter.get('/:id', sedeController_1.getSede);
-sediRouter.post('/', (0, validate_1.validate)(sede_schema_1.sedeSchema), sedeController_1.createSede);
-sediRouter.put('/:id', (0, validate_1.validate)(sede_schema_1.sedeSchema), sedeController_1.updateSede);
+sediRouter.post('/', (0, validate_1.validate)(sede_schema_1.createSedeSchema), sedeController_1.createSede);
+sediRouter.put('/:id', (0, validate_1.validate)(sede_schema_1.updateSedeSchema), sedeController_1.updateSede);
 sediRouter.delete('/:id', sedeController_1.deleteSede);
 //CORSI
 sediRouter.get('/:id/corsi', sedeController_1.getCorsiBySede);

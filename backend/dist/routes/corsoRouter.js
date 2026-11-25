@@ -12,8 +12,8 @@ const scheduleCorsoController_1 = require("../controllers/scheduleCorsoControlle
 const corsoController_2 = require("../controllers/corsoController");
 corsiRouter.get("/", corsoController_1.getCorsi);
 corsiRouter.get("/:id", corsoController_1.getCorso);
-corsiRouter.post("/", (0, validate_1.validate)(corso_schema_1.corsoSchema), corsoController_1.createCorsoCompleto);
-corsiRouter.put("/:id", (0, validate_1.validate)(corso_schema_1.corsoSchema), corsoController_1.updateCorso);
+corsiRouter.post("/", (0, validate_1.validate)(corso_schema_1.createCorsoSchema), corsoController_1.createCorso);
+corsiRouter.put("/:id", (0, validate_1.validate)(corso_schema_1.updateCorsoSchema), corsoController_1.updateCorso);
 corsiRouter.delete("/:id", corsoController_1.deleteCorso);
 // DOCENTI
 corsiRouter.get("/:id/docenti", corsoController_1.getDocenti);

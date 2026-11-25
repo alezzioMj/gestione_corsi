@@ -1,9 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.schedule = void 0;
-const prisma_1 = require("../prisma");
 const client_1 = require("@prisma/client");
 const availability_service_1 = require("./availability.service");
+const with_transaction_1 = require("../utils/with.transaction");
 var LogLevel;
 (function (LogLevel) {
     LogLevel["DEBUG"] = "debug";
@@ -18,26 +18,26 @@ const logger = {
     warn: (msg, ...args) => { console.warn(msg, ...args); },
     error: (msg, ...args) => { console.error(msg, ...args); }
 };
-const schedule = async (corso_id, giorniDisponibili, ordine) => {
-    return await prisma_1.prisma.$transaction(async (tx) => {
+const schedule = (corso_id, giorniDisponibili, ordine, tx) => {
+    return (0, with_transaction_1.withTransaction)(tx, async (db) => {
         const sessioniBulk = [];
-        const corso = await tx.corso.findUnique({
+        const corso = await db.corso.findUnique({
             where: { id: corso_id },
             include: { programma: true }
         });
         if (!corso || !corso.inizio || !corso.fine) {
             throw new Error("Dati corso insufficienti (date inizio/fine mancanti)");
         }
-        const docentiAbilitati = await tx.corso_docente.findMany({
+        const docentiAbilitati = await db.corso_docente.findMany({
             where: { corso_id },
             include: { docente: { include: { docente_modulo: true } } }
         });
-        const corsoConAule = await tx.corso.findUnique({
+        const corsoConAule = await db.corso.findUnique({
             where: { id: corso_id },
             select: { corso_sede: { select: { sede: { select: { aula: true } } } } }
         });
         const listaAule = corsoConAule?.corso_sede.flatMap(cs => cs.sede.aula) ?? [];
-        await tx.sessione.deleteMany({
+        await db.sessione.deleteMany({
             where: {
                 corso_id: corso_id,
                 stato: client_1.stato_sessione_enum.Bozza
@@ -45,12 +45,12 @@ const schedule = async (corso_id, giorniDisponibili, ordine) => {
         });
         const dataInizio = corso.inizio;
         const dataFine = corso.fine;
-        const tutteLeSessioniEsistenti = await tx.sessione.findMany({
+        const tutteLeSessioniEsistenti = await db.sessione.findMany({
             where: {
                 data: { gte: dataInizio, lte: dataFine }
             }
         });
-        const indisponibilita = await tx.indisponibilita.findMany({
+        const indisponibilita = await db.indisponibilita.findMany({
             where: {
                 data_inizio: { lte: dataFine },
                 data_fine: { gte: dataInizio },
@@ -58,7 +58,7 @@ const schedule = async (corso_id, giorniDisponibili, ordine) => {
         });
         let cacheSessioni = [...tutteLeSessioniEsistenti];
         const slots = (0, availability_service_1.generateSlots)(corso.inizio, corso.fine, corso.mattina_inizio, corso.mattina_fine, corso.pomeriggio_inizio, corso.pomeriggio_fine, giorniDisponibili);
-        const pm = await tx.programma_modulo.findMany({
+        const pm = await db.programma_modulo.findMany({
             where: { programma_id: corso.programma?.id },
             include: { modulo: true }
         });
@@ -131,11 +131,11 @@ const schedule = async (corso_id, giorniDisponibili, ordine) => {
         }
         if (sessioniBulk.length > 0) {
             logger.info(`Salvataggio massivo di ${sessioniBulk.length} sessioni...`);
-            await tx.sessione.createMany({
+            await db.sessione.createMany({
                 data: sessioniBulk
             });
         }
-        const sessioniCreate = await tx.sessione.findMany({
+        const sessioniCreate = await db.sessione.findMany({
             where: { corso_id, stato: client_1.stato_sessione_enum.Bozza },
             orderBy: { data: 'asc' }
         });
