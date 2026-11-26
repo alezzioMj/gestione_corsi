@@ -2,6 +2,9 @@ import express from 'express';
 import { prisma } from '../prisma';
 import { buildInclude, IncludeMap } from './utility.ts/include';
 import { CreateCommessa, UpdateCommessa } from '@progetto/shared/validation/commessa.schema';
+import { getDatiSchedaCommessa } from "../services/commessa-document.service";
+import { generateDocx } from "../services/document-generator.service";
+import { generaSchedaCommessa } from '../services/scheda-commessa.service';
 
 const INCLUDE_MAP = {
     corsi: true,
@@ -32,7 +35,7 @@ const createCommessa = async (req: express.Request, res: express.Response) => {
         scadenza,
         cliente_id,
         stato
-    } : CreateCommessa = req.body;
+    }: CreateCommessa = req.body;
 
     try {
         const commessa = await prisma.commessa.create({
@@ -66,7 +69,7 @@ const updateCommessa = async (req: express.Request, res: express.Response) => {
         scadenza,
         cliente_id,
         stato
-    } : UpdateCommessa = req.body;
+    }: UpdateCommessa = req.body;
 
     try {
         const commessa = await prisma.commessa.update({
@@ -105,9 +108,49 @@ const deleteCommessa = async (req: express.Request, res: express.Response) => {
     }
 };
 
+const downloadSchedaCommessa = async (
+    req: express.Request,
+    res: express.Response
+) => {
+    try {
+        const id = Number(req.params.id);
+
+        if (!Number.isInteger(id) || id <= 0) {
+            return res.status(400).json({
+                error: "ID commessa non valido",
+            });
+        }
+
+        const buffer = await generaSchedaCommessa(id);
+
+        res.setHeader(
+            "Content-Type",
+            "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        );
+
+        res.setHeader(
+            "Content-Disposition",
+            `attachment; filename="scheda-commessa-${id}.docx"`
+        );
+
+        return res.send(buffer);
+    } catch (error) {
+        console.error("Errore nella generazione della scheda commessa:", error);
+
+        if (error instanceof Error && error.message === "Commessa non trovata") {
+            return res.status(404).json({ error: error.message });
+        }
+
+        return res.status(500).json({
+            error: "Errore nella generazione della scheda commessa",
+        });
+    }
+};
+
 export {
     getCommesse,
     createCommessa,
     updateCommessa,
-    deleteCommessa
+    deleteCommessa,
+    downloadSchedaCommessa
 };

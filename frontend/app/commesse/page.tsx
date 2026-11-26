@@ -6,7 +6,7 @@ import WorkOutlineIcon from "@mui/icons-material/WorkOutlined";
 import useSWR from "swr";
 
 import type { Commessa } from "@progetto/shared/validation/commessa.schema";
-import { fetcher } from "@/lib/swr-config";
+import { buildApiUrl, fetcher } from "@/lib/swr-config";
 import { useConfirm } from "@/components/ConfirmContext";
 import { useDeleteEntity } from "@/hooks/useDeleteEntity";
 import { useEntityDialog } from "@/hooks/useEntityDialog";
@@ -27,6 +27,26 @@ export default function CommessePage() {
     const { remove } = useDeleteEntity("/commesse");
     const { confirm } = useConfirm();
     const dialog = useEntityDialog<Commessa>();
+
+    const handleDownloadScheda = async (id: number) => {
+        const response = await fetch(
+            buildApiUrl(`/commesse/${id}/scheda-commessa`)
+        );
+
+        if (!response.ok) {
+            throw new Error("Errore durante il download della scheda");
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = `scheda-commessa-${id}.docx`;
+        link.click();
+
+        URL.revokeObjectURL(url);
+    };
 
     const handleDelete = async (c: Commessa) => {
         const confirmed = await confirm({
@@ -99,6 +119,7 @@ export default function CommessePage() {
                                                 commessa={c}
                                                 onEdit={() => dialog.openEdit(c)}
                                                 onDelete={() => handleDelete(c)}
+                                                handleDownloadScheda={() => handleDownloadScheda(c.id)}
                                             />
                                         ))}
                                     </Stack>

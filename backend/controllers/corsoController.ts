@@ -5,6 +5,9 @@ import { connect } from "node:http2";
 import { SchedulingError } from "../services/availability.service";
 import { schedule } from "../services/scheduler.service";
 import { stato_sessione_enum } from "@prisma/client";
+import fs from "fs";
+import PizZip from "pizzip";
+import Docxtemplater from "docxtemplater";
 
 const INCLUDE_MAP = {
   programma: true,

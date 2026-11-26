@@ -8,6 +8,7 @@ import {
     Typography,
     Chip,
     IconButton,
+    Button,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -21,6 +22,7 @@ interface CommessaCardProps {
     };
     onEdit: (commessa: CommessaCardProps["commessa"]) => void;
     onDelete: (commessa: CommessaCardProps["commessa"]) => void;
+    handleDownloadScheda: (id: number) => void;
 }
 
 const STATO_CONFIG = {
@@ -34,6 +36,7 @@ export default function CommessaCard({
     commessa,
     onEdit,
     onDelete,
+    handleDownloadScheda
 }: CommessaCardProps) {
     const stato = STATO_CONFIG[commessa.stato as keyof typeof STATO_CONFIG];
 
@@ -129,6 +132,9 @@ export default function CommessaCard({
                 >
                     <DeleteIcon />
                 </IconButton>
+                <Button onClick={() => handleDownloadScheda(commessa.id)}>
+                    Scarica scheda commessa
+                </Button>
             </CardActions>
         </Card>
     );
