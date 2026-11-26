@@ -15,11 +15,13 @@ import EmptyState from "@/components/EmptyState";
 import CorsoCard from "@/components/Corsi/CorsoCard";
 import CorsoInfoDialog from "@/components/Corsi/CorsoModal";
 import { CorsoItem } from "@/components/Corsi/Corso";
+import CorsoBozzeDialog from "@/components/Corsi/CorsoBozzeDialog";
 
 export default function CorsiPage() {
     const { data: corsi, error, mutate } = useSWR<CorsoItem[]>('corsi?include=commessa,programma,corso_docente,corso_sede', fetcher);
     const { remove } = useDeleteEntity("/corsi");
     const { confirm } = useConfirm();
+    const bozze = useEntityDialog<CorsoItem>();
     const info = useEntityDialog<CorsoItem>();
 
     const handleDelete = async (corsoId: number) => {
@@ -73,12 +75,13 @@ export default function CorsiPage() {
                 {(list) => (
                     <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 2 }}>
                         {list.map((c) => (
-                            <CorsoCard key={c.id} corso={c} onInfo={info.openEdit} onDelete={handleDelete} />
+                            <CorsoCard key={c.id} corso={c} onInfo={info.openEdit} onBozze={bozze.openEdit} onDelete={handleDelete} />
                         ))}
                     </Box>
                 )}
             </AsyncContent>
 
+            <CorsoBozzeDialog open={bozze.open} corso={bozze.entity} onClose={bozze.close} onChanged={() => mutate()} />
             <CorsoInfoDialog open={info.open} corso={info.entity} onClose={info.close} />
         </Container>
     );

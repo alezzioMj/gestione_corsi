@@ -82,24 +82,27 @@ const scheduleCorsoController = async (req: express.Request, res: express.Respon
 // GET /corsi/:id/scheduling/conflitti: conflitti delle bozze del corso
 // ---------------------------------------------------------------------------
 
-const getConflittiController = async (req: express.Request, res: express.Response) => {
+const getBozzeController = async (req: express.Request, res: express.Response) => {
   const corso_id = parseCorsoId(req);
   if (!corso_id) return res.status(400).json({ error: "Id corso non valido" });
 
   try {
     const bozze = await prisma.sessione.findMany({
       where: { corso_id, stato: stato_sessione_enum.Bozza },
+      include: { modulo: { select: { titolo: true } } },
+      orderBy: [{ data: "asc" }, { ora_inizio: "asc" }],
     });
 
     const { complete, incomplete } = daVerificare(bozze);
     const risultati = await calcolaConflitti(prisma, corso_id, complete);
 
     return res.status(200).json({
-      conflitti: risultati.filter((r) => r.conflitti.length > 0), // [{ id, conflitti: [...] }]
-      incomplete, // id delle bozze senza docente, aula o sede
+      bozze,
+      conflitti: risultati.filter((r) => r.conflitti.length > 0),
+      incomplete,
     });
   } catch (err) {
-    return handleError(res, err, "calcolo conflitti");
+    return handleError(res, err, "lettura bozze");
   }
 };
 
@@ -133,7 +136,7 @@ const scartaSchedulingController = async (req: express.Request, res: express.Res
 
 export {
   scheduleCorsoController,
-  getConflittiController,
+  getBozzeController,
   confermaSchedulingController,
   scartaSchedulingController,
 };

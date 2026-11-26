@@ -18,7 +18,7 @@ import {
   deleteSessioni,
   createCorso
 } from "../controllers/corsoController";
-import { confermaSchedulingController, getConflittiController, scartaSchedulingController, scheduleCorsoController } from "../controllers/scheduleCorsoController";
+import { confermaSchedulingController, getBozzeController, scartaSchedulingController, scheduleCorsoController } from "../controllers/scheduleCorsoController";
 import { getDocentiByModulo } from "../controllers/corsoController";
 
 corsiRouter.get("/", getCorsi);
@@ -40,9 +40,9 @@ corsiRouter.post("/:id/sedi", addSedeToCorso);
 corsiRouter.delete("/:id/sedi/:sede_id", deleteSedeFromCorso);
 
 //SCHEDULAZIONE
+corsiRouter.get("/:id/scheduling", getBozzeController);     
 corsiRouter.post("/:id/scheduling", scheduleCorsoController);
 corsiRouter.post("/:id/scheduling/conferma", confermaSchedulingController);
 corsiRouter.delete("/:id/scheduling", scartaSchedulingController);
-corsiRouter.get("/:id/scheduling/conflitti", getConflittiController);
 
 export default corsiRouter;

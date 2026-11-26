@@ -6,14 +6,16 @@ import { Box, Button, Card, Typography } from "@mui/material";
 import InfoIcon from "@mui/icons-material/Info";
 import CardActionsBar from "@/components/common/CardActionsBar";
 import { formatRange, formatTime, visibleRows, type CorsoItem } from "./Corso";
+import EditCalendarIcon from "@mui/icons-material/EditCalendar";
 
 interface CorsoCardProps {
     corso: CorsoItem;
     onInfo: (corso: CorsoItem) => void;
     onDelete: (corsoId: number) => void;
+    onBozze: (corso: CorsoItem) => void;
 }
 
-export default function CorsoCard({ corso, onInfo, onDelete }: CorsoCardProps) {
+export default function CorsoCard({ corso, onInfo, onDelete, onBozze }: CorsoCardProps) {
     const fields = visibleRows([
         ["Cliente", corso.commessa?.cliente?.ragione_sociale],
         ["Programma", corso.programma?.titolo],
@@ -67,6 +69,15 @@ export default function CorsoCard({ corso, onInfo, onDelete }: CorsoCardProps) {
                     <Button variant="outlined" size="small" component={Link} href="/calendario">
                         Visualizza Sessioni
                     </Button>
+                    {(corso.bozze_count ?? 0) > 0 && (
+                        <Button
+                            variant="outlined" color="warning" size="small"
+                            startIcon={<EditCalendarIcon />}
+                            onClick={() => onBozze(corso)}
+                        >
+                            Bozze sessioni ({corso.bozze_count})
+                        </Button>
+                    )}
                 </CardActionsBar>
             </Box>
         </Card>

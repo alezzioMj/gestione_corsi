@@ -1,6 +1,8 @@
 import type { CorsoWithRelations } from "@progetto/shared/validation/corso.schema";
 
-export type CorsoItem = CorsoWithRelations<"commessa" | "corso_docente" | "corso_sede" | "programma">;
+export type CorsoItem = CorsoWithRelations<"commessa" | "corso_docente" | "corso_sede" | "programma"> & {
+    bozze_count?: number;
+};
 
 type DateInput = Date | string | null | undefined;
 

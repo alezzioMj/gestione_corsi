@@ -149,14 +149,16 @@ export default function StepProgrammazione({ programmi }: { programmi: Programma
         if (!selectedProgram) return [];
         return moduliOrdinati.map(uniqueId => {
             const moduloId = Number(uniqueId.split('-')[0]);
-            const rel = selectedProgram.programma_modulo.find(m => m.id === moduloId);
+            const rel = selectedProgram.programma_modulo.find(
+                m => (m.modulo_id ?? m.modulo?.id) === moduloId
+            );
             return {
                 uniqueId,
                 id: moduloId,
                 titolo: rel?.modulo?.titolo || `Modulo ${moduloId}`,
                 n_ore: rel?.modulo?.n_ore,
                 competenza: rel?.modulo?.competenza,
-                multiplo: rel?.modulo?.multiplo ?? true, // Defaults to true if your database allows repeating lessons
+                multiplo: rel?.modulo?.multiplo ?? true,
             };
         });
     }, [moduliOrdinati, selectedProgram]);

@@ -90,12 +90,8 @@ export const schedule = (
                 where: { corso_id, stato: stato_sessione_enum.Bozza },
             });
 
-            // Occupano risorse solo le sessioni non in bozza: le bozze di altri corsi non bloccano
             const sessioniEsistenti = await db.sessione.findMany({
-                where: {
-                    data: { gte: dataInizio, lte: dataFine },
-                    stato: { not: stato_sessione_enum.Bozza },
-                },
+                where: { data: { gte: dataInizio, lte: dataFine } }, // bozze comprese (le tue sono già cancellate sopra)
             });
 
             const indisponibilita = await db.indisponibilita.findMany({
@@ -288,12 +284,12 @@ export const confermaBozze = (corsoId: number, tx?: Prisma.TransactionClient): P
                 if (incomplete.length > 0) {
                     throw new SchedulingError("INCOMPLETE_DRAFTS", 422, "Alcune bozze non hanno docente, aula o sede", { ids: incomplete });
                 }
-                
+
                 if (incomplete.length > 0) {
                     throw new SchedulingError(
                         "INCOMPLETE_DRAFTS", 422,
                         "Alcune bozze non hanno docente, aula o sede",
-                        { ids: incomplete.map((b) => b.id) },
+                        { ids: incomplete.map((b) => b) },
                     );
                 }
 

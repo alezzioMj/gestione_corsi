@@ -8,7 +8,7 @@ import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
 
-import { CreateSede, Sede } from "@progetto/shared/validation/sede.schema";
+import { Sede } from "@progetto/shared/validation/sede.schema";
 import { FormType } from "@progetto/shared/validation/types";
 
 // Commessa come arriva da GET /commesse (con il cliente incluso)

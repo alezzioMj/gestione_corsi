@@ -1,27 +1,50 @@
 // hooks/useCreateEntity.ts
 import useSWRMutation from "swr/mutation";
-import { postFetcher } from "@/lib/swr-config";
+import { CreateArg, postFetcher } from "@/lib/swr-config";
 import { useSnackbar } from "@/components/SnackbarContext";
 import { getErrorMessage } from "@/utils/errorMessages";
 import { useCallback } from "react";
 
-export function useCreateEntity<TBody extends object, TResult>(endpoint: string, successMessage?: string) {
-    const { trigger: rawTrigger, isMutating } = useSWRMutation(endpoint, postFetcher<TBody, TResult>);
-    const trigger = rawTrigger as unknown as (body: TBody) => Promise<TResult | null>;
+export type CreateEntityResult<TResult> = {
+  ok: boolean;
+  data: TResult | null;
+};
 
-    const { showMessage } = useSnackbar();
+export function useCreateEntity<TBody = unknown, TResult = unknown>(
+  endpoint: string,
+  successMessage = "Creazione andata a buon fine!"
+) {
+  const { trigger: rawTrigger, isMutating } = useSWRMutation<
+    TResult | null,
+    Error,
+    string,
+    CreateArg<TBody>
+  >(endpoint, postFetcher);
 
-    const create = useCallback(async (body: TBody): Promise<boolean> => {
-        try {
-            await trigger(body);
-            showMessage(successMessage ?? "Creazione andata a buon fine!", "success");
-            return true;
-        } catch (error) {
-            console.error(error);
-            showMessage(getErrorMessage(error), "error");
-            return false;
-        }
-    }, [trigger, showMessage, successMessage]);
+  const trigger = rawTrigger as unknown as (
+    arg: CreateArg<TBody>
+  ) => Promise<TResult | null>;
 
-    return { submitting: isMutating, create };
+  const { showMessage } = useSnackbar();
+
+  const create = useCallback(
+    async (
+      body?: TBody,
+      id?: string | number,
+      suffix?: string
+    ): Promise<CreateEntityResult<TResult>> => {
+      try {
+        const data = await trigger({ body, id, suffix });
+        showMessage(successMessage, "success");
+        return { ok: true, data };
+      } catch (error) {
+        console.error(error);
+        showMessage(getErrorMessage(error), "error");
+        return { ok: false, data: null };
+      }
+    },
+    [trigger, showMessage, successMessage]
+  );
+
+  return { submitting: isMutating, create };
 }

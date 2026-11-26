@@ -1,8 +1,8 @@
-import { API_BASE_URL } from "./config";
+import { API_BASE_URL } from "@/lib/config";
 
-type DeleteArg = { id: string | number };
-export type UpdateArg<TBody> = { id: string | number; body: TBody };
-
+export type DeleteArg = { id: string | number; suffix?: string };
+export type UpdateArg<TBody> = { id: string | number; body?: TBody; suffix?: string };
+export type CreateArg<TBody> = { body?: TBody; id?: string | number; suffix?: string };
 
 function buildBody(arg: unknown): { body: BodyInit; headers: HeadersInit } {
   if (arg instanceof FormData) {
@@ -23,10 +23,15 @@ export function buildApiUrl(endpoint: string): string {
   return `${API_BASE_URL.replace(/\/$/, "")}/${endpoint.replace(/^\//, "")}`;
 }
 
+function buildTargetUrl(base: string, id?: string | number, suffix?: string): string {
+  const cleanBase = base.replace(/\/$/, "");
+  const idPart = id !== undefined ? `/${id}` : "";
+  const suffixPart = suffix ? `/${suffix.replace(/^\/|\/$/g, "")}` : "";
+  return `${cleanBase}${idPart}${suffixPart}`;
+}
+
 export async function fetcher<TResult>(url: string, init?: RequestInit): Promise<TResult> {
-  const res = await fetch(buildApiUrl(url),
-    init ?? { method: "GET" }
-  );
+  const res = await fetch(buildApiUrl(url), init ?? { method: "GET" });
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
@@ -36,36 +41,58 @@ export async function fetcher<TResult>(url: string, init?: RequestInit): Promise
   return res.json();
 }
 
-export async function postFetcher<TBody extends object, TResult>(
+export async function postFetcher<TBody = undefined, TResult = unknown>(
   url: string,
-  { arg }: { arg: TBody }
+  { arg }: { arg?: TBody | CreateArg<TBody> }
 ): Promise<TResult | null> {
-  const { body, headers } = buildBody(arg);
+  const isCreateArg =
+    typeof arg === "object" &&
+    arg !== null &&
+    !(arg instanceof FormData) &&
+    ("body" in arg || "id" in arg || "suffix" in arg);
 
-  const res = await fetch(buildApiUrl(url), {
+  const payload = isCreateArg ? arg.body : arg;
+  const targetUrl = isCreateArg
+    ? buildTargetUrl(url, arg.id, arg.suffix)
+    : buildTargetUrl(url);
+
+  const { body, headers } =
+    payload !== undefined ? buildBody(payload) : { body: undefined, headers: {} };
+
+  const res = await fetch(buildApiUrl(targetUrl), {
     method: "POST",
     headers,
-    body
+    body,
   });
 
   if (!res.ok) {
     const errorData = await res.json().catch(() => ({}));
     throw new Error(errorData.error || res.statusText);
   }
-  return res.json().catch(() => null);
+
+  return res.status === 204 ? null : res.json().catch(() => null);
 }
 
-export async function updateFetcher<TBody, TResult>(
-    base: string,
-    { arg }: { arg: UpdateArg<TBody> }
+export async function updateFetcher<TBody = undefined, TResult = unknown>(
+  base: string,
+  { arg }: { arg: UpdateArg<TBody> }
 ): Promise<TResult | null> {
-    const { body, headers } = buildBody(arg.body);
-    const res = await fetch(buildApiUrl(`${base}/${arg.id}`), { method: "PUT", headers, body });
-    if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.error || res.statusText);
-    }
-    return res.status === 204 ? null : res.json().catch(() => null);
+  const targetUrl = buildTargetUrl(base, arg.id, arg.suffix);
+  const { body, headers } =
+    arg.body !== undefined ? buildBody(arg.body) : { body: undefined, headers: {} };
+
+  const res = await fetch(buildApiUrl(targetUrl), {
+    method: "PUT",
+    headers,
+    body,
+  });
+
+  if (!res.ok) {
+    const errorData = await res.json().catch(() => ({}));
+    throw new Error(errorData.error || res.statusText);
+  }
+
+  return res.status === 204 ? null : res.json().catch(() => null);
 }
 
 export async function deleteFetcher(

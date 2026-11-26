@@ -4,6 +4,7 @@ import { buildInclude, IncludeMap } from "./utility.ts/include";
 import { connect } from "node:http2";
 import { SchedulingError } from "../services/availability.service";
 import { schedule } from "../services/scheduler.service";
+import { stato_sessione_enum } from "@prisma/client";
 
 const INCLUDE_MAP = {
   programma: true,
@@ -20,9 +21,12 @@ const getCorsi = async (req: express.Request, res: express.Response) => {
     const include = buildInclude(req, INCLUDE_MAP);
 
     const corsi = await prisma.corso.findMany({
-      include,
+      include: {
+        ...include,
+        _count: { select: { sessione: { where: { stato: stato_sessione_enum.Bozza } } } },
+      }
     });
-    res.json(corsi);
+    res.json(corsi.map(({ _count, ...c }) => ({ ...c, bozze_count: _count.sessione })));
   } catch (error) {
     console.error("Errore nel recupero dei corsi:", error);
     res.status(500).send("Errore del server");
@@ -124,9 +128,8 @@ const createCorso = async (req: express.Request, res: express.Response) => {
         corso.id,
         giorniDisponibili,
         ordineNormalizzato,
-        tx,
+        { tx },
       );
-
       return { corso, sessioni };
     });
 
