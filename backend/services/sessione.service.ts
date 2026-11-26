@@ -1,7 +1,53 @@
 import { sessione } from "@prisma/client";
 import { prisma } from "../prisma";
 import { toMinutes, hasOverlap } from "../utils/time.utils"
+import { Prisma, stato_sessione_enum } from "@prisma/client";
+import { withTransaction, conRetry } from "../utils/with.transaction";
+import { SchedulingError } from "./availability.service";
+import { calcolaConflitti, daVerificare } from "./conflicts.service";
 
+export type SessionePatch = {
+    data?: Date;
+    ora_inizio?: string;
+    ora_fine?: string;
+    docente_cf?: string;
+    aula_id?: number;
+    sede_id?: number;
+    note?: string | null;
+};
+
+export const updateSessione = (id: number, patch: SessionePatch, tx?: Prisma.TransactionClient) => {
+    const run = () =>
+        withTransaction(
+            tx,
+            async (db) => {
+                const corrente = await db.sessione.findUnique({ where: { id } });
+                if (!corrente) throw new SchedulingError("SESSION_NOT_FOUND", 404, "Sessione non trovata");
+
+                const next = { ...corrente, ...patch };
+
+                if (toMinutes(next.ora_inizio) >= toMinutes(next.ora_fine)) {
+                    throw new SchedulingError("INVALID_TIME_RANGE", 400, "L'orario di fine deve essere dopo quello di inizio");
+                }
+
+                // Una bozza si salva anche in conflitto; una sessione confermata no
+                if (corrente.stato !== stato_sessione_enum.Bozza) {
+                    const { complete } = daVerificare([next]);
+                    const [risultato] = await calcolaConflitti(db, next.corso_id, complete);
+                    if (risultato && risultato.conflitti.length > 0) {
+                        throw new SchedulingError("CONFLICTS", 409, "La modifica crea conflitti", {
+                            conflitti: risultato.conflitti,
+                        });
+                    }
+                }
+
+                return db.sessione.update({ where: { id }, data: patch });
+            },
+            { isolationLevel: Prisma.TransactionIsolationLevel.Serializable },
+        );
+
+    return tx ? run() : conRetry(run);
+};
 // =======================
 // GET
 // =======================

@@ -1,9 +1,9 @@
 import { aula, docente } from "@prisma/client";
-import { calculateHours, toMinutes, hasOverlap } from "../utils/time.utils"
+import { calculateHours, toMinutes, hasOverlap } from "../utils/time.utils";
 import { Indisponibilita } from "@progetto/shared/validation/indisponibilita.schema";
 import { SessioneWithRelations } from "@progetto/shared/validation/sessione.schema";
 
-type Slot = {
+export type Slot = {
     data: Date;
     ora_inizio: string;
     ora_fine: string;
@@ -13,7 +13,28 @@ type Slot = {
 export type Ordine = {
     modulo_id: number;
     ordine: number;
-}
+};
+
+export type SessioneCache = Pick<
+    SessioneWithRelations,
+    "docente_cf" | "aula_id" | "data" | "ora_inizio" | "ora_fine"
+> & { id?: number };
+
+type Finestra = { data: Date | string; ora_inizio: string; ora_fine: string };
+
+export type SchedulingCode =
+    | "DOCENTE_INDISPONIBILE"
+    | "DOCENTE_OCCUPATO"
+    | "AULA_INDISPONIBILE"
+    | "AULA_OCCUPATA"
+    | "SEDE_INDISPONIBILE";
+
+export type Conflitto = {
+    code: SchedulingCode;
+    status: number;
+    message: string;
+    details: Record<string, unknown>;
+};
 
 export class SchedulingError extends Error {
     constructor(
@@ -29,15 +50,17 @@ export class SchedulingError extends Error {
 
 const MINUTI_GIORNO = 24 * 60;
 
+export const dayKey = (d: Date | string) => new Date(d).toISOString().slice(0, 10);
+
 const indisponibilitaCopreSlot = (
     i: Indisponibilita,
-    data: Date,
+    data: Date | string,
     startSlot: number,
     endSlot: number
 ): boolean => {
-    const giorno = data.getTime();
-    const primo = new Date(i.data_inizio).getTime();
-    const ultimo = new Date(i.data_fine).getTime();
+    const giorno = dayKey(data);
+    const primo = dayKey(i.data_inizio);
+    const ultimo = dayKey(i.data_fine);
 
     if (giorno < primo || giorno > ultimo) return false;
 
@@ -55,10 +78,14 @@ const indisponibilitaCopreSlot = (
 const trovaIndisponibilita = (
     indisponibilita: Indisponibilita[],
     match: (i: Indisponibilita) => boolean,
-    data: Date,
+    data: Date | string,
     startSlot: number,
     endSlot: number
 ) => indisponibilita.find((i) => match(i) && indisponibilitaCopreSlot(i, data, startSlot, endSlot));
+
+// ---------------------------------------------------------------------------
+// Generazione slot
+// ---------------------------------------------------------------------------
 
 export const generateSlots = (
     inizio: Date,
@@ -73,150 +100,216 @@ export const generateSlots = (
     const durataMattina = calculateHours(mattino_inizio, mattino_fine);
     const durataPomeriggio = calculateHours(pomeriggio_inizio, pomeriggio_fine);
 
-    // Il ciclo genera tutto il calendario potenziale
-    while (inizio.getTime() <= fine.getTime()) {
-        const day = inizio.getDay();
+    const cursor = new Date(inizio); // copia: il chiamante non vede cambiare "inizio"
+    const ultimo = fine.getTime();
+
+    while (cursor.getTime() <= ultimo) {
+        const day = cursor.getUTCDay();
         const normalizedDay = day === 0 ? 7 : day;
 
         if (giorniDisponibili.includes(normalizedDay)) {
-            // SLOT MATTINO (Senza IF oreRimanenti)
             slots.push({
-                data: new Date(inizio),
+                data: new Date(cursor),
                 ora_inizio: mattino_inizio,
-                ora_fine: mattino_fine, // Usa l'orario di fine standard
+                ora_fine: mattino_fine,
                 durata: durataMattina,
             });
 
-            // SLOT POMERIGGIO (Senza IF oreRimanenti)
             slots.push({
-                data: new Date(inizio),
+                data: new Date(cursor),
                 ora_inizio: pomeriggio_inizio,
-                ora_fine: pomeriggio_fine, // Usa l'orario di fine standard
+                ora_fine: pomeriggio_fine,
                 durata: durataPomeriggio,
             });
         }
 
-        inizio.setDate(inizio.getDate() + 1);
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
     }
 
     return slots;
 };
 
-// VALIDAZIONE DOCENTE 
-export const findDocente = async (
-    listaDocenti: docente[],
-    slot: { data: Date; ora_inizio: string; ora_fine: string },
+// ---------------------------------------------------------------------------
+// Conflitti (restituiti come dati, non lanciati come eccezioni)
+// ---------------------------------------------------------------------------
+
+const sovrappone = (s: SessioneCache, w: Finestra, start: number, end: number) =>
+    dayKey(s.data) === dayKey(w.data) &&
+    hasOverlap(start, end, toMinutes(s.ora_inizio), toMinutes(s.ora_fine));
+
+export const conflittiDocente = (
+    docente_cf: string,
+    w: Finestra,
+    sessioniEsistenti: SessioneCache[],
+    indisponibilita: Indisponibilita[]
+): Conflitto[] => {
+    const start = toMinutes(w.ora_inizio);
+    const end = toMinutes(w.ora_fine);
+    const conflitti: Conflitto[] = [];
+
+    const ind = trovaIndisponibilita(indisponibilita, (i) => i.docente_cf === docente_cf, w.data, start, end);
+    if (ind) {
+        conflitti.push({
+            code: "DOCENTE_INDISPONIBILE",
+            status: 409,
+            message: "Il docente risulta indisponibile in questo slot",
+            details: { docente_cf, ...w, causale: ind.causale },
+        });
+    }
+
+    if (sessioniEsistenti.some((s) => s.docente_cf === docente_cf && sovrappone(s, w, start, end))) {
+        conflitti.push({
+            code: "DOCENTE_OCCUPATO",
+            status: 409,
+            message: "Il docente è già occupato in questo slot",
+            details: { docente_cf, ...w },
+        });
+    }
+
+    return conflitti;
+};
+
+export const conflittiAula = (
+    aula_id: number,
+    w: Finestra,
+    sessioniEsistenti: SessioneCache[],
+    indisponibilita: Indisponibilita[]
+): Conflitto[] => {
+    const start = toMinutes(w.ora_inizio);
+    const end = toMinutes(w.ora_fine);
+    const conflitti: Conflitto[] = [];
+
+    const ind = trovaIndisponibilita(indisponibilita, (i) => i.aula_id === aula_id, w.data, start, end);
+    if (ind) {
+        conflitti.push({
+            code: "AULA_INDISPONIBILE",
+            status: 409,
+            message: "L'aula risulta indisponibile in questo slot",
+            details: { aula_id, ...w, causale: ind.causale },
+        });
+    }
+
+    if (sessioniEsistenti.some((s) => s.aula_id === aula_id && sovrappone(s, w, start, end))) {
+        conflitti.push({
+            code: "AULA_OCCUPATA",
+            status: 409,
+            message: "L'aula è già occupata in questo slot",
+            details: { aula_id, ...w },
+        });
+    }
+
+    return conflitti;
+};
+
+export const conflittiSede = (
     sede_id: number,
-    cacheSessioni: any[],
+    w: Finestra,
     indisponibilita: Indisponibilita[]
-) => {
-    for (const docente of listaDocenti) {
-        try {
-            // Controlla la disponibilità del docente usando la cache delle sessioni
-            checkDocenteDisponibileMemoria(
-                docente.codice_fiscale, slot.data, slot.ora_inizio, slot.ora_fine,
-                sede_id, cacheSessioni, indisponibilita
-            );
-            return docente;
-        } catch (err: any) {
-            if (err instanceof SchedulingError) {
-                continue; // try another one
-            }
-            throw err;
-        }
-    }
-    return null;
+): Conflitto[] => {
+    const ind = trovaIndisponibilita(
+        indisponibilita,
+        (i) => i.sede_id === sede_id,
+        w.data,
+        toMinutes(w.ora_inizio),
+        toMinutes(w.ora_fine)
+    );
+
+    return ind
+        ? [{
+            code: "SEDE_INDISPONIBILE",
+            status: 409,
+            message: "La sede risulta indisponibile in questo slot",
+            details: { sede_id, ...w, causale: ind.causale },
+        }]
+        : [];
 };
 
-// VALIDAZIONE AULA VELOCE
-export const findAula = async (
+export type SessioneDaVerificare = Finestra & {
+    id?: number;
+    docente_cf: string;
+    aula_id: number;
+    sede_id: number;
+};
+
+export const verificaSessioni = (
+    sessioni: SessioneDaVerificare[],
+    cache: SessioneCache[],
+    indisponibilita: Indisponibilita[]
+) =>
+    sessioni.map((s) => {
+        const altre = s.id !== undefined ? cache.filter((c) => c.id !== s.id) : cache;
+        return {
+            id: s.id,
+            conflitti: [
+                ...conflittiDocente(s.docente_cf, s, altre, indisponibilita),
+                ...conflittiAula(s.aula_id, s, altre, indisponibilita),
+                ...conflittiSede(s.sede_id, s, indisponibilita), // una sola volta, non per docente e aula
+            ],
+        };
+    });
+
+
+export const findDocente = (
+    listaDocenti: docente[],
+    slot: Finestra,
+    sede_id: number,
+    cacheSessioni: SessioneCache[],
+    indisponibilita: Indisponibilita[]
+): docente | null => {
+    if (conflittiSede(sede_id, slot, indisponibilita).length > 0) return null;
+
+    return (
+        listaDocenti.find(
+            (d) => conflittiDocente(d.codice_fiscale, slot, cacheSessioni, indisponibilita).length === 0
+        ) ?? null
+    );
+};
+
+export const findAula = (
     listaAule: aula[],
-    slot: { data: Date; ora_inizio: string; ora_fine: string },
-    cacheSessioni: any[],
+    slot: Finestra,
+    cacheSessioni: SessioneCache[],
     indisponibilita: Indisponibilita[]
-) => {
-    for (const aula of listaAule) {
-        try {
-            // Controlla la disponibilità dell'aula usando la cache delle sessioni
-            checkAulaDisponibileMemoria(
-                aula.id, aula.sede_id, slot.data, slot.ora_inizio, slot.ora_fine,
-                cacheSessioni, indisponibilita
-            );
-            // Se non lancia errori, l'aula è disponibile
-            return aula;
-        } catch (err: any) {
-            if (err instanceof SchedulingError) {
-                continue; // try another one
-            }
-            throw err;
-        }
-    }
-    return null;
+): aula | null =>
+    listaAule.find(
+        (a) =>
+            conflittiSede(a.sede_id, slot, indisponibilita).length === 0 &&
+            conflittiAula(a.id, slot, cacheSessioni, indisponibilita).length === 0
+    ) ?? null;
+
+const lanciaPrimo = (conflitti: Conflitto[]) => {
+    const [primo] = conflitti;
+    if (primo) throw new SchedulingError(primo.code, primo.status, primo.message, primo.details);
 };
 
-// VALIDAZIONE DOCENTE 
 export const checkDocenteDisponibileMemoria = (
     docente_cf: string,
     data: Date,
     ora_inizio: string,
     ora_fine: string,
     sede_id: number,
-    sessioniEsistenti: SessioneWithRelations[],
+    sessioniEsistenti: SessioneCache[],
     indisponibilita: Indisponibilita[]
 ) => {
-    const giorno = data.getTime();
-    const startA = toMinutes(ora_inizio);
-    const endA = toMinutes(ora_fine);
-
-    const indDocente = trovaIndisponibilita(indisponibilita, (i) => i.docente_cf === docente_cf, data, startA, endA);
-    if (indDocente) {
-        throw new SchedulingError("TEACHER_INDISPONIBILE", 409, "Il docente risulta indisponibile in questo slot",
-            { docente_cf, data, ora_inizio, ora_fine, causale: indDocente.causale });
-    }
-
-    const indSede = trovaIndisponibilita(indisponibilita, (i) => i.sede_id === sede_id, data, startA, endA);
-    if (indSede) {
-        throw new SchedulingError("SEDE_INDISPONIBILE", 409, "La sede risulta indisponibile in questo slot",
-            { sede_id, data, ora_inizio, ora_fine, causale: indSede.causale });
-    }
-
-    const overlap = sessioniEsistenti.some((s) => {
-        if (s.docente_cf !== docente_cf || new Date(s.data).getTime() !== giorno) return false;
-        return hasOverlap(startA, endA, toMinutes(s.ora_inizio), toMinutes(s.ora_fine));
-    });
-    if (overlap) throw new SchedulingError("TEACHER_UNAVAILABLE", 409, "Il docente è già occupato in questo slot",
-        { docente_cf, data, ora_inizio, ora_fine });
+    const w = { data, ora_inizio, ora_fine };
+    lanciaPrimo([
+        ...conflittiDocente(docente_cf, w, sessioniEsistenti, indisponibilita),
+        ...conflittiSede(sede_id, w, indisponibilita),
+    ]);
 };
-// VALIDAZIONE AULA 
+
 export const checkAulaDisponibileMemoria = (
     aula_id: number,
     sede_id: number,
     data: Date,
     ora_inizio: string,
     ora_fine: string,
-    sessioniEsistenti: any[],
+    sessioniEsistenti: SessioneCache[],
     indisponibilita: Indisponibilita[]
 ) => {
-    const giorno = data.getTime();
-    const startA = toMinutes(ora_inizio);
-    const endA = toMinutes(ora_fine);
-
-    const indAula = trovaIndisponibilita(indisponibilita, (i) => i.aula_id === aula_id, data, startA, endA);
-    if (indAula) {
-        throw new SchedulingError("AULA_INDISPONIBILE", 409, "L'aula risulta indisponibile in questo slot",
-            { aula_id, data, ora_inizio, ora_fine, causale: indAula.causale });
-    }
-
-    const indSede = trovaIndisponibilita(indisponibilita, (i) => i.sede_id === sede_id, data, startA, endA);
-    if (indSede) {
-        throw new SchedulingError("SEDE_INDISPONIBILE", 409, "La sede risulta indisponibile in questo slot",
-            { sede_id, data, ora_inizio, ora_fine, causale: indSede.causale });
-    }
-
-    const overlap = sessioniEsistenti.some((s) => {
-        if (s.aula_id !== aula_id || new Date(s.data).getTime() !== giorno) return false;
-        return hasOverlap(startA, endA, toMinutes(s.ora_inizio), toMinutes(s.ora_fine));
-    });
-    if (overlap) throw new SchedulingError("AULA_UNAVAILABLE", 409, "L'aula è già occupata in questo slot",
-        { aula_id, data, ora_inizio, ora_fine });
+    const w = { data, ora_inizio, ora_fine };
+    lanciaPrimo([
+        ...conflittiAula(aula_id, w, sessioniEsistenti, indisponibilita),
+        ...conflittiSede(sede_id, w, indisponibilita),
+    ]);
 };
